@@ -1,0 +1,25 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "athltiq",
+          "appId": "1:867243651880:android:85f3e5dcdf27fbd261161d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "athltiq",
+          "configurations": {
+            "android": "1:867243651880:android:85f3e5dcdf27fbd261161d",
+            "ios": "1:867243651880:ios:08bb40d8a839acab61161d",
+            "macos": "1:867243651880:ios:08bb40d8a839acab61161d",
+            "web": "1:867243651880:web:2ad920efca2624c761161d",
+            "windows": "1:867243651880:web:d5bb3745a18886c061161d"
+          }
+        }
+      }
+    }
+  }
+}

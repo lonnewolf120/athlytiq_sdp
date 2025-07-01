@@ -1,0 +1,27 @@
+class RideActivityParticipant {
+  final String rideActivityId;
+  final String userId;
+  final DateTime joinedAt;
+
+  RideActivityParticipant({
+    required this.rideActivityId,
+    required this.userId,
+    required this.joinedAt,
+  });
+
+  factory RideActivityParticipant.fromJson(Map<String, dynamic> json) {
+    return RideActivityParticipant(
+      rideActivityId: json['ride_activity_id'] as String,
+      userId: json['user_id'] as String,
+      joinedAt: DateTime.parse(json['joined_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'ride_activity_id': rideActivityId,
+      'user_id': userId,
+      'joined_at': joinedAt.toIso8601String(),
+    };
+  }
+}
