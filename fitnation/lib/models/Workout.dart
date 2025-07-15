@@ -7,7 +7,8 @@ class Workout {
   final String? equipmentSelected; // e.g., "5 Selected"
   final String? oneRmGoal; // e.g., "100 kg"
   final String? type;
-  final Map<String, dynamic>? prompt;
+  final String? prompt; // Re-added as String type
+
   final List<PlannedExercise> exercises; // List of exercises in this plan
 
   Workout({
@@ -30,9 +31,9 @@ class Workout {
       equipmentSelected: json['equipment_selected'] as String?,
       oneRmGoal: json['one_rm_goal'] as String?,
       type: json['type'] as String?,
-      prompt: json['type'] as Map<String, dynamic>?,
+      prompt: json['type'] as String?, // Assign type to prompt
       exercises:
-          (json['planned_exercises'] as List<dynamic>)
+          (json['exercises'] as List<dynamic>)
               .map((e) => PlannedExercise.fromJson(e as Map<String, dynamic>))
               .toList(),
     );
