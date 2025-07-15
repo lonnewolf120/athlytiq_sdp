@@ -114,7 +114,7 @@ class AppTheme {
           color: AppColors.primaryForeground,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -216,7 +216,7 @@ class AppTheme {
         ),
         side: BorderSide.none,
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.mutedForeground,
         indicatorSize: TabBarIndicatorSize.tab,
@@ -316,7 +316,7 @@ class AppTheme {
           color: Colors.black,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -416,7 +416,7 @@ class AppTheme {
         ),
         side: BorderSide.none,
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.mutedForeground,
         indicatorSize: TabBarIndicatorSize.tab,
