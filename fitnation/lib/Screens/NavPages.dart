@@ -5,6 +5,7 @@ import 'package:fitnation/Screens/Community/CommunityHome.dart';
 import 'package:fitnation/Screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:fitnation/Screens/nutrition/NutritionScreen.dart'; // Import NutritionScreen
+import 'package:fitnation/Screens/shop_page.dart'; // Import ShopPage
 
 enum NavItem {
   home,
@@ -24,7 +25,7 @@ enum NavItem {
       case nutrition:
         return Icons.fastfood; // Icon for nutrition
       case settings:
-        return Icons.person;
+        return Icons.shop_2;
     }
   }
 
@@ -91,5 +92,7 @@ final List<Widget> navPages = [
   const CommunityGroupsScreen(),
   const WorkoutScreen(),
   const NutritionScreen(), // Added Nutrition Screen
-  const ProfileScreen(),
+ // const ProfileScreen(),
+  const ShopPage(), // Added Shop Page
+ 
 ];
