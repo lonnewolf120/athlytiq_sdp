@@ -8,16 +8,22 @@ class GeminiService {
   final GenerativeModel _model;
 
   GeminiService()
-      : _model = FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash-preview-05-20');
+    : _model = FirebaseAI.googleAI().generativeModel(
+        model: 'gemini-2.5-flash-preview-05-20',
+      );
 
   Future<Workout> generateWorkoutPlan(Map<String, dynamic> userInfo) async {
     debugPrint('GeminiService: generateWorkoutPlan called.');
     if (_model == null) {
       debugPrint('GeminiService: Model not initialized.');
-      throw Exception('Gemini model failed to initialize. Check Firebase AI setup.');
+      throw Exception(
+        'Gemini model failed to initialize. Check Firebase AI setup.',
+      );
     }
 
-    final String promptText = _buildWorkoutPrompt(userInfo); // Use specific prompt builder
+    final String promptText = _buildWorkoutPrompt(
+      userInfo,
+    ); // Use specific prompt builder
     debugPrint('GeminiService: Workout Prompt: $promptText');
 
     try {
@@ -29,7 +35,12 @@ class GeminiService {
         final candidate = response.candidates![0];
         if (candidate.content != null && candidate.content!.parts != null) {
           rawJsonString =
-              candidate.content!.parts!.map((part) => part.toString()).join();
+              candidate.content!.parts!.map((part) {
+                if (part is TextPart) {
+                  return part.text;
+                }
+                return ''; // Or handle other part types if necessary
+              }).join();
         }
       }
 
@@ -41,37 +52,78 @@ class GeminiService {
       }
 
       // Clean the rawJsonString if it's wrapped in markdown (e.g., ```json ... ```)
-      if (rawJsonString.startsWith('```json') && rawJsonString.endsWith('```')) {
-        rawJsonString = rawJsonString.substring(7, rawJsonString.length - 3).trim();
-      } else if (rawJsonString.startsWith('```') && rawJsonString.endsWith('```')) {
+      if (rawJsonString.startsWith('```json') &&
+          rawJsonString.endsWith('```')) {
+        rawJsonString =
+            rawJsonString.substring(7, rawJsonString.length - 3).trim();
+      } else if (rawJsonString.startsWith('```') &&
+          rawJsonString.endsWith('```')) {
         // Handle generic markdown code block
-        rawJsonString = rawJsonString.substring(3, rawJsonString.length - 3).trim();
+        rawJsonString =
+            rawJsonString.substring(3, rawJsonString.length - 3).trim();
       }
       debugPrint('GeminiService: Cleaned Workout JSON: $rawJsonString');
 
       // Decode the JSON string. It might be a List or a Map.
       final dynamic decodedJson = jsonDecode(rawJsonString);
-      debugPrint('GeminiService: Decoded Workout JSON Type: ${decodedJson.runtimeType}');
+      debugPrint(
+        'GeminiService: Decoded Workout JSON Type: ${decodedJson.runtimeType}',
+      );
 
       Map<String, dynamic> workoutJson;
-      if (decodedJson is List) {
+      // If the decodedJson is a String, try to decode it again.
+      // This handles cases where Gemini might return a raw string that is actually JSON,
+      // but wasn't wrapped in markdown.
+      if (decodedJson is String) {
+        try {
+          final reDecodedJson = jsonDecode(decodedJson);
+          if (reDecodedJson is Map<String, dynamic>) {
+            workoutJson = reDecodedJson;
+            debugPrint('GeminiService: Re-decoded String to Map.');
+          } else if (reDecodedJson is List) {
+            if (reDecodedJson.isNotEmpty &&
+                reDecodedJson[0] is Map<String, dynamic>) {
+              workoutJson = reDecodedJson[0];
+              debugPrint(
+                'GeminiService: Re-decoded String to List, using first workout.',
+              );
+            } else {
+              debugPrint(
+                'GeminiService: Re-decoded String to empty or invalid list.',
+              );
+              throw Exception(
+                'Gemini returned an empty or invalid list after re-decoding.',
+              );
+            }
+          } else {
+            debugPrint(
+              'GeminiService: Re-decoded String to unexpected type: ${reDecodedJson.runtimeType}. Original string: $decodedJson',
+            );
+            throw Exception(
+              'Gemini returned a non-JSON string response. Please refine your prompt or check Gemini output.',
+            );
+          }
+        } catch (e) {
+          debugPrint(
+            'GeminiService: Failed to re-decode String. Original string: $decodedJson. Error: $e',
+          );
+          throw Exception(
+            'Gemini returned a non-JSON string response. Please refine your prompt or check Gemini output.',
+          );
+        }
+      } else if (decodedJson is List) {
         if (decodedJson.isNotEmpty && decodedJson[0] is Map<String, dynamic>) {
           workoutJson = decodedJson[0];
           debugPrint('GeminiService: Using first workout from list.');
         } else {
           debugPrint('GeminiService: Empty or invalid list of workout plans.');
-          throw Exception('Gemini returned an empty or invalid list of workout plans.');
+          throw Exception(
+            'Gemini returned an empty or invalid list of workout plans.',
+          );
         }
       } else if (decodedJson is Map<String, dynamic>) {
         workoutJson = decodedJson;
         debugPrint('GeminiService: Using single workout map.');
-      } else if (decodedJson is String) {
-        debugPrint(
-          'GeminiService: Gemini returned a String instead of JSON. Raw response: $decodedJson',
-        );
-        throw Exception(
-          'Gemini returned a non-JSON string response. Please refine your prompt or check Gemini output.',
-        );
       } else {
         debugPrint(
           'GeminiService: Unexpected workout JSON format. Type: ${decodedJson.runtimeType}',
@@ -91,7 +143,9 @@ class GeminiService {
       );
     } catch (e) {
       debugPrint('GeminiService: Error during workout API call: $e');
-      throw Exception('An unexpected error occurred during Gemini API call: $e');
+      throw Exception(
+        'An unexpected error occurred during Gemini API call: $e',
+      );
     }
   }
 
@@ -99,10 +153,14 @@ class GeminiService {
     debugPrint('GeminiService: generateMealPlan called.');
     if (_model == null) {
       debugPrint('GeminiService: Model not initialized.');
-      throw Exception('Gemini model failed to initialize. Check Firebase AI setup.');
+      throw Exception(
+        'Gemini model failed to initialize. Check Firebase AI setup.',
+      );
     }
 
-    final String promptText = _buildMealPlanPrompt(userInfo); // Use specific prompt builder
+    final String promptText = _buildMealPlanPrompt(
+      userInfo,
+    ); // Use specific prompt builder
     debugPrint('GeminiService: Meal Plan Prompt: $promptText');
 
     try {
@@ -114,7 +172,12 @@ class GeminiService {
         final candidate = response.candidates![0];
         if (candidate.content != null && candidate.content!.parts != null) {
           rawJsonString =
-              candidate.content!.parts!.map((part) => part.toString()).join();
+              candidate.content!.parts!.map((part) {
+                if (part is TextPart) {
+                  return part.text;
+                }
+                return ''; // Or handle other part types if necessary
+              }).join();
         }
       }
 
@@ -126,37 +189,78 @@ class GeminiService {
       }
 
       // Clean the rawJsonString if it's wrapped in markdown (e.g., ```json ... ```)
-      if (rawJsonString.startsWith('```json') && rawJsonString.endsWith('```')) {
-        rawJsonString = rawJsonString.substring(7, rawJsonString.length - 3).trim();
-      } else if (rawJsonString.startsWith('```') && rawJsonString.endsWith('```')) {
+      if (rawJsonString.startsWith('```json') &&
+          rawJsonString.endsWith('```')) {
+        rawJsonString =
+            rawJsonString.substring(7, rawJsonString.length - 3).trim();
+      } else if (rawJsonString.startsWith('```') &&
+          rawJsonString.endsWith('```')) {
         // Handle generic markdown code block
-        rawJsonString = rawJsonString.substring(3, rawJsonString.length - 3).trim();
+        rawJsonString =
+            rawJsonString.substring(3, rawJsonString.length - 3).trim();
       }
       debugPrint('GeminiService: Cleaned Meal Plan JSON: $rawJsonString');
 
       // Decode the JSON string. It might be a List or a Map.
       final dynamic decodedJson = jsonDecode(rawJsonString);
-      debugPrint('GeminiService: Decoded Meal Plan JSON Type: ${decodedJson.runtimeType}');
+      debugPrint(
+        'GeminiService: Decoded Meal Plan JSON Type: ${decodedJson.runtimeType}',
+      );
 
       Map<String, dynamic> mealPlanJson;
-      if (decodedJson is List) {
+      // If the decodedJson is a String, try to decode it again.
+      // This handles cases where Gemini might return a raw string that is actually JSON,
+      // but wasn't wrapped in markdown.
+      if (decodedJson is String) {
+        try {
+          final reDecodedJson = jsonDecode(decodedJson);
+          if (reDecodedJson is Map<String, dynamic>) {
+            mealPlanJson = reDecodedJson;
+            debugPrint('GeminiService: Re-decoded String to Map.');
+          } else if (reDecodedJson is List) {
+            if (reDecodedJson.isNotEmpty &&
+                reDecodedJson[0] is Map<String, dynamic>) {
+              mealPlanJson = reDecodedJson[0];
+              debugPrint(
+                'GeminiService: Re-decoded String to List, using first meal plan.',
+              );
+            } else {
+              debugPrint(
+                'GeminiService: Re-decoded String to empty or invalid list.',
+              );
+              throw Exception(
+                'Gemini returned an empty or invalid list after re-decoding.',
+              );
+            }
+          } else {
+            debugPrint(
+              'GeminiService: Re-decoded String to unexpected type: ${reDecodedJson.runtimeType}. Original string: $decodedJson',
+            );
+            throw Exception(
+              'Gemini returned a non-JSON string response. Please refine your prompt or check Gemini output.',
+            );
+          }
+        } catch (e) {
+          debugPrint(
+            'GeminiService: Failed to re-decode String. Original string: $decodedJson. Error: $e',
+          );
+          throw Exception(
+            'Gemini returned a non-JSON string response. Please refine your prompt or check Gemini output.',
+          );
+        }
+      } else if (decodedJson is List) {
         if (decodedJson.isNotEmpty && decodedJson[0] is Map<String, dynamic>) {
           mealPlanJson = decodedJson[0];
           debugPrint('GeminiService: Using first meal plan from list.');
         } else {
           debugPrint('GeminiService: Empty or invalid list of meal plans.');
-          throw Exception('Gemini returned an empty or invalid list of meal plans.');
+          throw Exception(
+            'Gemini returned an empty or invalid list of meal plans.',
+          );
         }
       } else if (decodedJson is Map<String, dynamic>) {
         mealPlanJson = decodedJson;
         debugPrint('GeminiService: Using single meal plan map.');
-      } else if (decodedJson is String) {
-        debugPrint(
-          'GeminiService: Gemini returned a String instead of JSON. Raw response: $decodedJson',
-        );
-        throw Exception(
-          'Gemini returned a non-JSON string response. Please refine your prompt or check Gemini output.',
-        );
       } else {
         debugPrint(
           'GeminiService: Unexpected meal plan JSON format. Type: ${decodedJson.runtimeType}',
@@ -174,12 +278,15 @@ class GeminiService {
       throw Exception('Gemini returned invalid JSON for meal plan. Error: $e');
     } catch (e) {
       debugPrint('GeminiService: Error during meal plan API call: $e');
-      throw Exception('An unexpected error occurred during Gemini API call: $e');
+      throw Exception(
+        'An unexpected error occurred during Gemini API call: $e',
+      );
     }
   }
 
   String _buildWorkoutPrompt(Map<String, dynamic> userInfo) {
-    String prompt = "Generate a workout plan in JSON format. The JSON should strictly adhere to the following structure:\n\n";
+    String prompt =
+        "Generate a workout plan in JSON format. The JSON should strictly adhere to the following structure:\n\n";
     prompt += """
 {
   "id": "string",
@@ -206,13 +313,15 @@ class GeminiService {
     userInfo.forEach((key, value) {
       prompt += "- $key: $value\n";
     });
-    prompt += "\nEnsure the 'id' for the workout and 'exercise_id' for each exercise are unique strings. If an exercise does not have a specific GIF URL, set 'exercise_gif_url' to null. If 'equipment_selected', 'one_rm_goal', or 'type' are not applicable, set them to null. For 'exercise_equipment', provide a list of strings, e.g., [\"Barbell\", \"Dumbbell\"]. If no specific weight is planned, set 'planned_weight' to \"Bodyweight\" or null. Provide a plan suitable for the user's goals and intensity.";
+    prompt +=
+        "\nEnsure the 'id' for the workout and 'exercise_id' for each exercise are unique strings. If an exercise does not have a specific GIF URL, set 'exercise_gif_url' to null. If 'equipment_selected', 'one_rm_goal', or 'type' are not applicable, set them to null. For 'exercise_equipment', provide a list of strings, e.g., [\"Barbell\", \"Dumbbell\"]. If no specific weight is planned, set 'planned_weight' to \"Bodyweight\" or null. Provide a plan suitable for the user's goals and intensity.";
 
     return prompt;
   }
 
   String _buildMealPlanPrompt(Map<String, dynamic> userInfo) {
-    String prompt = "Generate a meal plan in JSON format. The JSON should strictly adhere to the following structure:\n\n";
+    String prompt =
+        "Generate a meal plan in JSON format. The JSON should strictly adhere to the following structure:\n\n";
     prompt += """
 {
   "id": "string",
@@ -241,8 +350,10 @@ class GeminiService {
     });
 
     // Add linked workout plan details to the prompt if available
-    if (userInfo.containsKey('linked_workout_plan_id') && userInfo['linked_workout_plan_id'] != null) {
-      prompt += "\nThis meal plan should complement a workout plan with ID: ${userInfo['linked_workout_plan_id']}.";
+    if (userInfo.containsKey('linked_workout_plan_id') &&
+        userInfo['linked_workout_plan_id'] != null) {
+      prompt +=
+          "\nThis meal plan should complement a workout plan with ID: ${userInfo['linked_workout_plan_id']}.";
       // You might want to add more details from the workout plan if available in userInfo,
       // e.g., workout intensity, main goals from the workout.
       // For example:
@@ -254,7 +365,8 @@ class GeminiService {
       // }
     }
 
-    prompt += "\nEnsure the 'id' for the meal plan is a unique string. Provide a meal plan suitable for the user's goals, dietary preferences, and calorie needs. If 'linked_workout_plan_id' is provided, tailor the meal plan to complement the workout plan.";
+    prompt +=
+        "\nEnsure the 'id' for the meal plan is a unique string. Provide a meal plan suitable for the user's goals, dietary preferences, and calorie needs. If 'linked_workout_plan_id' is provided, tailor the meal plan to complement the workout plan.";
 
     return prompt;
   }
