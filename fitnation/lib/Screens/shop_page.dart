@@ -4,6 +4,7 @@ import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 import 'product_detail_page.dart';
+import 'cart_page.dart';
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -57,7 +58,7 @@ class _ShopPageState extends State<ShopPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Athlytiq Store',
@@ -66,12 +67,16 @@ class _ShopPageState extends State<ShopPage> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart, color: Colors.white),
             onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartPage()),
+              );
             },
           ),
         ],
@@ -80,19 +85,25 @@ class _ShopPageState extends State<ShopPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.surface,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
               child: TextField(
                 controller: _searchController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                decoration: InputDecoration(
                   hintText: 'Search products...',
-                  prefixIcon: Icon(Icons.search),
+                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
@@ -101,6 +112,7 @@ class _ShopPageState extends State<ShopPage> {
           Container(
             height: 60,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),

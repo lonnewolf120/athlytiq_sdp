@@ -4,6 +4,8 @@ class Product {
   final String description;
   final double price;
   final String imageUrl;
+  final List<String> images; 
+
   final String category;
   final double rating;
   final int reviewCount;
@@ -16,6 +18,8 @@ class Product {
     required this.description,
     required this.price,
     required this.imageUrl,
+    this.images = const [],
+    
     required this.category,
     required this.rating,
     required this.reviewCount,

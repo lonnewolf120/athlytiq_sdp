@@ -74,42 +74,48 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeNotifierProvider);
-    final authState = ref.watch(authProvider); // Watch auth state
+    // final authState = ref.watch(authProvider); // Watch auth state - commented out for bypass
 
     Widget homeWidget;
+    // Temporarily bypass auth - always show main app
+    homeWidget = Scaffold(
+      // Main app scaffold
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: navPages,
+      ),
+      bottomNavigationBar: AnimatedNotchBottomBar(
+        notchBottomBarController: _notchController,
+        color: const Color.fromARGB(250, 84, 83, 83),
+        showLabel: false,
+        notchColor: const Color.fromARGB(255, 255, 236, 236),
+        removeMargins: false,
+        bottomBarWidth: 500,
+        elevation: 5.0,
+        shadowElevation: 5.0,
+        durationInMilliSeconds: 300,
+        bottomBarItems:
+            NavItem.values.map((navitem) => navitem.option).toList(),
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          _pageController.jumpToPage(index);
+        },
+        kIconSize: 16.0,
+        kBottomRadius: 24.0,
+      ),
+    );
+    
+    /* Original auth logic - commented out for testing
     if (authState is Authenticated) {
       homeWidget = Scaffold(
-        // Main app scaffold
-        body: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          children: navPages,
-        ),
-        bottomNavigationBar: AnimatedNotchBottomBar(
-          notchBottomBarController: _notchController,
-          color: const Color.fromARGB(250, 84, 83, 83),
-          showLabel: false,
-          notchColor: const Color.fromARGB(255, 255, 236, 236),
-          removeMargins: false,
-          bottomBarWidth: 500,
-          elevation: 5.0,
-          shadowElevation: 5.0,
-          durationInMilliSeconds: 300,
-          bottomBarItems:
-              NavItem.values.map((navitem) => navitem.option).toList(),
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-            _pageController.jumpToPage(index);
-          },
-          kIconSize: 16.0,
-          kBottomRadius: 24.0,
-        ),
+        // Main app scaffold with navigation...
       );
     } else if (authState is Unauthenticated) {
       homeWidget = const LoginScreen();
@@ -119,6 +125,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+    */
 
     return MaterialApp(
       title: 'Athlytiq',
@@ -146,5 +153,4 @@ extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
-
 }
