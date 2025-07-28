@@ -38,7 +38,7 @@ class Product_card extends StatelessWidget {
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                color: Colors.white,
               ),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
@@ -47,7 +47,7 @@ class Product_card extends StatelessWidget {
                 ),
                 child: Image.network(
                   product.imageUrl,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
