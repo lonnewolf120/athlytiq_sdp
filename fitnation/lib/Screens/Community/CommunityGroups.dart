@@ -1,11 +1,10 @@
 import 'package:fitnation/Screens/Community/CreateCommunity.dart';
 import 'package:fitnation/Screens/Community/GroupDetailsScreen.dart';
+import 'package:fitnation/Screens/Community/ChallengesScreen.dart';
 import 'package:fitnation/widgets/community/GroupCard.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
-// import 'package:fitnation/widgets/ResponsiveCenter.dart'; // If you want to constrain the whole screen
 import 'package:flutter/material.dart';
 
-// Dummy data for groups
 final List<Group> _dummyGroups = [
   Group(
     id: 'g1', name: 'Strength Squad', description: 'For all things strength training, powerlifting, and bodybuilding. Share your PBs!',
@@ -24,11 +23,7 @@ final List<Group> _dummyGroups = [
   ),
 ];
 
-
 class CommunityGroupsScreen extends StatefulWidget {
-  // If this screen is part of CommunityHomeScreen's TabBarView, it doesn't need its own Scaffold/AppBar
-  // unless explicitly designed to. Here, I'll assume it's a standalone view for clarity or if navigated to directly.
-  // If it's under the TabBar, remove the Scaffold and AppBar.
   const CommunityGroupsScreen({super.key});
 
   @override
@@ -42,8 +37,10 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
   @override
   void initState() {
     super.initState();
-    // Assuming this screen might be navigated to and have its own sub-tabs
-    _groupTabController = TabController(length: 4, vsync: this);
+    _groupTabController = TabController(length: 3, vsync: this);
+    _groupTabController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -54,55 +51,54 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    // If this screen is a top-level tab in CommunityHomeScreen, it won't have its own AppBar.
-    // The header described (Logo, "Communities", + button) would be part of the CommunityHomeScreen's AppBar
-    // and would change title/actions based on the selected main tab.
-    // For this example, let's build it as if it could be a standalone view for clarity.
-    // If it's part of CommunityHomeScreen's TabBarView, this Scaffold and AppBar are redundant.
-
     return Scaffold(
-      // This AppBar would only be used if CommunityGroupsScreen is a standalone page.
-      // If it's a tab under CommunityHome, that screen's AppBar handles the title and + button.
-      // appBar: AppBar(
-      //   title: Text("Communities", style: textTheme.titleLarge),
-      //   actions: [
-      //     IconButton(
-      //       icon: const Icon(Icons.add_circle_outline),
-      //       onPressed: () {
-      //           Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateCommunityScreen()));
-      //       },
-      //     ),
-      //   ],
-      // ),
-      body: NestedScrollView( // Good for scrollable content with a fixed search bar/tabs
+      body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search communities...',
-                    prefixIcon: const Icon(Icons.search),
-                    // Using the theme's input decoration
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                      color: Colors.grey.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
-                  onChanged: (value) {
-                    // TODO: Implement search logic
-                  },
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search communities...',
+                      prefixIcon: Icon(
+                        Icons.search, 
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    onChanged: (value) {
+                      
+                    },
+                  ),
                 ),
               ),
             ),
-            SliverPersistentHeader( // For sticky tabs
+            SliverPersistentHeader(
               delegate: _SliverAppBarDelegate(
                 TabBar(
                   controller: _groupTabController,
-                  isScrollable: true, // If many tabs
+                  isScrollable: false,
                   tabs: const [
                     Tab(text: 'All'),
                     Tab(text: 'My Groups'),
-                    Tab(text: 'Popular'),
-                    Tab(text: 'Trending'),
+                    Tab(text: 'Challenges'),
                   ],
                 ),
               ),
@@ -113,29 +109,47 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
         body: TabBarView(
           controller: _groupTabController,
           children: [
-            _buildGroupList(_dummyGroups.where((g) => true).toList()), // All
-            _buildGroupList(_dummyGroups.where((g) => g.joined).toList()), // My Groups
-            _buildGroupList(_dummyGroups.orderByPopularity()), // Popular (needs sorting logic)
-            _buildGroupList(_dummyGroups.where((g) => g.trending).toList()), // Trending
+            _buildGroupList(_dummyGroups.where((g) => true).toList()),
+            _buildGroupList(_dummyGroups.where((g) => g.joined).toList()),
+            ChallengesScreen(),
           ],
         ),
       ),
-       floatingActionButton: FloatingActionButton( // This FAB is for "Create Community"
+      floatingActionButton: _groupTabController.index != 2 ? FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateCommunityScreen()));
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
-      ),
+      ) : null,
     );
   }
 
   Widget _buildGroupList(List<Group> groups) {
     if (groups.isEmpty) {
-      return const Center(child: Text("No groups found."));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.group_outlined,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No groups found.",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(16.0), // Section padding
+      padding: const EdgeInsets.all(16.0),
       itemCount: groups.length,
       itemBuilder: (context, index) {
         final group = groups[index];
@@ -153,7 +167,6 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
   }
 }
 
-// Helper for SliverPersistentHeader with TabBar
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverAppBarDelegate(this._tabBar);
 
@@ -168,7 +181,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor, // Match background
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: _tabBar,
     );
   }
@@ -179,10 +192,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-// Dummy extension for sorting
 extension GroupListSort on List<Group> {
   List<Group> orderByPopularity() {
-    // Dummy: sort by member count
     List<Group> sorted = List.from(this);
     sorted.sort((a, b) => b.memberCount.compareTo(a.memberCount));
     return sorted;
