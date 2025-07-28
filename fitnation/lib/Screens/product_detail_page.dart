@@ -114,7 +114,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         itemBuilder: (context, index) {
                           return Image.network(
                             productImages[index],
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
                             width: double.infinity,
                             height: double.infinity,
                             loadingBuilder: (context, child, loadingProgress) {
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               borderRadius: BorderRadius.circular(10),
                               child: Image.network(
                                 productImages[index],
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
                                     color: Colors.grey[200],
@@ -451,6 +451,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Row(
                 children: [
                   Container(
+                    height: 56,
                     decoration: BoxDecoration(
                       border: Border.all(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
