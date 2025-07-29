@@ -68,14 +68,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               );
             },
           ),
-          IconButton(
-            icon: Icon(Icons.share, color: Theme.of(context).colorScheme.onSurface),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(Icons.favorite_border, color: Theme.of(context).colorScheme.onSurface),
-            onPressed: () {},
-          ),
+          
         ],
       ),
       body: Column(

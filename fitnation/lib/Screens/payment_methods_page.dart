@@ -19,38 +19,37 @@ class PaymentMethodsPage extends StatefulWidget {
 }
 
 class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
-  String _selectedPaymentMethod = 'card';
-  bool _isCardSelected = true;
+  String _selectedPaymentMethod = 'bkash';
 
   final List<PaymentMethod> _paymentMethods = [
     PaymentMethod(
       id: 'bkash',
       name: 'bKash',
-      icon: '🔵',
+      icon: 'https://logos-world.net/wp-content/uploads/2022/01/bKash-Logo.png',
       color: Color(0xFFE2136E),
     ),
     PaymentMethod(
       id: 'nagad',
       name: 'Nagad',
-      icon: '🟠',
+      icon: 'https://logos-world.net/wp-content/uploads/2021/08/Nagad-Logo.png',
       color: Color(0xFFEC5242),
     ),
     PaymentMethod(
       id: 'rocket',
       name: 'Rocket',
-      icon: '🚀',
+      icon: 'https://logos-world.net/wp-content/uploads/2021/08/Rocket-Logo.png',
       color: Color(0xFF8A2BE2),
     ),
     PaymentMethod(
       id: 'upay',
       name: 'Upay',
-      icon: '💳',
+      icon: 'https://play-lh.googleusercontent.com/EMobDJKabP1eVoxKVsTH0nCcWx6am7fCb_UM0yKVOaV7uJ8UNdaQzi3P4aYVJyQ9D0g',
       color: Color(0xFF00A651),
     ),
     PaymentMethod(
       id: 'card',
       name: 'Credit/Debit Card',
-      icon: '💳',
+      icon: 'https://logos-world.net/wp-content/uploads/2020/04/Visa-Logo.png',
       color: Color(0xFF1976D2),
     ),
   ];
@@ -91,14 +90,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_isCardSelected) _buildCreditCardSection(),
-            
-            if (!_isCardSelected) _buildAddNewCardSection(),
-
-            const SizedBox(height: 24),
-
             Text(
-              'Select Other Payment Method',
+              'Select Payment Method',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -120,10 +113,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
 
   Widget _buildCreditCardSection() {
     return Container(
-      height: 200,
+      height: 220,
       margin: const EdgeInsets.only(bottom: 16),
-      child: Stack(
+      child: Row(
         children: [
+          // Add New Card Button
           Container(
             width: 120,
             height: 180,
@@ -135,31 +129,38 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.add,
-                  size: 32,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add New Card',
-                  style: TextStyle(
-                    fontSize: 12,
+            child: InkWell(
+              onTap: () {
+                // Add new card functionality
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add,
+                    size: 32,
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add New Card',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
           
-          Positioned(
-            right: 0,
+          const SizedBox(width: 16),
+          
+          // Full Credit Card
+          Expanded(
             child: Container(
-              width: 200,
               height: 180,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -168,6 +169,14 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    spreadRadius: 0,
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -196,11 +205,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                             Container(
                               width: 32,
                               height: 20,
-                              child: Row(
+                              child: Stack(
                                 children: [
                                   Container(
                                     width: 16,
-                                    height: 20,
+                                    height: 16,
                                     decoration: const BoxDecoration(
                                       color: Color(0xFFEB001B),
                                       shape: BoxShape.circle,
@@ -210,7 +219,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                                     left: 8,
                                     child: Container(
                                       width: 16,
-                                      height: 20,
+                                      height: 16,
                                       decoration: const BoxDecoration(
                                         color: Color(0xFFF79E1B),
                                         shape: BoxShape.circle,
@@ -241,14 +250,65 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     const Text(
-                      '**** **** 2003',
+                      '**** **** **** 2003',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 16,
                         letterSpacing: 2,
+                        fontFamily: 'monospace',
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'CARDHOLDER',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 8,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const Text(
+                              'JOHN DOE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'EXPIRES',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 8,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const Text(
+                              '12/28',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -318,10 +378,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
-            child: Text(
-              method.icon,
-              style: const TextStyle(fontSize: 20),
-            ),
+            child: _buildPaymentIcon(method),
           ),
         ),
         title: Text(
@@ -337,7 +394,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
           onChanged: (value) {
             setState(() {
               _selectedPaymentMethod = value!;
-              _isCardSelected = value == 'card';
             });
           },
           activeColor: Theme.of(context).primaryColor,
@@ -345,11 +401,74 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         onTap: () {
           setState(() {
             _selectedPaymentMethod = method.id;
-            _isCardSelected = method.id == 'card';
           });
         },
       ),
     );
+  }
+
+  Widget _buildPaymentIcon(PaymentMethod method) {
+    // Create text-based icons as immediate fallback
+    Widget fallbackIcon = Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: method.color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Center(
+        child: Text(
+          _getPaymentInitials(method.id),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Image.network(
+        method.icon,
+        width: 28,
+        height: 28,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          print('Failed to load image for ${method.name}: $error');
+          return fallbackIcon;
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(method.color),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _getPaymentInitials(String id) {
+    switch (id) {
+      case 'bkash':
+        return 'bK';
+      case 'nagad':
+        return 'NG';
+      case 'rocket':
+        return 'RC';
+      case 'upay':
+        return 'UP';
+      case 'card':
+        return 'CD';
+      default:
+        return 'PM';
+    }
   }
 
   Widget _buildOrderSummary(double subtotal, double deliveryFee, double discount, double total) {
