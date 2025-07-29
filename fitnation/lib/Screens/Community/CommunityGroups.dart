@@ -7,19 +7,43 @@ import 'package:flutter/material.dart';
 
 final List<Group> _dummyGroups = [
   Group(
-    id: 'g1', name: 'Strength Squad', description: 'For all things strength training, powerlifting, and bodybuilding. Share your PBs!',
-    memberCount: 1203, postCount: 450, image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGd5bXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
-    trending: true, categories: ['Weightlifting', 'Powerlifting'], joined: false,
+    id: 'g1',
+    name: 'Strength Squad',
+    description:
+        'For all things strength training, powerlifting, and bodybuilding. Share your PBs!',
+    memberCount: 1203,
+    postCount: 450,
+    image:
+        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGd5bXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
+    trending: true,
+    categories: ['Weightlifting', 'Powerlifting'],
+    joined: false,
   ),
   Group(
-    id: 'g2', name: 'Cardio Kings & Queens', description: 'Running, cycling, HIIT - if it gets your heart pumping, this is the place.',
-    memberCount: 875, postCount: 302, image: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cnVubmluZ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
-    trending: false, categories: ['Running', 'HIIT'], joined: true,
+    id: 'g2',
+    name: 'Cardio Kings & Queens',
+    description:
+        'Running, cycling, HIIT - if it gets your heart pumping, this is the place.',
+    memberCount: 875,
+    postCount: 302,
+    image:
+        'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cnVubmluZ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
+    trending: false,
+    categories: ['Running', 'HIIT'],
+    joined: true,
   ),
   Group(
-    id: 'g3', name: 'Yoga & Mindfulness', description: 'Find your zen. Share poses, meditation tips, and peaceful vibes.',
-    memberCount: 1500, postCount: 600, image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8eW9nYXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
-    trending: true, categories: ['Yoga', 'Meditation'], joined: false,
+    id: 'g3',
+    name: 'Yoga & Mindfulness',
+    description:
+        'Find your zen. Share poses, meditation tips, and peaceful vibes.',
+    memberCount: 1500,
+    postCount: 600,
+    image:
+        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8eW9nYXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
+    trending: true,
+    categories: ['Yoga', 'Meditation'],
+    joined: false,
   ),
 ];
 
@@ -55,12 +79,62 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
+            SliverAppBar(
+              title: const Text('Community & Challenges'),
+              pinned: true,
+              floating: true,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              bottom: TabBar(
+                controller: _groupTabController,
+                tabs: const [
+                  Tab(
+                    child: Text(
+                      'All',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'My Groups',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Challenges',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+                indicator: BoxDecoration(
+                  color: Colors.white.withAlpha(100),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                indicatorColor: Colors.white,
+                indicatorWeight: 2,
+                unselectedLabelColor: const Color.fromARGB(226, 70, 59, 59),
+              ),
+            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(
                       color: Colors.grey.withOpacity(0.3),
@@ -69,41 +143,46 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
                   ),
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'Search communities...',
+                      hintText: 'Search',
                       prefixIcon: Icon(
-                        Icons.search, 
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                        Icons.search,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       hintStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    onChanged: (value) {
-                      
-                    },
+                    onChanged: (value) {},
                   ),
                 ),
               ),
             ),
-            SliverPersistentHeader(
-              delegate: _SliverAppBarDelegate(
-                TabBar(
-                  controller: _groupTabController,
-                  isScrollable: false,
-                  tabs: const [
-                    Tab(text: 'All'),
-                    Tab(text: 'My Groups'),
-                    Tab(text: 'Challenges'),
-                  ],
-                ),
-              ),
-              pinned: true,
-            ),
+            // SliverPersistentHeader(
+            //   delegate: _SliverAppBarDelegate(
+            //     TabBar(
+            //       controller: _groupTabController,
+            //       isScrollable: false,
+            //       tabs: const [
+            //         Tab(text: 'All'),
+            //         Tab(text: 'My Groups'),
+            //         Tab(text: 'Challenges'),
+            //       ],
+            //     ),
+            //   ),
+            //   pinned: true,
+            // ),
           ];
         },
         body: TabBarView(
@@ -115,13 +194,21 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
           ],
         ),
       ),
-      floatingActionButton: _groupTabController.index != 2 ? FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateCommunityScreen()));
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ) : null,
+      floatingActionButton:
+          _groupTabController.index != 2
+              ? FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CreateCommunityScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 
@@ -158,7 +245,9 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => GroupDetailScreen(groupId: group.id)),
+              MaterialPageRoute(
+                builder: (_) => GroupDetailScreen(groupId: group.id),
+              ),
             );
           },
         );
@@ -179,7 +268,10 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: _tabBar,
