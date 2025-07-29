@@ -11,6 +11,7 @@ import 'package:fitnation/services/database_helper.dart';
 import 'package:fitnation/models/Exercise.dart' as exercise_db;
 import 'package:fitnation/providers/gemini_workout_provider.dart';
 import 'package:fitnation/Screens/Activities/WorkoutPlanGeneratorScreen.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({super.key});
@@ -119,18 +120,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Workout Planner',
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'Workout Planner',
+        showLogo: false,
+        showMenuButton: false, // Disable menu button
+        showProfileMenu: true, // Enable profile menu
         backgroundColor: colorScheme.surface,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
         foregroundColor: colorScheme.onSurface,
+        elevation: 0,
         actions: [
           FilledButton.tonalIcon(
             onPressed: () {

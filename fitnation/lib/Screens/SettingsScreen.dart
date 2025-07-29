@@ -1,5 +1,6 @@
 import 'package:fitnation/main.dart';
 import 'package:fitnation/providers/theme_provider.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +13,11 @@ class SettingsScreen extends ConsumerWidget {
         ref.watch(themeNotifierProvider.notifier).currentAppThemeMode;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: CustomAppBar(
+        title: 'Settings',
+        showProfileMenu: true,
+        showMenuButton: false,
+      ),
       body: ListView(
         children: [
           ListTile(

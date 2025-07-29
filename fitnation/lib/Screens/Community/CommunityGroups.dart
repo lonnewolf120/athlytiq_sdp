@@ -4,6 +4,7 @@ import 'package:fitnation/Screens/Community/ChallengesScreen.dart';
 import 'package:fitnation/widgets/community/GroupCard.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
 import 'package:flutter/material.dart';
+import 'package:fitnation/widgets/common/CustomSliverAppBar.dart';
 
 final List<Group> _dummyGroups = [
   Group(
@@ -79,11 +80,10 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
-            SliverAppBar(
-              title: const Text('Community & Challenges'),
-              pinned: true,
-              floating: true,
-              backgroundColor: Theme.of(context).colorScheme.primary,
+            CustomSliverAppBar(
+              title: 'Community & Challenges',
+              showMenuButton: false, // Disable menu button
+              showProfileMenu: true, // Enable profile menu
               bottom: TabBar(
                 controller: _groupTabController,
                 tabs: const [
@@ -253,34 +253,6 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
         );
       },
     );
-  }
-}
-
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
-
-  final TabBar _tabBar;
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: _tabBar,
-    );
-  }
-
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
   }
 }
 

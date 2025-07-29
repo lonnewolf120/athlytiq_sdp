@@ -5,6 +5,7 @@ import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 import 'product_detail_page.dart';
 import 'cart_page.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -39,12 +40,20 @@ class _ShopPageState extends State<ShopPage> {
 
   void _filterProducts() {
     setState(() {
-      _filteredProducts = _products.where((product) {
-        final matchesCategory = _selectedCategory == 'all' || product.category == _selectedCategory;
-        final matchesSearch = product.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-            product.description.toLowerCase().contains(_searchController.text.toLowerCase());
-        return matchesCategory && matchesSearch;
-      }).toList();
+      _filteredProducts =
+          _products.where((product) {
+            final matchesCategory =
+                _selectedCategory == 'all' ||
+                product.category == _selectedCategory;
+            final matchesSearch =
+                product.name.toLowerCase().contains(
+                  _searchController.text.toLowerCase(),
+                ) ||
+                product.description.toLowerCase().contains(
+                  _searchController.text.toLowerCase(),
+                );
+            return matchesCategory && matchesSearch;
+          }).toList();
     });
   }
 
@@ -59,15 +68,13 @@ class _ShopPageState extends State<ShopPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text(
-          'Athlytiq Store',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'Athlytiq Store',
+        showLogo: false,
+        showMenuButton: false, // Disable menu button
+        showProfileMenu: true, // Enable profile menu
         backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
@@ -97,13 +104,27 @@ class _ShopPageState extends State<ShopPage> {
               ),
               child: TextField(
                 controller: _searchController,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search products...',
-                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                  prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  hintStyle: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
@@ -153,51 +174,48 @@ class _ShopPageState extends State<ShopPage> {
 
           // Products Grid
           Expanded(
-            child: _filteredProducts.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No products found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
+            child:
+                _filteredProducts.isEmpty
+                    ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'No products found',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                    : GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.75,
+                          ),
+                      itemCount: _filteredProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = _filteredProducts[index];
+                        return Product_card(
+                          product: product,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        ProductDetailPage(product: product),
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      return Product_card(
-                        product: product,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProductDetailPage(product: product),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
           ),
         ],
       ),

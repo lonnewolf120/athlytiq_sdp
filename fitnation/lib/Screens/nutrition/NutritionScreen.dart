@@ -10,6 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:barcode_scan2/barcode_scan2.dart'; // Import barcode_scan2
 import 'package:fitnation/core/themes/colors.dart'; // Import AppColors
 import 'package:fitnation/core/themes/text_styles.dart'; // Import AppTextStyles
+import 'package:fitnation/providers/auth_provider.dart' as auth_provider;
+import 'package:fitnation/providers/theme_provider.dart';
+import 'package:fitnation/Screens/ProfileScreen.dart';
 
 class NutritionScreen extends ConsumerStatefulWidget {
   const NutritionScreen({super.key});
@@ -394,7 +397,18 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                       children: [
                         Row(
                           children: [
-                            Image.asset('assets/logos/logo.png', height: 30),
+                            // Builder(
+                            //   builder:
+                            //       (context) => IconButton(
+                            //         icon: const Icon(
+                            //           Icons.menu,
+                            //           color: Colors.white,
+                            //         ),
+                            //         onPressed:
+                            //             () => Scaffold.of(context).openDrawer(),
+                            //       ),
+                            // ),
+                            Image.asset('assets/logos/logo.png', height: 48),
                             const SizedBox(width: 8),
                             Text(
                               'Diet',
@@ -440,6 +454,153 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                                 );
                               },
                               tooltip: 'Nutrition Settings',
+                            ),
+                            // Profile PopupMenuButton
+                            PopupMenuButton<String>(
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                margin: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final currentUser = ref.watch(
+                                      auth_provider.currentUserProvider,
+                                    );
+                                    return ClipOval(
+                                      child:
+                                          currentUser?.avatarUrl != null
+                                              ? Image.network(
+                                                currentUser!.avatarUrl,
+                                                width: 36,
+                                                height: 36,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) => Icon(
+                                                      Icons.person,
+                                                      color: Colors.white,
+                                                      size: 20,
+                                                    ),
+                                              )
+                                              : Icon(
+                                                Icons.person,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              onSelected:
+                                  (String value) =>
+                                      _handleMenuSelection(context, value),
+                              itemBuilder:
+                                  (BuildContext context) => [
+                                    PopupMenuItem<String>(
+                                      value: 'profile',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text('Profile'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'reminders',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.notifications,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text('Reminders'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'notifications',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.notification_important,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text('Notifications'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'settings',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.settings,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text('Settings'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'themes',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.palette,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text('Themes'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(),
+                                    PopupMenuItem<String>(
+                                      value: 'logout',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.logout, color: Colors.red),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            'Logout',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                             ),
                           ],
                         ),
@@ -1773,5 +1934,115 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
         ),
       );
     }
+  }
+
+  // Method to handle profile menu selection
+  void _handleMenuSelection(BuildContext context, String value) {
+    switch (value) {
+      case 'profile':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        );
+        break;
+      case 'reminders':
+        // TODO: Navigate to reminders screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reminders feature coming soon!')),
+        );
+        break;
+      case 'notifications':
+        // TODO: Navigate to notifications screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notifications feature coming soon!')),
+        );
+        break;
+      case 'settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NutritionQuizScreen()),
+        ).then((_) => _updateTargetsBasedOnUserProfile());
+        break;
+      case 'themes':
+        _showThemeDialog(context);
+        break;
+      case 'logout':
+        _showLogoutDialog(context);
+        break;
+    }
+  }
+
+  // Method to show theme selection dialog
+  void _showThemeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose Theme'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.light_mode),
+                title: const Text('Light Theme'),
+                onTap: () {
+                  ref
+                      .read(themeNotifierProvider.notifier)
+                      .setThemeMode(AppThemeMode.light);
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.dark_mode),
+                title: const Text('Dark Theme'),
+                onTap: () {
+                  ref
+                      .read(themeNotifierProvider.notifier)
+                      .setThemeMode(AppThemeMode.dark);
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings_system_daydream),
+                title: const Text('System Theme'),
+                onTap: () {
+                  ref
+                      .read(themeNotifierProvider.notifier)
+                      .setThemeMode(AppThemeMode.system);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Method to show logout confirmation dialog
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ref.read(auth_provider.authProvider.notifier).logout();
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

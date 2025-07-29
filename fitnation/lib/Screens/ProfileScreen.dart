@@ -11,6 +11,7 @@ import 'package:fitnation/widgets/Activities/StatsCard.dart'; // Reuse StatsCard
 import 'package:fitnation/widgets/Activities/WeeklyActivityChart.dart'; // Import charts
 import 'package:fitnation/widgets/Activities/WorkoutDistributionChart.dart';
 import 'package:fitnation/widgets/Activities/IntensityTrend.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // For state management
 import 'package:cached_network_image/cached_network_image.dart'; // For avatar
@@ -23,7 +24,6 @@ import 'package:fitnation/providers/auth_provider.dart'
     as auth_provider; // Alias auth_provider
 import 'package:fitnation/providers/data_providers.dart'
     as data_providers; // Alias data_providers
-
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -72,7 +72,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Future<void> _pickAvatarImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -83,7 +86,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   void _saveProfileChanges() async {
     if (_profileFormKey.currentState!.validate()) {
-      _profileFormKey.currentState!.save(); // Save form fields (if using onSaved)
+      _profileFormKey.currentState!
+          .save(); // Save form fields (if using onSaved)
 
       // Check if any changes were actually made
       // TODO: Compare controller text with original user data
@@ -98,7 +102,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
       if (!nameChanged && !usernameChanged && !avatarChanged) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No changes to save.'), backgroundColor: Colors.orangeAccent),
+          const SnackBar(
+            content: Text('No changes to save.'),
+            backgroundColor: Colors.orangeAccent,
+          ),
         );
         return;
       }
@@ -155,12 +162,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     // Sort data points by date
-    final processedData = dailyMinutes.entries
+    final processedData =
+        dailyMinutes.entries
             .map(
               (entry) =>
                   WeeklyActivityData(date: entry.key, minutes: entry.value),
             )
-        .toList();
+            .toList();
     processedData.sort(
       (a, b) => a.date.compareTo(b.date),
     ); // Ensure chronological order
@@ -182,10 +190,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (totalWorkouts == 0) return [];
 
     return workoutCounts.entries
-        .map((entry) => WorkoutDistributionData(
-              type: entry.key,
-              percentage: (entry.value / totalWorkouts) * 100,
-            ))
+        .map(
+          (entry) => WorkoutDistributionData(
+            type: entry.key,
+            percentage: (entry.value / totalWorkouts) * 100,
+          ),
+        )
         .toList();
   }
 
@@ -198,19 +208,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     // Limit to a reasonable number of recent workouts for the trend line
     const int maxTrendPoints = 10; // Example: show last 10 workouts
-    final trendWorkouts = sortedWorkouts.length > maxTrendPoints
-        ? sortedWorkouts.sublist(sortedWorkouts.length - maxTrendPoints)
-        : sortedWorkouts;
-
+    final trendWorkouts =
+        sortedWorkouts.length > maxTrendPoints
+            ? sortedWorkouts.sublist(sortedWorkouts.length - maxTrendPoints)
+            : sortedWorkouts;
 
     return trendWorkouts
-        .map((workout) => IntensityTrendData(
-              date: workout.endTime,
-              intensity: workout.intensityScore,
-            ))
+        .map(
+          (workout) => IntensityTrendData(
+            date: workout.endTime,
+            intensity: workout.intensityScore,
+          ),
+        )
         .toList();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -241,7 +252,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
                     );
                   },
                   child: const Text('Login / Sign Up'),
@@ -258,16 +271,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       // final profileUpdateState = ref.watch(profileUpdateProvider);
       // final isSaving = profileUpdateState.isLoading;
       return Scaffold(
-        appBar: AppBar(
-          // leading: IconButton(
-          //   icon: const Icon(Icons.arrow_back),
-          //   onPressed: () => Navigator.pop(context),
-          //   tooltip: 'Back',
-          // ),
-          leading: Image.asset('assets/logos/logo.png', width: 50, height: 50),
-
-          title: Text('Profile', style: textTheme.titleLarge),
-          centerTitle: true,
+        appBar: CustomAppBar(
+          title: 'Profile',
+          showProfileMenu:
+              false, // Don't show profile menu on profile screen itself
+          showMenuButton: false,
           bottom: TabBar(
             controller: _tabController,
             tabs: const [Tab(text: 'Progress'), Tab(text: 'Settings')],
@@ -367,7 +375,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ],
           ),
           const SizedBox(height: 24), // Margin between sections
-
           // Weekly Activity Chart
           WeeklyActivityChart(data: weeklyActivityData),
           const SizedBox(height: 24),
@@ -388,22 +395,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  Widget _buildProfileTab(BuildContext context, User user, {required bool isSaving}) {
+  Widget _buildProfileTab(
+    BuildContext context,
+    User user, {
+    required bool isSaving,
+  }) {
     final textTheme = Theme.of(context).textTheme;
     final currentAppThemeMode =
         ref.watch(themeNotifierProvider.notifier).currentAppThemeMode;
     // debugPrint("User profile: ${user.profile!.profilePictureUrl ?? ''}");
     // debugPrint("${user.profile}");
-     // TODO: Handle loading/error states from providers
-     // final currentUserAsyncValue = ref.watch(currentUserProvider);
-     // if (currentUserAsyncValue.isLoading) {
-     //   return const Center(child: CircularProgressIndicator());
-     // }
-     // if (currentUserAsyncValue.hasError) {
-     //   return Center(child: Text('Error loading profile: ${currentUserAsyncValue.error}'));
-     // }
-     // final user = currentUserAsyncValue.value!; // Get the actual user data
-
+    // TODO: Handle loading/error states from providers
+    // final currentUserAsyncValue = ref.watch(currentUserProvider);
+    // if (currentUserAsyncValue.isLoading) {
+    //   return const Center(child: CircularProgressIndicator());
+    // }
+    // if (currentUserAsyncValue.hasError) {
+    //   return Center(child: Text('Error loading profile: ${currentUserAsyncValue.error}'));
+    // }
+    // final user = currentUserAsyncValue.value!; // Get the actual user data
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0), // Section padding
@@ -417,8 +427,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               CircleAvatar(
                 radius: 50,
                 backgroundColor: AppColors.mutedBackground,
-                backgroundImage: _newAvatarImage != null
-                    ? FileImage(_newAvatarImage!) as ImageProvider // Use new image if picked
+                backgroundImage:
+                    _newAvatarImage != null
+                        ? FileImage(_newAvatarImage!)
+                            as ImageProvider // Use new image if picked
                         : ((user.profile != null &&
                                 user.profile!.profilePictureUrl != null)
                             ? CachedNetworkImageProvider(
@@ -431,17 +443,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     _newAvatarImage == null &&
                             (user.profile == null ||
                                 user.profile!.profilePictureUrl == null)
-                    ? Icon(Icons.person_outline, size: 50, color: AppColors.mutedForeground) // Default icon
-                    : null,
+                        ? Icon(
+                          Icons.person_outline,
+                          size: 50,
+                          color: AppColors.mutedForeground,
+                        ) // Default icon
+                        : null,
               ),
               Positioned(
                 right: 0,
-                child: GestureDetector( // Make camera icon tappable
-                   onTap: isSaving ? null : _pickAvatarImage, // Disable if saving
+                child: GestureDetector(
+                  // Make camera icon tappable
+                  onTap:
+                      isSaving ? null : _pickAvatarImage, // Disable if saving
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: AppColors.primary, // Red background for camera icon
-                    child: Icon(Icons.camera_alt_outlined, size: 16, color: AppColors.primary),
+                    backgroundColor:
+                        AppColors.primary, // Red background for camera icon
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -456,9 +479,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               color: AppColors.foreground,
             ),
           ),
-          Text('@${user.username ?? 'nousername'}', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+          Text(
+            '@${user.username ?? 'nousername'}',
+            style: AppTextStyles.bodyMedium?.copyWith(
+              color: AppColors.mutedForeground,
+            ),
+          ),
           const SizedBox(height: 24), // Margin before form card
-
           // Account Information Card
           Card(
             margin: EdgeInsets.zero, // No margin needed for this card
@@ -469,34 +496,68 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Account Information', style: AppTextStyles.headlineSmall?.copyWith(color: AppColors.foreground)),
+                    Text(
+                      'Account Information',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Email Field (Read-only)
-                    Text('Email', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Email',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     TextFormField(
-                      initialValue: user.email ?? 'N/A', // Assuming email is in User model
+                      initialValue:
+                          user.email ??
+                          'N/A', // Assuming email is in User model
                       readOnly: true,
                       decoration: InputDecoration(
                         // Use theme's input decoration, but maybe no border for readOnly
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
                         filled: true,
-                        fillColor: AppColors.mutedBackground, // Slightly different background for read-only
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        fillColor:
+                            AppColors
+                                .mutedBackground, // Slightly different background for read-only
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                       ),
-                      style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.foreground),
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.foreground,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text('Email cannot be changed', style: AppTextStyles.labelSmall?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Email cannot be changed',
+                      style: AppTextStyles.labelSmall?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Full Name Field (Editable)
-                    Text('Full Name', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Full Name',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     TextFormField(
                       controller: _fullNameController,
-                      decoration: const InputDecoration(hintText: 'Enter your full name'),
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your full name',
+                      ),
                       keyboardType: TextInputType.name,
                       textCapitalization: TextCapitalization.words,
                       validator: (value) {
@@ -505,26 +566,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         }
                         return null;
                       },
-                       enabled: !isSaving, // Disable while saving
+                      enabled: !isSaving, // Disable while saving
                     ),
                     const SizedBox(height: 16),
 
                     // Username Field (Editable)
-                    Text('Username', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Username',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(hintText: 'Enter your username'),
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your username',
+                      ),
                       keyboardType: TextInputType.text,
                       // Add input formatter for username format if needed
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Username cannot be empty';
                         }
-                         // TODO: Add username format validation (e.g., no spaces, allowed characters)
+                        // TODO: Add username format validation (e.g., no spaces, allowed characters)
                         return null;
                       },
-                       enabled: !isSaving, // Disable while saving
+                      enabled: !isSaving, // Disable while saving
                     ),
                     const SizedBox(height: 24),
 
@@ -532,31 +600,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded( // Use Expanded to make buttons take equal space
-                          child: OutlinedButton( // Sign Out button
-                            onPressed: isSaving ? null : _signOut, // Disable if saving
+                        Expanded(
+                          // Use Expanded to make buttons take equal space
+                          child: OutlinedButton(
+                            // Sign Out button
+                            onPressed:
+                                isSaving ? null : _signOut, // Disable if saving
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary, // Red text/border
+                              foregroundColor:
+                                  AppColors.primary, // Red text/border
                               side: BorderSide(color: AppColors.primary),
-                              padding: const EdgeInsets.symmetric(vertical: 12), // Match ElevatedButton height
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ), // Match ElevatedButton height
                             ),
-                            child: Row( // Icon and text
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 Icon(Icons.logout_outlined, size: 20),
-                                 SizedBox(width: 8),
-                                 Text('Sign Out'),
-                               ],
-                             ),
+                            child: Row(
+                              // Icon and text
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.logout_outlined, size: 20),
+                                SizedBox(width: 8),
+                                Text('Sign Out'),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Expanded( // Use Expanded
-                          child: ElevatedButton( // Save Changes button
+                        Expanded(
+                          // Use Expanded
+                          child: ElevatedButton(
+                            // Save Changes button
                             onPressed: isSaving ? null : _saveProfileChanges,
-                            child: isSaving
-                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Text('Save Changes'),
+                            child:
+                                isSaving
+                                    ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : const Text('Save Changes'),
                           ),
                         ),
                       ],
@@ -576,11 +661,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Trainer Tools', style: AppTextStyles.headlineSmall?.copyWith(color: AppColors.foreground)),
+                    Text(
+                      'Trainer Tools',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/trainer_nutrition_plans');
+                        Navigator.pushNamed(
+                          context,
+                          '/trainer_nutrition_plans',
+                        );
                       },
                       icon: Icon(Icons.restaurant_menu),
                       label: Text('Manage Nutrition Plans'),
