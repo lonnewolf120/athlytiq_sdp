@@ -14,7 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fitnation/providers/data_providers.dart'; // Import the actual data providers
 
-
 // Removed _dummyCompletedWorkouts list as data will now come from SQLite
 
 class WorkoutHistoryScreen extends ConsumerStatefulWidget {
@@ -239,10 +238,13 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                       child: workoutTypesAsyncValue.when(
                         data: (types) {
                           // Ensure 'All Workouts' is always an option
-                          final allTypes = [
-                            'All Workouts',
-                            ...types.where((type) => type != 'All Workouts'),
-                          ].toSet().toList();
+                          final allTypes =
+                              [
+                                'All Workouts',
+                                ...types.where(
+                                  (type) => type != 'All Workouts',
+                                ),
+                              ].toSet().toList();
 
                           // If the currently selected type is no longer in the list, reset it
                           // This needs to be done carefully to avoid setState during build if not necessary
@@ -256,28 +258,31 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                           });
 
                           return DropdownButtonFormField<String>(
-                            value: allTypes.contains(_selectedWorkoutType)
-                                ? _selectedWorkoutType
-                                : 'All Workouts',
-                            items: allTypes.map<DropdownMenuItem<String>>(
-                              (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value.length > 10
-                                        ? value
-                                            .replaceAllMapped(
-                                              RegExp(r'.{1,10}'),
-                                              (match) => '${match.group(0)}\n',
-                                            )
-                                            .trim()
-                                        : value,
-                                    softWrap: true,
-                                    maxLines: null,
-                                  ),
-                                );
-                              },
-                            ).toList(),
+                            value:
+                                allTypes.contains(_selectedWorkoutType)
+                                    ? _selectedWorkoutType
+                                    : 'All Workouts',
+                            items:
+                                allTypes.map<DropdownMenuItem<String>>((
+                                  String value,
+                                ) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value.length > 10
+                                          ? value
+                                              .replaceAllMapped(
+                                                RegExp(r'.{1,10}'),
+                                                (match) =>
+                                                    '${match.group(0)}\n',
+                                              )
+                                              .trim()
+                                          : value,
+                                      softWrap: true,
+                                      maxLines: null,
+                                    ),
+                                  );
+                                }).toList(),
                             onChanged: (String? newValue) {
                               if (newValue != null) {
                                 setState(() {
@@ -308,12 +313,13 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedTimeRange,
-                        items: _timeRangeOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
+                        items:
+                            _timeRangeOptions.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
                         onChanged: (String? newValue) {
                           if (newValue != null) {
                             setState(() {
@@ -364,7 +370,9 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                       value: '${stats['avgIntensity'].toStringAsFixed(1)}/10',
                     ),
                     StatsCard(
-                      icon: Icons.star, // Using star icon as a placeholder for streak
+                      icon:
+                          Icons
+                              .star, // Using star icon as a placeholder for streak
                       label: 'Day Streak',
                       value: stats['dayStreak'].toString(),
                     ),
@@ -387,16 +395,20 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                 // Recent Workouts List
                 Text('Recent Workouts', style: textTheme.titleLarge),
                 const SizedBox(height: 16),
-                _buildFilteredWorkoutList(workouts), // Use helper for filtered list
+                _buildFilteredWorkoutList(
+                  workouts,
+                ), // Use helper for filtered list
               ],
             ),
           );
         },
         loading: () {
           print(
-              "WorkoutHistoryScreen: completedWorkoutsProvider is in loading state.");
+            "WorkoutHistoryScreen: completedWorkoutsProvider is in loading state.",
+          );
           return const Center(
-              child: CircularProgressIndicator(key: ValueKey("history_loading")));
+            child: CircularProgressIndicator(key: ValueKey("history_loading")),
+          );
         },
         error: (e, st) {
           print("WorkoutHistoryScreen: Error in completedWorkoutsProvider: $e");
@@ -407,15 +419,17 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
               children: [
                 Text(
                   'Error loading workouts: ${e.toString()}',
-                  style:
-                      AppTextStyles.bodyMedium?.copyWith(color: Colors.redAccent),
+                  style: AppTextStyles.bodyMedium?.copyWith(
+                    color: Colors.redAccent,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
                 Text(
                   "The backend endpoint for workout history might be returning an error or is not reachable. Please check server logs.",
-                  style: textTheme.bodySmall
-                      ?.copyWith(color: Colors.grey), // Used textTheme
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.grey,
+                  ), // Used textTheme
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -433,7 +447,8 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
 
     if (workouts.isEmpty) {
       return Center(
-        child: Padding( // Added padding for better spacing
+        child: Padding(
+          // Added padding for better spacing
           padding: const EdgeInsets.symmetric(vertical: 32.0),
           child: Text(
             'No completed workouts found for the selected filters.',

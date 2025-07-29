@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../themes/text_styles.dart';
+import 'package:fitnation/core/themes/text_styles.dart';
 
 class ContactsTab extends StatelessWidget {
   const ContactsTab({super.key});

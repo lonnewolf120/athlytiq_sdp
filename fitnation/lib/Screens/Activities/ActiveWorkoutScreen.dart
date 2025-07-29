@@ -44,9 +44,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     _initializeWorkoutStateAndTimer();
 
     // Listen to startTime changes from the provider to update the timer and duration
-    ref.listenManual(activeWorkoutProvider.select((state) => state.startTime), (previousStartTime, newStartTime) {
-      _updateTimerAndDuration(newStartTime);
-    }, fireImmediately: true); // fireImmediately to catch initial state if already set
+    ref.listenManual(
+      activeWorkoutProvider.select((state) => state.startTime),
+      (previousStartTime, newStartTime) {
+        _updateTimerAndDuration(newStartTime);
+      },
+      fireImmediately: true,
+    ); // fireImmediately to catch initial state if already set
   }
 
   void _initializeWorkoutStateAndTimer() {
@@ -57,21 +61,30 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
       // If the provider's startTime is already set (e.g. screen rebuild but workout ongoing)
       // or if widget.initialState has a startTime (resuming a workout perhaps)
-      DateTime? effectiveStartTime = currentProviderState.startTime ?? widget.initialState.startTime;
+      DateTime? effectiveStartTime =
+          currentProviderState.startTime ?? widget.initialState.startTime;
 
       if (effectiveStartTime != null) {
         // Workout is already started or is being resumed with a start time
-        debugPrint("ActiveWorkoutScreen initState: Workout already has startTime: $effectiveStartTime. Initializing timer.");
-        if (currentProviderState.startTime == null) { // If provider isn't set, load initial state
-            notifier.loadState(widget.initialState); // Assumes loadState method in provider
+        debugPrint(
+          "ActiveWorkoutScreen initState: Workout already has startTime: $effectiveStartTime. Initializing timer.",
+        );
+        if (currentProviderState.startTime == null) {
+          // If provider isn't set, load initial state
+          notifier.loadState(
+            widget.initialState,
+          ); // Assumes loadState method in provider
         }
         _updateTimerAndDuration(effectiveStartTime);
       } else {
         // New workout, or initial state has no start time.
         // Initialize provider with name/exercises, but don't start timer yet.
         // Timer will start when provider's startTime is set (e.g., by startWorkout call).
-        debugPrint("ActiveWorkoutScreen initState: No startTime. Initializing provider with name/exercises from widget.initialState.");
-        notifier.initializeNewWorkout( // Assumes initializeNewWorkout method in provider
+        debugPrint(
+          "ActiveWorkoutScreen initState: No startTime. Initializing provider with name/exercises from widget.initialState.",
+        );
+        notifier.initializeNewWorkout(
+          // Assumes initializeNewWorkout method in provider
           name: widget.initialState.workoutName,
           initialExercises: widget.initialState.exercises,
         );
@@ -79,8 +92,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         // should happen explicitly, e.g., when user presses a "Start" button or automatically if desired.
         // For now, let's assume starting immediately if it's a fresh entry to this screen without a startTime.
         // This matches the previous logic of calling startWorkout if _currentState.startTime was null.
-        debugPrint("ActiveWorkoutScreen initState: Calling provider.startWorkout() as no effective startTime was found.");
-        notifier.startWorkout(name: widget.initialState.workoutName); // This will trigger the listener
+        debugPrint(
+          "ActiveWorkoutScreen initState: Calling provider.startWorkout() as no effective startTime was found.",
+        );
+        notifier.startWorkout(
+          name: widget.initialState.workoutName,
+        ); // This will trigger the listener
       }
     });
   }
@@ -136,24 +153,32 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   // _onExerciseUpdated is removed as ActiveWorkoutExerciseItem will update the provider directly.
   // void _onExerciseUpdated(ActiveWorkoutExercise updatedExercise) { ... }
 
-
   void _addSetToExercise(int exerciseIndex) {
     final currentWorkoutState = ref.read(activeWorkoutProvider);
-    if (exerciseIndex >= 0 && exerciseIndex < currentWorkoutState.exercises.length) {
+    if (exerciseIndex >= 0 &&
+        exerciseIndex < currentWorkoutState.exercises.length) {
       final activeExerciseId = currentWorkoutState.exercises[exerciseIndex].id;
-      ref.read(activeWorkoutProvider.notifier).addSetToExercise(activeExerciseId);
+      ref
+          .read(activeWorkoutProvider.notifier)
+          .addSetToExercise(activeExerciseId);
     } else {
-      debugPrint("Error: Invalid exerciseIndex in _addSetToExercise: $exerciseIndex");
+      debugPrint(
+        "Error: Invalid exerciseIndex in _addSetToExercise: $exerciseIndex",
+      );
     }
   }
 
-  void _removeExercise(int exerciseIndex) { // Corrected signature to int
+  void _removeExercise(int exerciseIndex) {
+    // Corrected signature to int
     final currentWorkoutState = ref.read(activeWorkoutProvider);
-     if (exerciseIndex >= 0 && exerciseIndex < currentWorkoutState.exercises.length) {
+    if (exerciseIndex >= 0 &&
+        exerciseIndex < currentWorkoutState.exercises.length) {
       final activeExerciseId = currentWorkoutState.exercises[exerciseIndex].id;
       ref.read(activeWorkoutProvider.notifier).removeExercise(activeExerciseId);
     } else {
-      debugPrint("Error: Invalid exerciseIndex in _removeExercise: $exerciseIndex");
+      debugPrint(
+        "Error: Invalid exerciseIndex in _removeExercise: $exerciseIndex",
+      );
     }
   }
 
@@ -185,17 +210,17 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   void _restartWorkout() {
     // setState(() { // No longer managing local _currentState for exercises
     //   _currentState = _currentState.copyWith(
-    //     startTime: DateTime.now(), 
+    //     startTime: DateTime.now(),
     //     clearEndTime: true,
     //     exercises: _currentState.exercises.map((activeEx) {
     //       return ActiveWorkoutExercise(
     //         baseExercise: activeEx.baseExercise,
-    //         sets: [ActiveWorkoutSet()], 
+    //         sets: [ActiveWorkoutSet()],
     //       );
     //     }).toList(),
     //   );
-    //   _elapsedDuration = Duration.zero; 
-    //   _timer?.cancel(); 
+    //   _elapsedDuration = Duration.zero;
+    //   _timer?.cancel();
     //   if (_currentState.startTime != null) {
     //     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
     //       if (mounted && _currentState.startTime != null) {
@@ -207,7 +232,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     //   }
     // });
     final currentWorkoutName = ref.read(activeWorkoutProvider).workoutName;
-    ref.read(activeWorkoutProvider.notifier).restartWorkout(name: currentWorkoutName); 
+    ref
+        .read(activeWorkoutProvider.notifier)
+        .restartWorkout(name: currentWorkoutName);
     // Timer and _elapsedDuration will be handled by listening to provider's startTime changes in initState/ref.listen
   }
 
@@ -221,8 +248,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.black.withOpacity(0.7), // Transparent background
       transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (BuildContext buildContext, Animation animation,
-          Animation secondaryAnimation) {
+      pageBuilder: (
+        BuildContext buildContext,
+        Animation animation,
+        Animation secondaryAnimation,
+      ) {
         return WorkoutPauseModal(
           onResume: () {
             Navigator.of(context).pop(); // Dismiss modal
@@ -247,21 +277,31 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 
   void _finishWorkout() async {
-    final providerState = ref.read(activeWorkoutProvider); // providerState is ActiveWorkoutState
+    final providerState = ref.read(
+      activeWorkoutProvider,
+    ); // providerState is ActiveWorkoutState
     // debugPrint("_finishWorkout: Local _currentState.startTime = ${_currentState.startTime}"); // _currentState removed
-    debugPrint("_finishWorkout: Provider providerState.startTime = ${providerState.startTime}");
-    debugPrint("_finishWorkout: Provider providerState.isFinished = ${providerState.isFinished}");
-    debugPrint("_finishWorkout: Provider providerState.intensityScore = ${providerState.intensityScore}");
+    debugPrint(
+      "_finishWorkout: Provider providerState.startTime = ${providerState.startTime}",
+    );
+    debugPrint(
+      "_finishWorkout: Provider providerState.isFinished = ${providerState.isFinished}",
+    );
+    debugPrint(
+      "_finishWorkout: Provider providerState.intensityScore = ${providerState.intensityScore}",
+    );
 
     if (providerState.startTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Workout not started (provider state is null).')),
+        const SnackBar(
+          content: Text('Workout not started (provider state is null).'),
+        ),
       );
       return;
     }
     // Call the provider's finishWorkout to set endTime and intensityScore in the state
     // TODO: Get actual intensity score from user input instead of hardcoding
-    const intensityScore = 7.5; 
+    const intensityScore = 7.5;
     ref.read(activeWorkoutProvider.notifier).finishWorkout(intensityScore);
 
     // Now that the state in the provider is updated (endTime, intensityScore are set),
@@ -273,15 +313,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     if (authState is Authenticated) {
       userId = authState.user.id;
     } else {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated.')));
       return;
     }
-    
 
     // The conversion to CompletedWorkoutExercise and CompletedWorkoutSet,
-    // and the check for empty exercises, are now handled within 
+    // and the check for empty exercises, are now handled within
     // activeWorkoutProvider.generateCompletedWorkoutData() and activeWorkoutProvider.saveCompletedWorkout().
     // Thus, the local creation of `completedExercises` and its associated checks are removed from here.
 
@@ -289,14 +328,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       // debugPrint('Attempting to save workout: ${completedWorkout.workoutName}'); // This object is no longer created here
       final apiService = ref.read(apiServiceProvider);
       final dbHelper = DatabaseHelper();
-      
-      final success = await ref.read(activeWorkoutProvider.notifier).saveCompletedWorkout(
-        userId, 
-        apiService,
-        dbHelper,
-      );
 
-      if (mounted) { // Check if the widget is still in the tree
+      final success = await ref
+          .read(activeWorkoutProvider.notifier)
+          .saveCompletedWorkout(userId, apiService, dbHelper);
+
+      if (mounted) {
+        // Check if the widget is still in the tree
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Workout saved successfully!')),
@@ -304,15 +342,17 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           Navigator.pop(context); // Go back to previous screen
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save workout. Please try again.')),
+            const SnackBar(
+              content: Text('Failed to save workout. Please try again.'),
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
       }
       debugPrint('Error in _finishWorkout: $e');
     }
@@ -321,7 +361,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final currentWorkoutState = ref.watch(activeWorkoutProvider); // Watch the provider state
+    final currentWorkoutState = ref.watch(
+      activeWorkoutProvider,
+    ); // Watch the provider state
 
     return Scaffold(
       appBar: AppBar(
@@ -334,7 +376,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              currentWorkoutState.workoutName.toUpperCase(), // Use provider state
+              currentWorkoutState.workoutName
+                  .toUpperCase(), // Use provider state
               style: textTheme.titleLarge?.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 2),
@@ -368,7 +411,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               child: Text(
                 'FINISH',
@@ -389,15 +435,18 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           // _onExerciseUpdated will be removed. ActiveWorkoutExerciseItem will call provider directly.
           // onAddSet and onRemoveExercise will now use exercise.id
           return ActiveWorkoutExerciseItem(
-            exercise: exercise, // This is ActiveWorkoutExercise from the provider
-            exerciseIndex: index, // Keep for now, might be used by the item for UI
+            exercise:
+                exercise, // This is ActiveWorkoutExercise from the provider
+            exerciseIndex:
+                index, // Keep for now, might be used by the item for UI
             // onExerciseUpdated has been removed from ActiveWorkoutExerciseItem's constructor
             // ActiveWorkoutExerciseItem expects VoidCallback for onAddSet.
             // _addSetToExercise takes an int (the index).
-            onAddSet: () => _addSetToExercise(index), 
+            onAddSet: () => _addSetToExercise(index),
             // ActiveWorkoutExerciseItem expects ValueChanged<int> for onRemoveExercise.
             // _removeExercise takes an int (the index).
-            onRemoveExercise: _removeExercise, // Pass the method reference directly
+            onRemoveExercise:
+                _removeExercise, // Pass the method reference directly
           );
         },
       ),
@@ -455,28 +504,17 @@ class WorkoutPauseModal extends StatelessWidget {
                 textTheme,
               ),
               const SizedBox(height: 20),
-              _buildModalButton(
-                context,
-                'RESTART',
-                null,
-                onRestart,
-                textTheme,
-              ),
+              _buildModalButton(context, 'RESTART', null, onRestart, textTheme),
               const SizedBox(height: 20),
-              _buildModalButton(
-                context,
-                'QUIT',
-                null,
-                onQuit,
-                textTheme,
-              ),
+              _buildModalButton(context, 'QUIT', null, onQuit, textTheme),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: onResume,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.darkPrimaryText, // White background
+                    backgroundColor:
+                        AppColors.darkPrimaryText, // White background
                     foregroundColor: AppColors.darkBackground, // Dark text
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
@@ -639,7 +677,8 @@ class _ExerciseSelectionModalState
                         // Use CircleAvatar for GIF preview
                         backgroundColor: AppColors.mutedBackground,
                         backgroundImage:
-                            exercise.gifUrl != null && exercise.gifUrl!.isNotEmpty
+                            exercise.gifUrl != null &&
+                                    exercise.gifUrl!.isNotEmpty
                                 ? CachedNetworkImageProvider(exercise.gifUrl!)
                                 : null,
                         child:
