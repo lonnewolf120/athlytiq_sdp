@@ -40,6 +40,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // Controllers for editable fields
   late TextEditingController _fullNameController;
   late TextEditingController _usernameController;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
+  late TextEditingController _healthConditionsController;
+  late TextEditingController _injuriesController;
+
+  // Dropdown values
+  String? _selectedGender;
+  String? _selectedActivityLevel;
+  String? _selectedFitnessGoal;
+  List<String> _selectedDietaryPreferences = [];
 
   File? _newAvatarImage; // To hold a newly picked avatar image
 
@@ -52,11 +62,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // These should be populated with actual user data when fetched
     _fullNameController = TextEditingController();
     _usernameController = TextEditingController();
+    _heightController = TextEditingController();
+    _weightController = TextEditingController();
+    _healthConditionsController = TextEditingController();
+    _injuriesController = TextEditingController();
 
     // Fetch initial user data and populate controllers
     ref.read(data_providers.currentUserProvider).whenData((user) {
       _fullNameController.text = user.profile?.displayName ?? user.username;
       _usernameController.text = user.username;
+      _heightController.text = user.profile?.height_cm?.toString() ?? '';
+      _weightController.text = user.profile?.weight_kg?.toString() ?? '';
+      _healthConditionsController.text = ''; // TODO: Add to Profile model
+      _injuriesController.text = ''; // TODO: Add to Profile model
+      _selectedGender = user.profile?.gender;
+      _selectedActivityLevel = user.profile?.activity_level;
+      _selectedFitnessGoal = user.profile?.fitnessGoals;
+      _selectedDietaryPreferences = []; // TODO: Add to Profile model
     });
   }
 
@@ -65,6 +87,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     _tabController.dispose();
     _fullNameController.dispose();
     _usernameController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _healthConditionsController.dispose();
+    _injuriesController.dispose();
     super.dispose();
   }
 
@@ -90,17 +116,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           .save(); // Save form fields (if using onSaved)
 
       // Check if any changes were actually made
-      // TODO: Compare controller text with original user data
+      final currentUser = ref.read(auth_provider.currentUserProvider);
       final bool nameChanged =
           _fullNameController.text.trim() !=
-          (ref.read(auth_provider.currentUserProvider)?.profile?.displayName ??
-              ref.read(auth_provider.currentUserProvider)?.username);
+          (currentUser?.profile?.displayName ?? currentUser?.username);
       final bool usernameChanged =
-          _usernameController.text.trim() !=
-          (ref.read(auth_provider.currentUserProvider)?.username ?? '');
+          _usernameController.text.trim() != (currentUser?.username ?? '');
+      final bool heightChanged =
+          _heightController.text.trim() !=
+          (currentUser?.profile?.height_cm?.toString() ?? '');
+      final bool weightChanged =
+          _weightController.text.trim() !=
+          (currentUser?.profile?.weight_kg?.toString() ?? '');
+      final bool genderChanged =
+          _selectedGender != currentUser?.profile?.gender;
+      final bool activityLevelChanged =
+          _selectedActivityLevel != currentUser?.profile?.activity_level;
+      final bool fitnessGoalChanged =
+          _selectedFitnessGoal != currentUser?.profile?.fitnessGoals;
       final bool avatarChanged = _newAvatarImage != null;
+      final bool healthConditionsChanged =
+          _healthConditionsController.text.trim().isNotEmpty;
+      final bool injuriesChanged = _injuriesController.text.trim().isNotEmpty;
+      final bool dietaryPreferencesChanged =
+          _selectedDietaryPreferences.isNotEmpty;
 
-      if (!nameChanged && !usernameChanged && !avatarChanged) {
+      if (!nameChanged &&
+          !usernameChanged &&
+          !heightChanged &&
+          !weightChanged &&
+          !genderChanged &&
+          !activityLevelChanged &&
+          !fitnessGoalChanged &&
+          !avatarChanged &&
+          !healthConditionsChanged &&
+          !injuriesChanged &&
+          !dietaryPreferencesChanged) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No changes to save.'),
@@ -110,15 +161,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         return;
       }
 
+      // Create profile update data
+      final profileUpdateData = {
+        if (nameChanged) 'display_name': _fullNameController.text.trim(),
+        if (usernameChanged) 'username': _usernameController.text.trim(),
+        if (heightChanged && _heightController.text.trim().isNotEmpty)
+          'height_cm': double.tryParse(_heightController.text.trim()),
+        if (weightChanged && _weightController.text.trim().isNotEmpty)
+          'weight_kg': double.tryParse(_weightController.text.trim()),
+        if (genderChanged) 'gender': _selectedGender,
+        if (activityLevelChanged) 'activity_level': _selectedActivityLevel,
+        if (fitnessGoalChanged) 'fitness_goals': _selectedFitnessGoal,
+        if (healthConditionsChanged)
+          'health_conditions': _healthConditionsController.text.trim(),
+        if (injuriesChanged) 'injuries': _injuriesController.text.trim(),
+        if (dietaryPreferencesChanged)
+          'dietary_preferences': _selectedDietaryPreferences,
+      };
+
       // TODO: Implement actual profile update logic using a provider
-      // For now, just print a message
+      // For now, just show what would be saved
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile update logic not yet implemented.'),
+        SnackBar(
+          content: Text(
+            'Profile would be updated with: ${profileUpdateData.keys.join(', ')}',
+          ),
           backgroundColor: Colors.blueAccent,
         ),
       );
-      print("Save Changes tapped"); // Placeholder
+      print("Profile update data: $profileUpdateData");
     }
   }
 
@@ -593,6 +664,305 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         return null;
                       },
                       enabled: !isSaving, // Disable while saving
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Physical Information Section
+                    Text(
+                      'Physical Information',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Height and Weight Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Height (cm)',
+                                style: AppTextStyles.bodyMedium?.copyWith(
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _heightController,
+                                decoration: const InputDecoration(
+                                  hintText: '170',
+                                  suffixText: 'cm',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value != null && value.isNotEmpty) {
+                                    final height = double.tryParse(value);
+                                    if (height == null ||
+                                        height <= 0 ||
+                                        height > 300) {
+                                      return 'Enter valid height';
+                                    }
+                                  }
+                                  return null;
+                                },
+                                enabled: !isSaving,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Weight (kg)',
+                                style: AppTextStyles.bodyMedium?.copyWith(
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _weightController,
+                                decoration: const InputDecoration(
+                                  hintText: '70',
+                                  suffixText: 'kg',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value != null && value.isNotEmpty) {
+                                    final weight = double.tryParse(value);
+                                    if (weight == null ||
+                                        weight <= 0 ||
+                                        weight > 500) {
+                                      return 'Enter valid weight';
+                                    }
+                                  }
+                                  return null;
+                                },
+                                enabled: !isSaving,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Gender Dropdown
+                    Text(
+                      'Gender',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      value: _selectedGender,
+                      decoration: const InputDecoration(
+                        hintText: 'Select your gender',
+                      ),
+                      items:
+                          ['Male', 'Female', 'Other', 'Prefer not to say']
+                              .map(
+                                (gender) => DropdownMenuItem(
+                                  value: gender,
+                                  child: Text(gender),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          isSaving
+                              ? null
+                              : (value) {
+                                setState(() {
+                                  _selectedGender = value;
+                                });
+                              },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Activity Level Dropdown
+                    Text(
+                      'Activity Level',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      value: _selectedActivityLevel,
+                      decoration: const InputDecoration(
+                        hintText: 'Select your activity level',
+                      ),
+                      items:
+                          [
+                                'Sedentary',
+                                'Lightly active',
+                                'Moderately active',
+                                'Very active',
+                                'Extremely active',
+                              ]
+                              .map(
+                                (level) => DropdownMenuItem(
+                                  value: level,
+                                  child: Text(
+                                    level,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          isSaving
+                              ? null
+                              : (value) {
+                                setState(() {
+                                  _selectedActivityLevel = value;
+                                });
+                              },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Fitness Goal Dropdown
+                    Text(
+                      'Fitness Goal',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      value: _selectedFitnessGoal,
+                      decoration: const InputDecoration(
+                        hintText: 'Select your fitness goal',
+                      ),
+                      items:
+                          [
+                                'Lose Weight',
+                                'Maintain Weight',
+                                'Gain Weight',
+                                'Build Muscle',
+                                'Improve Endurance',
+                                'General Fitness',
+                              ]
+                              .map(
+                                (goal) => DropdownMenuItem(
+                                  value: goal,
+                                  child: Text(goal),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          isSaving
+                              ? null
+                              : (value) {
+                                setState(() {
+                                  _selectedFitnessGoal = value;
+                                });
+                              },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Health Information Section
+                    Text(
+                      'Health Information',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Dietary Preferences
+                    Text(
+                      'Dietary Preferences',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          [
+                            'Vegetarian',
+                            'Vegan',
+                            'Keto',
+                            'Paleo',
+                            'Mediterranean',
+                            'Low Carb',
+                            'High Protein',
+                            'Gluten Free',
+                            'Dairy Free',
+                            'Halal',
+                            'Kosher',
+                          ].map((preference) {
+                            final isSelected = _selectedDietaryPreferences
+                                .contains(preference);
+                            return FilterChip(
+                              label: Text(preference),
+                              selected: isSelected,
+                              onSelected:
+                                  isSaving
+                                      ? null
+                                      : (selected) {
+                                        setState(() {
+                                          if (selected) {
+                                            _selectedDietaryPreferences.add(
+                                              preference,
+                                            );
+                                          } else {
+                                            _selectedDietaryPreferences.remove(
+                                              preference,
+                                            );
+                                          }
+                                        });
+                                      },
+                              selectedColor: AppColors.primary.withOpacity(0.2),
+                              checkmarkColor: AppColors.primary,
+                            );
+                          }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Health Conditions
+                    Text(
+                      'Health Conditions',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _healthConditionsController,
+                      decoration: const InputDecoration(
+                        hintText:
+                            'e.g., diabetes, hypertension, allergies (optional)',
+                      ),
+                      maxLines: 3,
+                      enabled: !isSaving,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Injuries
+                    Text(
+                      'Injuries or Physical Limitations',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _injuriesController,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g., knee injury, back problems (optional)',
+                      ),
+                      maxLines: 3,
+                      enabled: !isSaving,
                     ),
                     const SizedBox(height: 24),
 
