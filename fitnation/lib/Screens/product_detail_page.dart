@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import 'cart_page.dart';
+import 'product_reviews_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -279,47 +280,63 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                         const SizedBox(height: 16),
 
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.grey.withOpacity(0.2),
-                              width: 1,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductReviewsPage(product: widget.product),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.grey.withOpacity(0.2),
+                                width: 1,
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Row(
-                                children: List.generate(5, (index) {
-                                  return Icon(
-                                    index < widget.product.rating.floor()
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: Colors.amber,
-                                    size: 20,
-                                  );
-                                }),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                '${widget.product.rating}',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                            child: Row(
+                              children: [
+                                Row(
+                                  children: List.generate(5, (index) {
+                                    return Icon(
+                                      index < widget.product.rating.floor()
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 20,
+                                    );
+                                  }),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '(${widget.product.reviewCount} reviews)',
-                                style: TextStyle(
+                                const SizedBox(width: 12),
+                                Text(
+                                  '${widget.product.rating}',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '(${widget.product.reviewCount} reviews)',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                  fontSize: 14,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
 

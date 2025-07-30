@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ChallengeDetailScreen.dart';
 
 class Challenge {
   final String id;
@@ -151,7 +152,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
       ),
       body: Column(
         children: [
-          // Activity Type Filters (Strava-style)
           Container(
             height: 60,
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -216,7 +216,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
           const SizedBox(height: 16),
 
-          // Recommended Section Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             alignment: Alignment.centerLeft,
@@ -262,7 +261,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
           const SizedBox(height: 16),
 
-          // Challenges List
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -296,7 +294,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           children: [
-            // Background Image
             Container(
               height: 280,
               width: double.infinity,
@@ -316,7 +313,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               ),
             ),
             
-            // Dark overlay
             Container(
               height: 280,
               decoration: BoxDecoration(
@@ -331,7 +327,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               ),
             ),
 
-            // Brand logos (top corners)
             Positioned(
               top: 16,
               left: 16,
@@ -380,7 +375,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               ),
             ),
 
-            // Bottom content
             Positioned(
               bottom: 0,
               left: 0,
@@ -436,7 +430,14 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => _toggleChallenge(challenge),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChallengeDetailScreen(challenge: challenge),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: challenge.isJoined 
                             ? Colors.white.withOpacity(0.2)
@@ -450,7 +451,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                           ),
                         ),
                         child: Text(
-                          challenge.isJoined ? 'Joined' : 'Join Challenge',
+                          challenge.isJoined ? 'View Challenge' : 'Join Challenge',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -488,42 +489,4 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
     }
   }
 
-  void _toggleChallenge(Challenge challenge) {
-    setState(() {
-      final index = _stravaStyleChallenges.indexWhere((c) => c.id == challenge.id);
-      if (index != -1) {
-        // Create a new challenge with updated status
-        final updatedChallenge = Challenge(
-          id: challenge.id,
-          title: challenge.title,
-          description: challenge.description,
-          brand: challenge.brand,
-          brandLogo: challenge.brandLogo,
-          backgroundImage: challenge.backgroundImage,
-          distance: challenge.distance,
-          duration: challenge.duration,
-          friendsJoined: challenge.isJoined 
-            ? challenge.friendsJoined - 1 
-            : challenge.friendsJoined + 1,
-          isJoined: !challenge.isJoined,
-          brandColor: challenge.brandColor,
-          activityType: challenge.activityType,
-        );
-        _stravaStyleChallenges[index] = updatedChallenge;
-      }
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(challenge.isJoined 
-          ? 'Left ${challenge.title}' 
-          : 'Joined ${challenge.title}'),
-        backgroundColor: Theme.of(context).primaryColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
 }
