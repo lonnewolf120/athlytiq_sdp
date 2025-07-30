@@ -3,7 +3,7 @@ import 'package:fitnation/models/Workout.dart'; // Import the Workout model
 import 'package:fitnation/models/PlannedExercise.dart';
 import 'package:fitnation/models/Exercise.dart'
     as exercise_db; // Aliased to avoid conflict if any
-import 'package:fitnation/core/themes/colors.dart';// Import PlannedExercise
+import 'package:fitnation/core/themes/colors.dart'; // Import PlannedExercise
 import 'package:fitnation/providers/active_workout_provider.dart'; // Correct import
 import 'package:fitnation/core/themes/text_styles.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // For icon URL
@@ -236,7 +236,6 @@ class WorkoutDetailScreen extends StatelessWidget {
                                   ),
                                 ),
                           ),
-                        
                       ],
                     ),
                   ),
@@ -319,9 +318,11 @@ class WorkoutDetailScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MealPlanGeneratorScreen(
-                              linkedWorkoutPlan: workoutPlan, // Pass the workout plan
-                            ),
+                            builder:
+                                (context) => MealPlanGeneratorScreen(
+                                  linkedWorkoutPlan:
+                                      workoutPlan, // Pass the workout plan
+                                ),
                           ),
                         );
                       },

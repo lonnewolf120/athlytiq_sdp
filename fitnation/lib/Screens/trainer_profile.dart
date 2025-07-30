@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:one/themes/themes.dart';
-import 'themes/text_styles.dart';
-import 'themes/colors.dart' as app_colors;
+import 'package:fitnation/core/themes/text_styles.dart';
+import 'package:fitnation/core/themes/colors.dart' as app_colors;
 import 'booking.dart';
 
 class TrainerProfileScreen extends StatelessWidget {
@@ -12,7 +11,10 @@ class TrainerProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: app_colors.AppColors.darkBackground,
       appBar: AppBar(
-        title: const Text('Trainer Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Trainer Profile',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         //title: const Text('Trainer Profile', style: TextStyle.),
         backgroundColor: app_colors.AppColors.lightGradientStart,
       ),
@@ -27,7 +29,9 @@ class TrainerProfileScreen extends StatelessWidget {
                 // Trainer Picture
                 CircleAvatar(
                   radius: 48,
-                  backgroundImage: AssetImage('assets/trainer.jpg'), // Trainer pic here
+                  backgroundImage: AssetImage(
+                    'assets/trainer.jpg',
+                  ), // Trainer pic here
                   backgroundColor: app_colors.AppColors.darkSurface,
                 ),
                 const SizedBox(width: 24),
@@ -38,11 +42,14 @@ class TrainerProfileScreen extends StatelessWidget {
                     children: [
                       Text('Akram Emtiaz', style: AppTextStyles.darkBodyLarge),
                       const SizedBox(height: 8),
-                      Text('Certified Strength & Conditioning Specialist', style: AppTextStyles.darkBodyMedium),
+                      Text(
+                        'Certified Strength & Conditioning Specialist',
+                        style: AppTextStyles.darkBodyMedium,
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         // rating stars to be updated later on
-                        children: [ 
+                        children: [
                           Icon(Icons.star, color: Colors.amber, size: 20),
                           Icon(Icons.star, color: Colors.amber, size: 20),
                           Icon(Icons.star, color: Colors.amber, size: 20),
@@ -54,8 +61,14 @@ class TrainerProfileScreen extends StatelessWidget {
                       ),
                       // call details from database
                       const SizedBox(height: 8),
-                      Text('Contact: +1 555-123-4567', style: AppTextStyles.darkBodyMedium),
-                      Text('Email: alex.johnson@athlytiq.com', style: AppTextStyles.darkBodyMedium),
+                      Text(
+                        'Contact: +1 555-123-4567',
+                        style: AppTextStyles.darkBodyMedium,
+                      ),
+                      Text(
+                        'Email: alex.johnson@athlytiq.com',
+                        style: AppTextStyles.darkBodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -78,7 +91,9 @@ class TrainerProfileScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const BookingScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const BookingScreen(),
+                    ),
                   );
                 },
                 child: const Text('Book Now'),
