@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PaymentMethodsPage extends StatefulWidget {
   final double totalAmount;
@@ -117,7 +118,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          // Add New Card Button
           Container(
             width: 120,
             height: 180,
@@ -131,7 +131,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
             ),
             child: InkWell(
               onTap: () {
-                // Add new card functionality
               },
               borderRadius: BorderRadius.circular(12),
               child: Column(
@@ -158,7 +157,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
           
           const SizedBox(width: 16),
           
-          // Full Credit Card
           Expanded(
             child: Container(
               height: 180,
@@ -408,7 +406,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   }
 
   Widget _buildPaymentIcon(PaymentMethod method) {
-    // Create text-based icons as immediate fallback
     Widget fallbackIcon = Container(
       width: 28,
       height: 28,
@@ -572,6 +569,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         .firstWhere((method) => method.id == _selectedPaymentMethod)
         .name;
 
+    if (_selectedPaymentMethod == 'bkash') {
+      _launchBkashApp();
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -631,6 +633,82 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _launchBkashApp() async {
+    const String bkashAppUrl = 'com.bKash.customerapp&hl=en_NZ';
+    const String bkashPlayStoreUrl = 'https://play.google.com/store/apps/details/bKash?id=com.bKash.customerapp&hl=en_NZ';
+    const String bkashWebUrl = 'https://www.bkash.com/';
+
+    try {
+      if (await canLaunchUrl(Uri.parse(bkashAppUrl))) {
+        await launchUrl(Uri.parse(bkashAppUrl));
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Opening bKash app...'),
+              backgroundColor: Color(0xFFE2136E),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      } else {
+        if (await canLaunchUrl(Uri.parse(bkashPlayStoreUrl))) {
+          await launchUrl(
+            Uri.parse(bkashPlayStoreUrl),
+            mode: LaunchMode.externalApplication,
+          );
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('bKash app not found. Opening Play Store...'),
+                backgroundColor: Color(0xFFE2136E),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+        } else {
+          await launchUrl(
+            Uri.parse(bkashWebUrl),
+            mode: LaunchMode.externalApplication,
+          );
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Opening bKash website...'),
+                backgroundColor: Color(0xFFE2136E),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open bKash. Please try again.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
   }
 }
 
