@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'ChallengeDetailScreen.dart';
+import 'AddChallengeScreen.dart';
 
 class Challenge {
   final String id;
@@ -128,10 +129,15 @@ class ChallengesScreen extends StatefulWidget {
 class _ChallengesScreenState extends State<ChallengesScreen> {
   String selectedActivity = 'All';
   final List<String> activityTypes = ['All', 'Run', 'Ride', 'Swim', 'Walk', 'Hike', 'Workout'];
+  List<Challenge> userChallenges = [];
+
+  List<Challenge> get allChallenges {
+    return [..._stravaStyleChallenges, ...userChallenges];
+  }
 
   List<Challenge> get filteredChallenges {
-    if (selectedActivity == 'All') return _stravaStyleChallenges;
-    return _stravaStyleChallenges.where((c) => c.activityType == selectedActivity).toList();
+    if (selectedActivity == 'All') return allChallenges;
+    return allChallenges.where((c) => c.activityType == selectedActivity).toList();
   }
 
   @override
@@ -149,6 +155,25 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: () async {
+              final Challenge? newChallenge = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddChallengeScreen(),
+                ),
+              );
+              
+              if (newChallenge != null) {
+                setState(() {
+                  userChallenges.add(newChallenge);
+                });
+              }
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -262,13 +287,73 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
           const SizedBox(height: 16),
 
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: filteredChallenges.length,
-              itemBuilder: (context, index) {
-                final challenge = filteredChallenges[index];
-                return _buildStravaStyleChallengeCard(challenge);
-              },
+            child: filteredChallenges.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filteredChallenges.length,
+                  itemBuilder: (context, index) {
+                    final challenge = filteredChallenges[index];
+                    return _buildStravaStyleChallengeCard(challenge);
+                  },
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.emoji_events_outlined,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No ${selectedActivity == 'All' ? '' : selectedActivity.toLowerCase()} challenges yet',
+            style: TextStyle(
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create your own challenge to get started!',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final Challenge? newChallenge = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddChallengeScreen(),
+                ),
+              );
+              
+              if (newChallenge != null) {
+                setState(() {
+                  userChallenges.add(newChallenge);
+                });
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Create Challenge'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],
@@ -277,6 +362,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
   }
 
   Widget _buildStravaStyleChallengeCard(Challenge challenge) {
+    final isUserCreated = userChallenges.contains(challenge);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -343,6 +429,27 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               ),
             ),
             
+            if (isUserCreated)
+              Positioned(
+                top: 16,
+                left: 60,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Created by You',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            
             Positioned(
               top: 16,
               right: 16,
@@ -401,11 +508,13 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                           size: 16,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          challenge.description,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
+                        Expanded(
+                          child: Text(
+                            challenge.description,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
