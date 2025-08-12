@@ -4,3 +4,5 @@
 **/node_modules
 **/build
 /fitnation/mcp_servers
+
+backend/venv/Scripts/uvicorn.exe
