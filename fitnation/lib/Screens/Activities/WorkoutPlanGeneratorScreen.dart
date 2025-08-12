@@ -1,6 +1,8 @@
+import 'package:fitnation/Screens/shop_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/providers/gemini_workout_provider.dart';
+import 'dart:async'; // Import for Timer
 
 class WorkoutPlanGeneratorScreen extends ConsumerStatefulWidget {
   const WorkoutPlanGeneratorScreen({super.key});
@@ -52,6 +54,23 @@ class _WorkoutPlanGeneratorScreenState
     'Other',
   ];
 
+  final List<String> _shopRecommendations = [
+    'Dumbbells',
+    'Barbell',
+    'Kettlebell',
+    'Pull-up Bar',
+    'Treadmill',
+  ];
+
+  int _currentRecommendationIndex = 0;
+  Timer? _recommendationTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startRecommendationTimer();
+  }
+
   @override
   void dispose() {
     _heightController.dispose();
@@ -59,7 +78,17 @@ class _WorkoutPlanGeneratorScreenState
     _ageController.dispose();
     _goalsController.dispose();
     _equipmentController.dispose();
+    _recommendationTimer?.cancel(); // Cancel the timer
     super.dispose();
+  }
+
+  void _startRecommendationTimer() {
+    _recommendationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      setState(() {
+        _currentRecommendationIndex =
+            (_currentRecommendationIndex + 1) % _shopRecommendations.length;
+      });
+    });
   }
 
   Future<void> _generatePlan() async {
@@ -302,7 +331,11 @@ class _WorkoutPlanGeneratorScreenState
                     ),
                     const SizedBox(height: 16),
                     _buildEquipmentSelection(colorScheme),
-                    const SizedBox(height: 40),
+                    // The _buildShopRecommendations now contains the button logic
+                    _buildShopRecommendations(colorScheme),
+                    const SizedBox(
+                      height: 40,
+                    ), // Spacing before the final generate button
                   ],
                 ),
               ),
@@ -568,6 +601,129 @@ class _WorkoutPlanGeneratorScreenState
               ),
             );
           }).toList(),
+    );
+  }
+
+  // ONLY THIS WIDGET IS MODIFIED
+  Widget _buildShopRecommendations(ColorScheme colorScheme) {
+    if (_shopRecommendations.isEmpty) {
+      return const SizedBox.shrink(); // Don't show if no recommendations
+    }
+
+    String currentEquipment = _shopRecommendations[_currentRecommendationIndex];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32), // Add spacing before the recommendation
+        Text(
+          'Looking for equipment?',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              colors: [
+                Color.fromARGB(255, 226, 24, 5), // A red shade
+                Color.fromARGB(255, 251, 4, 78), // An orange shade
+                Color.fromARGB(255, 255, 0, 106), // A pinkish shade
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: FilledButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => ShopPage(initialCategory: currentEquipment),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.shopping_cart_rounded,
+              size: 20,
+              color: Colors.white,
+            ),
+            label: AnimatedSwitcher(
+              duration: const Duration(
+                milliseconds: 500,
+              ), // Transition duration
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                final offsetAnimation = Tween<Offset>(
+                  begin: const Offset(0.0, -1.0), // Start from top
+                  end: Offset.zero,
+                ).animate(animation);
+                return ClipRect(
+                  // Clip to prevent text from showing outside bounds during transition
+                  child: SlideTransition(
+                    position: offsetAnimation,
+                    child: FadeTransition(
+                      // Add fade for smoother transition
+                      opacity: animation,
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  // Text(
+                  //   '',
+                  //   style: TextStyle(
+                  //     fontSize: MediaQuery.of(context).size.width * 0.04,
+                  //     fontWeight: FontWeight.w600,
+                  //     color: Colors.white,
+                  //     overflow: TextOverflow.ellipsis,
+                  //   ),
+                  // ),
+                  Text(
+                    key: ValueKey<int>(
+                      _currentRecommendationIndex,
+                    ), // Key for AnimatedSwitcher
+                    'Buy the best & affordable $currentEquipment ',
+                    style: TextStyle(
+                      fontSize: MediaQuery.of(context).size.width * 0.04,
+                      fontWeight: FontWeight.w600,
+                      overflow: TextOverflow.ellipsis,
+                      color:
+                          Colors
+                              .white, // Text color should contrast with gradient
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor:
+                  Colors
+                      .transparent, // Make button background transparent to show gradient
+              foregroundColor:
+                  Colors.white, // Ensure icon and text color are white
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0, // Remove default button elevation
+              shadowColor: Colors.transparent, // Remove default button shadow
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -87,7 +87,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           showLabel: false,
           notchColor: const Color.fromARGB(255, 255, 236, 236),
           removeMargins: false,
-          bottomBarWidth: 500,
+          bottomBarWidth: MediaQuery.of(context).size.width,
           elevation: 5.0,
           shadowElevation: 5.0,
           durationInMilliSeconds: 300,

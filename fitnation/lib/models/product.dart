@@ -2,11 +2,14 @@ class Product {
   final String id;
   final String name;
   final String description;
+
   final double price;
   final String imageUrl;
-  final List<String> images; 
+  final List<String> images;
 
   final String category;
+  final String? subCategory;
+  final String? categoryIcon;
   final double rating;
   final int reviewCount;
   final bool isInStock;
@@ -19,7 +22,8 @@ class Product {
     required this.price,
     required this.imageUrl,
     this.images = const [],
-    
+    this.subCategory,
+    this.categoryIcon,
     required this.category,
     required this.rating,
     required this.reviewCount,
@@ -34,6 +38,10 @@ enum ProductCategory {
   accessories,
   clothing,
   footwear,
+  treadmill,
+  kettlebell,
+  barbell,
+  dumbbells,
 }
 
 extension ProductCategoryExtension on ProductCategory {
@@ -49,6 +57,14 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Clothing';
       case ProductCategory.footwear:
         return 'Footwear';
+      case ProductCategory.treadmill:
+        return 'Treadmill';
+      case ProductCategory.kettlebell:
+        return 'Kettlebell';
+      case ProductCategory.barbell:
+        return 'Barbell';
+      case ProductCategory.dumbbells:
+        return 'Dumbbells';
     }
   }
 
@@ -64,6 +80,14 @@ extension ProductCategoryExtension on ProductCategory {
         return '👕';
       case ProductCategory.footwear:
         return '👟';
+      case ProductCategory.treadmill:
+        return '🏃';
+      case ProductCategory.kettlebell:
+        return '🏋️';
+      case ProductCategory.barbell:
+        return '🏋️';
+      case ProductCategory.dumbbells:
+        return '🏋️';
     }
   }
 }

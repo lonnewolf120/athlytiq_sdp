@@ -165,7 +165,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           unselectedLabelStyle: textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w500,
           ),
-          tabs: const [Tab(text: 'WORKOUT PLANS'), Tab(text: 'TRAINER'), Tab(text: 'ACTIVE SESSION')],
+          tabs: const [
+            Tab(text: 'PLANS'),
+            Tab(text: 'TRAINER'),
+            Tab(text: 'SESSION'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -933,7 +937,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     );
   }
 
-  Widget _buildTrainerTabContent(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildTrainerTabContent(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -971,7 +978,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                           children: [
                             Text(
                               "Personal AI Trainer",
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: colorScheme.onPrimaryContainer,
                               ),
@@ -979,8 +988,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                             const SizedBox(height: 4),
                             Text(
                               "Get personalized guidance and tips",
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onPrimaryContainer
+                                    .withOpacity(0.8),
                               ),
                             ),
                           ],
@@ -1067,7 +1079,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const TrainerApplicationStatusScreen(),
+                        builder:
+                            (context) => const TrainerApplicationStatusScreen(),
                       ),
                     );
                   },
