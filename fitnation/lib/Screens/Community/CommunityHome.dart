@@ -1,4 +1,5 @@
 import 'package:fitnation/Screens/Community/CreatePostScreen.dart';
+import 'package:fitnation/Screens/Community/messages_page.dart';
 import 'package:fitnation/widgets/community/PostCard.dart';
 import 'package:fitnation/widgets/community/StoryBubble.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
@@ -54,6 +55,16 @@ class _CommunityHomeScreenState
                 MaterialPageRoute(
                   builder: (_) => const CreatePostScreen(communityId: null),
                 ),
+              ); // Pass communityId if creating from specific group
+            },
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.message_outlined, color: Colors.redAccent),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MessagesPage()),
               ); // Pass communityId if creating from specific group
             },
           ),

@@ -1,6 +1,7 @@
 import 'package:fitnation/Screens/Community/CreateCommunity.dart';
 import 'package:fitnation/Screens/Community/GroupDetailsScreen.dart';
 import 'package:fitnation/Screens/Community/ChallengesScreen.dart';
+import 'package:fitnation/Screens/Community/find_friends_page.dart';
 import 'package:fitnation/widgets/community/GroupCard.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
 import 'package:flutter/material.dart';
@@ -89,7 +90,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
                 tabs: const [
                   Tab(
                     child: Text(
-                      'All',
+                      'Groups',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white,
@@ -99,7 +100,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
                   ),
                   Tab(
                     child: Text(
-                      'My Groups',
+                      'Buddies',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white,
@@ -135,7 +136,7 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
                     color: Theme.of(
                       context,
                     ).colorScheme.surface.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(25),
+                    // borderRadius: BorderRadius.circular(25),
                     border: Border.all(
                       color: Colors.grey.withOpacity(0.3),
                       width: 1,
@@ -189,7 +190,8 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
           controller: _groupTabController,
           children: [
             _buildGroupList(_dummyGroups.where((g) => true).toList()),
-            _buildGroupList(_dummyGroups.where((g) => g.joined).toList()),
+            FindFriendsPage(),
+            // _buildGroupList(_dummyGroups.where((g) => g.joined).toList()),
             ChallengesScreen(),
           ],
         ),
