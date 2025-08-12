@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Python virtual environment
+venv/
+.venv/
+env/
+.env
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# Docker specific
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+
+# Test files and coverage reports
+*.test.py
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

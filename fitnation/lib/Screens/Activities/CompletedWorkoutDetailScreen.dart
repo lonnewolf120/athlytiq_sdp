@@ -23,10 +23,7 @@ class CompletedWorkoutDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          workout.workoutName,
-          style: textTheme.titleLarge,
-        ),
+        title: Text(workout.workoutName, style: textTheme.titleLarge),
         centerTitle: true,
       ),
       body: ListView(
@@ -39,10 +36,7 @@ class CompletedWorkoutDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Workout Summary',
-                    style: textTheme.titleMedium,
-                  ),
+                  Text('Workout Summary', style: textTheme.titleMedium),
                   const SizedBox(height: 16),
                   _buildInfoRow(
                     context,
@@ -79,10 +73,7 @@ class CompletedWorkoutDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text(
-            'Exercises Performed',
-            style: textTheme.titleLarge,
-          ),
+          Text('Exercises Performed', style: textTheme.titleLarge),
           const SizedBox(height: 16),
           if (workout.exercises.isEmpty)
             Center(
@@ -118,10 +109,7 @@ class CompletedWorkoutDetailScreen extends StatelessWidget {
                             exercise.exerciseEquipments!.join(', '),
                           ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Sets:',
-                          style: textTheme.bodyLarge,
-                        ),
+                        Text('Sets:', style: textTheme.bodyLarge),
                         const SizedBox(height: 8),
                         ListView.builder(
                           shrinkWrap: true,
@@ -150,7 +138,11 @@ class CompletedWorkoutDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(
-      BuildContext context, IconData icon, String label, String value) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),

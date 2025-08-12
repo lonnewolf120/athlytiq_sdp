@@ -1,25 +1,27 @@
-import 'package:fitnation/Screens/Community/CommunityGroups.dart';
-// import 'package:fitnation/Screens/Community/CreateCommunity.dart';
 import 'package:fitnation/Screens/Community/CreatePostScreen.dart';
 import 'package:fitnation/widgets/community/PostCard.dart';
 import 'package:fitnation/widgets/community/StoryBubble.dart';
-import 'package:fitnation/models/PostModel.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
 import 'package:fitnation/providers/data_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
-import 'package:fitnation/Screens/Community/CreateStoryScreen.dart'; // Import the new screen
+import 'package:fitnation/widgets/common/CustomAppBar.dart'; // Import CustomAppBar
 // import 'package:intl/intl.dart'; // For date formatting
 
-class CommunityHomeScreen extends ConsumerStatefulWidget { // Change to ConsumerStatefulWidget
+class CommunityHomeScreen extends ConsumerStatefulWidget {
+  // Change to ConsumerStatefulWidget
   const CommunityHomeScreen({super.key});
 
   @override
-  ConsumerState<CommunityHomeScreen> createState() => _CommunityHomeScreenState(); // Change state type
+  ConsumerState<CommunityHomeScreen> createState() =>
+      _CommunityHomeScreenState(); // Change state type
 }
 
-class _CommunityHomeScreenState extends ConsumerState<CommunityHomeScreen> // Change state type
-    with TickerProviderStateMixin<CommunityHomeScreen> { // Corrected mixin type
+class _CommunityHomeScreenState
+    extends
+        ConsumerState<CommunityHomeScreen> // Change state type
+    with TickerProviderStateMixin<CommunityHomeScreen> {
+  // Corrected mixin type
   late TabController _tabController;
   List<Story> _userStories = []; // Make stories mutable
 
@@ -38,17 +40,11 @@ class _CommunityHomeScreenState extends ConsumerState<CommunityHomeScreen> // Ch
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset(
-            'assets/logos/logo.png',
-          ), // Replace with your logo
-        ),
-        title: Text('Feed', style: textTheme.titleLarge),
+      appBar: CustomAppBar(
+        title: 'Feed',
+        showMenuButton: false, // Disable menu button
+        showProfileMenu: true, // Enable profile menu
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
@@ -62,27 +58,15 @@ class _CommunityHomeScreenState extends ConsumerState<CommunityHomeScreen> // Ch
             },
           ),
         ],
-        // bottom: TabBar(
-        //   controller: _tabController,
-        //   tabs: const [
-        //     Tab(icon: Icon(Icons.home_outlined), text: 'Feed'),
-        //     Tab(icon: Icon(Icons.group_outlined), text: 'Groups'),
-        //   ],
-        // ),
       ),
-      body:
-      // TabBarView(
-      //   controller: _tabController,
-      //   children: [
-          _buildFeedTab(context),
-      //     const CommunityGroupsScreen(), // Navigate or embed
-      //   ],
-      // ),
+      body: _buildFeedTab(context),
     );
   }
 
   Widget _buildFeedTab(BuildContext context) {
-    final postsAsyncValue = ref.watch(postsFeedProvider); // Watch the posts provider
+    final postsAsyncValue = ref.watch(
+      postsFeedProvider,
+    ); // Watch the posts provider
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -106,38 +90,39 @@ class _CommunityHomeScreenState extends ConsumerState<CommunityHomeScreen> // Ch
           postsAsyncValue.when(
             data: (posts) {
               if (posts.isEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text("No posts yet. Be the first to share!"),
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Text("No posts yet. Be the first to share!"),
+                  ),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                ), // Section padding
+                child: ListView.builder(
+                  shrinkWrap: true, // Important for ListView inside ListView
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Disable its own scrolling
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) {
+                    final post = posts[index];
+                    // Each PostCard should handle its own padding if it's a Card
+                    return PostCard(post: post);
+                  },
                 ),
               );
-            }
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ), // Section padding
-              child: ListView.builder(
-                shrinkWrap: true, // Important for ListView inside ListView
-                physics:
-                    const NeverScrollableScrollPhysics(), // Disable its own scrolling
-                itemCount: posts.length,
-                itemBuilder: (context, index) {
-                  final post = posts[index];
-                  // Each PostCard should handle its own padding if it's a Card
-                  return PostCard(post: post);
-                },
-              ),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('Error loading posts: $error'),
-            ),
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error:
+                (error, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Error loading posts: $error'),
+                  ),
+                ),
           ),
-        ),
         ],
       ),
     );
@@ -162,10 +147,14 @@ class _CommunityHomeScreenState extends ConsumerState<CommunityHomeScreen> // Ch
               onYourStoryTap: (newContent) {
                 if (newContent != null) {
                   setState(() {
-                    final yourStoryIndex = _userStories.indexWhere((s) => s.isYourStory);
+                    final yourStoryIndex = _userStories.indexWhere(
+                      (s) => s.isYourStory,
+                    );
                     if (yourStoryIndex != -1) {
                       final currentStory = _userStories[yourStoryIndex];
-                      final updatedContent = List<StoryContentItem>.from(currentStory.storyContent ?? []);
+                      final updatedContent = List<StoryContentItem>.from(
+                        currentStory.storyContent ?? [],
+                      );
                       updatedContent.add(newContent);
                       _userStories[yourStoryIndex] = Story(
                         id: currentStory.id,
@@ -175,13 +164,15 @@ class _CommunityHomeScreenState extends ConsumerState<CommunityHomeScreen> // Ch
                         storyContent: updatedContent,
                       );
                     } else {
-                      _userStories.add(Story(
-                        id: 's_new_${DateTime.now().millisecondsSinceEpoch}',
-                        name: 'Your Story',
-                        isYourStory: true,
-                        image: null,
-                        storyContent: [newContent],
-                      ));
+                      _userStories.add(
+                        Story(
+                          id: 's_new_${DateTime.now().millisecondsSinceEpoch}',
+                          name: 'Your Story',
+                          isYourStory: true,
+                          image: null,
+                          storyContent: [newContent],
+                        ),
+                      );
                     }
                   });
                 }

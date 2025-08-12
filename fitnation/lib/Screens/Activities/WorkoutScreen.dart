@@ -1,24 +1,20 @@
-// lib/Screens/Activities/WorkoutScreen.dart
 import 'package:fitnation/Screens/Activities/WorkoutHistoryScreen.dart';
-import 'package:fitnation/models/PlannedExercise.dart';
 import 'package:fitnation/models/Workout.dart';
-import 'package:fitnation/models/CompletedWorkout.dart' as completed_workout_model;
 import 'package:fitnation/Screens/Activities/WorkoutDetailScreen.dart';
-import 'package:fitnation/widgets/Activities/WorkoutCard.dart';
-import 'package:fitnation/core/themes/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/providers/active_workout_provider.dart';
 import 'package:fitnation/providers/auth_provider.dart';
-import 'package:fitnation/providers/data_providers.dart'; // Import apiServiceProvider from data_providers
+import 'package:fitnation/providers/data_providers.dart';
 import 'package:fitnation/services/database_helper.dart';
-import 'package:fitnation/models/Exercise.dart' as exercise_db; // For ExerciseDB model
-import 'package:fitnation/providers/gemini_workout_provider.dart'; // Import geminiWorkoutPlanProvider
-import 'package:fitnation/Screens/Activities/WorkoutPlanGeneratorScreen.dart'; // Import WorkoutPlanGeneratorScreen
-import 'package:fitnation/providers/gemini_meal_plan_provider.dart'; // Import geminiMealPlanProvider
-import 'package:fitnation/Screens/Activities/MealPlanGeneratorScreen.dart'; // Import MealPlanGeneratorScreen
-import 'package:fitnation/models/MealPlan.dart'; // Import MealPlan
-import 'package:fitnation/Screens/Activities/MealPlanDetailScreen.dart'; // Import MealPlanDetailScreen
+import 'package:fitnation/models/Exercise.dart' as exercise_db;
+import 'package:fitnation/providers/gemini_workout_provider.dart';
+import 'package:fitnation/Screens/Activities/WorkoutPlanGeneratorScreen.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
+import 'package:fitnation/Screens/Trainer/TrainerRegistrationScreen.dart';
+import 'package:fitnation/Screens/Trainer/TrainerApplicationStatusScreen.dart';
+import 'package:fitnation/Screens/Trainer/TrainerListScreen.dart';
+import 'package:fitnation/Screens/Trainer/MySessionsScreen.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({super.key});
@@ -29,7 +25,6 @@ class WorkoutScreen extends ConsumerStatefulWidget {
 
 class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     with SingleTickerProviderStateMixin {
-  // Added a comment to trigger re-analysis
   late TabController _tabController;
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -39,7 +34,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     _tabController = TabController(
       length: 3,
       vsync: this,
-    ); // Changed length to 3
+    ); // Changed length to 3 to include Trainer tab
   }
 
   @override
@@ -49,7 +44,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
   }
 
   Future<void> _handleSaveWorkout() async {
-    final activeWorkoutState = ref.read(activeWorkoutProvider);
     final authState = ref.read(authProvider);
     String? currentUserId;
 
@@ -57,7 +51,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
       currentUserId = authState.user.id;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated. Cannot save workout.')),
+        const SnackBar(
+          content: Text('User not authenticated. Cannot save workout.'),
+        ),
       );
       return;
     }
@@ -65,11 +61,15 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     const double dummyIntensity = 7.5;
     ref.read(activeWorkoutProvider.notifier).finishWorkout(dummyIntensity);
 
-    final completedWorkoutData = ref.read(activeWorkoutProvider.notifier).generateCompletedWorkoutData(currentUserId);
+    final completedWorkoutData = ref
+        .read(activeWorkoutProvider.notifier)
+        .generateCompletedWorkoutData(currentUserId);
 
     if (completedWorkoutData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Workout data is incomplete or not finished.')),
+        const SnackBar(
+          content: Text('Workout data is incomplete or not finished.'),
+        ),
       );
       return;
     }
@@ -78,19 +78,31 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
       final apiService = ref.read(apiServiceProvider);
       await apiService.saveWorkoutSession(completedWorkoutData);
 
-      await _dbHelper.insertCompletedWorkout(completedWorkoutData, synced: true);
+      await _dbHelper.insertCompletedWorkout(
+        completedWorkoutData,
+        synced: true,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Workout saved and synced successfully!')),
       );
     } catch (e) {
       try {
-        await _dbHelper.insertCompletedWorkout(completedWorkoutData, synced: false);
+        await _dbHelper.insertCompletedWorkout(
+          completedWorkoutData,
+          synced: false,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Workout saved locally. Will sync later. Error: $e')),
+          SnackBar(
+            content: Text('Workout saved locally. Will sync later. Error: $e'),
+          ),
         );
       } catch (dbError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save workout to API and local DB. Error: $dbError')),
+          SnackBar(
+            content: Text(
+              'Failed to save workout to API and local DB. Error: $dbError',
+            ),
+          ),
         );
       }
     } finally {
@@ -102,21 +114,24 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
   Widget build(BuildContext context) {
     debugPrint('WorkoutScreen: build method called.');
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final activeWorkout = ref.watch(activeWorkoutProvider);
-    final generatedWorkouts = ref.watch(geminiWorkoutPlanProvider); // Watch the generated workouts
-
-    final generatedMealPlans = ref.watch(
-      geminiMealPlanProvider,
-    ); // Watch the generated meal plans
+    final generatedWorkouts = ref.watch(
+      geminiWorkoutPlanProvider,
+    ); // Watch the generated workouts
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Workouts & Plans',
-          style: textTheme.titleLarge,
-        ), // Updated title
+      backgroundColor: colorScheme.surface,
+      appBar: CustomAppBar(
+        title: 'Workout Planner',
+        showLogo: false,
+        showMenuButton: false, // Disable menu button
+        showProfileMenu: true, // Enable profile menu
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        elevation: 0,
         actions: [
-          ElevatedButton.icon(
+          FilledButton.tonalIcon(
             onPressed: () {
               Navigator.push(
                 context,
@@ -125,31 +140,35 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                 ),
               );
             },
-            icon: Icon(Icons.history, color: AppColors.primaryForeground),
-            label: Text(
-              'History',
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.primaryForeground,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              elevation: 0,
-              foregroundColor: AppColors.primaryForeground,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            icon: const Icon(Icons.history_rounded, size: 18),
+            label: const Text('History'),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.secondaryContainer,
+              foregroundColor: colorScheme.onSecondaryContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: colorScheme.primary,
+          unselectedLabelColor: colorScheme.onSurfaceVariant,
+          indicatorColor: colorScheme.primary,
+          indicatorWeight: 3,
+          labelStyle: textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
           tabs: const [
-            Tab(text: 'WORKOUT'), // Renamed tab
-            Tab(text: 'MEAL PLANS'), // New tab
-            Tab(text: 'ACTIVE SESSION'),
+            Tab(text: 'PLANS'),
+            Tab(text: 'TRAINER'),
+            Tab(text: 'SESSION'),
           ],
         ),
       ),
@@ -157,191 +176,523 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
         controller: _tabController,
         children: [
           // Workout Plan Tab
-          _buildWorkoutPlanTabContent(generatedWorkouts),
+          _buildWorkoutPlanTabContent(context, generatedWorkouts, colorScheme),
 
-          // Meal Plan Tab
-          _buildMealPlanTabContent(generatedMealPlans),
+          // Trainer Tab
+          _buildTrainerTabContent(context, colorScheme),
 
           // Active Session Tab
-          _buildActiveWorkoutTab(activeWorkout),
+          _buildActiveWorkoutTab(context, activeWorkout, colorScheme),
         ],
       ),
-      floatingActionButton:
-          _tabController.index == 2 &&
-                  !activeWorkout
-                      .isStarted // FAB for Active Session only
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                ref.read(activeWorkoutProvider.notifier).startWorkout(name: "New Session");
-                ref.read(activeWorkoutProvider.notifier).addExercise(
-                      exercise_db.Exercise(
-                        exerciseId: 'dummyEx001',
-                        name: 'Push Ups',
-                        gifUrl: '',
-                        bodyParts: ['Chest', 'Triceps'],
-                        equipments: ['Bodyweight'],
-                        targetMuscles: ['Pectoralis Major'],
-                        secondaryMuscles: ['Triceps Brachii', 'Deltoids'],
-                        instructions: ['1. Get down on all fours...', '2. Lower your body...']
-                      ),
-                    );
-              },
-              label: const Text('Start New Workout'),
-              icon: const Icon(Icons.fitness_center),
-            )
-              : null, // No FAB for plan generation tabs
+      floatingActionButton: _buildFloatingActionButton(
+        activeWorkout,
+        colorScheme,
+      ),
     );
   }
 
-  Widget _buildActiveWorkoutTab(ActiveWorkoutState activeWorkout) {
+  Widget? _buildFloatingActionButton(
+    ActiveWorkoutState activeWorkout,
+    ColorScheme colorScheme,
+  ) {
+    // Only show FAB on active workout tab (index 2)
+    if (_tabController.index != 2) return null;
+
+    return !activeWorkout.isStarted
+        ? FloatingActionButton.extended(
+          onPressed: () {
+            ref.read(activeWorkoutProvider.notifier).startWorkout();
+            ref
+                .read(activeWorkoutProvider.notifier)
+                .addExercise(
+                  exercise_db.Exercise(
+                    exerciseId: 'dummyEx001',
+                    name: 'Push Ups',
+                    gifUrl: '',
+                    bodyParts: ['Chest', 'Triceps'],
+                    equipments: ['Bodyweight'],
+                    targetMuscles: ['Pectoralis Major'],
+                    secondaryMuscles: ['Triceps Brachii', 'Deltoids'],
+                    instructions: [
+                      '1. Get down on all fours...',
+                      '2. Lower your body...',
+                    ],
+                  ),
+                );
+          },
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          label: const Text('Start New Workout'),
+          icon: const Icon(Icons.fitness_center),
+        )
+        : null;
+  }
+
+  Widget _buildActiveWorkoutTab(
+    BuildContext context,
+    ActiveWorkoutState activeWorkout,
+    ColorScheme colorScheme,
+  ) {
     if (!activeWorkout.isStarted) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.directions_run, size: 80, color: Colors.grey),
-            SizedBox(height: 20),
-            Text("No active workout session.", style: TextStyle(fontSize: 18, color: Colors.grey)),
-            SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.directions_run_rounded,
+                size: 64,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 24),
             Text(
-              "Tap the 'Start New Workout' button to begin.",
-              style: TextStyle(color: Colors.grey),
+              "No active workout session",
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Tap the 'Start New Workout' button to begin your fitness journey.",
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
       );
     }
 
-    return ListView(
+    return Container(
       padding: const EdgeInsets.all(16.0),
-      children: [
-        Text("Workout: ${activeWorkout.workoutName}", style: Theme.of(context).textTheme.headlineSmall),
-        Text("Started: ${activeWorkout.startTime?.toLocal().toString().substring(0,16) ?? 'Not started'}", style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 20),
-        if (activeWorkout.exercises.isEmpty)
-          const Text("No exercises added yet. Add some!"),
-        ...activeWorkout.exercises.map((ex) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Workout Header Card
+          Card(
+            elevation: 0,
+            color: colorScheme.primaryContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex.baseExercise.name, style: Theme.of(context).textTheme.titleLarge),
-                  Text("Equipment: ${ex.baseExercise.equipments.join(', ')}", style: Theme.of(context).textTheme.bodySmall),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.fitness_center_rounded,
+                        color: colorScheme.onPrimaryContainer,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Workout: ${activeWorkout.workoutName}",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
-                  ...ex.sets.asMap().entries.map((entrySet) {
-                    int setIndex = entrySet.key;
-                    ActiveWorkoutSet currentSet = entrySet.value;
-                    return Row(
-                      children: [
-                        Expanded(child: Text("Set ${setIndex + 1}:")),
-                        Expanded(
-                          child: TextFormField(
-                            initialValue: currentSet.weight ?? '',
-                            decoration: const InputDecoration(labelText: "Weight"),
-                            onChanged: (val) => ref.read(activeWorkoutProvider.notifier).updateSet(ex.id, setIndex, val, currentSet.reps, currentSet.isCompleted),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Started: ${activeWorkout.startTime?.toLocal().toString().substring(0, 16) ?? 'Not started'}",
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onPrimaryContainer.withOpacity(
+                            0.8,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextFormField(
-                            initialValue: currentSet.reps ?? '',
-                            decoration: const InputDecoration(labelText: "Reps"),
-                             onChanged: (val) => ref.read(activeWorkoutProvider.notifier).updateSet(ex.id, setIndex, currentSet.weight, val, currentSet.isCompleted),
-                          ),
-                        ),
-                        Checkbox(
-                          value: currentSet.isCompleted,
-                          onChanged: (bool? value) {
-                            ref.read(activeWorkoutProvider.notifier).toggleSetComplete(ex.id, setIndex);
-                          },
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                  TextButton.icon(
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text("Add Set"),
-                    onPressed: () => ref.read(activeWorkoutProvider.notifier).addSetToExercise(ex.id),
-                  )
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-          );
-        }).toList(),
-        const SizedBox(height: 20),
-        ElevatedButton.icon(
-            onPressed: () {
-                ref.read(activeWorkoutProvider.notifier).addExercise(
-                      exercise_db.Exercise(
-                        exerciseId: 'dummyEx002',
-                        name: 'Bicep Curls',
-                        gifUrl: '',
-                        bodyParts: ['Arms'],
-                        equipments: ['Dumbbell'],
-                        targetMuscles: ['Biceps'],
-                        secondaryMuscles: [],
-                        instructions: []
-                      ),
-                    );
-            },
-            icon: const Icon(Icons.add),
-            label: const Text("Add Exercise (Dummy)")
-        ),
-        const SizedBox(height: 20),
-        if (activeWorkout.isStarted && !activeWorkout.isFinished)
-          ElevatedButton(
-            onPressed: _handleSaveWorkout,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text("Finish & Save Workout"),
           ),
-      ],
+          const SizedBox(height: 20),
+
+          // Exercises List
+          Expanded(
+            child:
+                activeWorkout.exercises.isEmpty
+                    ? _buildEmptyExerciseState(context, colorScheme)
+                    : _buildExercisesList(context, activeWorkout, colorScheme),
+          ),
+
+          // Action Buttons
+          const SizedBox(height: 16),
+          _buildActionButtons(context, activeWorkout, colorScheme),
+        ],
+      ),
     );
   }
 
-  Widget _buildWorkoutListTab(List<WorkoutSummary> workouts) {
-    if (workouts.isEmpty) {
-      return const Center(child: Text("No workouts found in this section."));
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: workouts.length,
+  Widget _buildEmptyExerciseState(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.secondaryContainer.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.add_circle_outline_rounded,
+              size: 48,
+              color: colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No exercises added yet",
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Add some exercises to get started!",
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExercisesList(
+    BuildContext context,
+    ActiveWorkoutState activeWorkout,
+    ColorScheme colorScheme,
+  ) {
+    return ListView.separated(
+      itemCount: activeWorkout.exercises.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final workout = workouts[index];
-        return WorkoutCard(
-          workout: workout,
-          onTap: () {
-            // For generated workouts, we need to fetch the full Workout object
-            // from the provider's state, as WorkoutSummary doesn't contain all details.
-            final fullWorkout = ref.read(geminiWorkoutPlanProvider).firstWhere(
-              (w) => w.id == workout.id,
-              orElse: () => throw Exception('Workout not found in provider state'),
-            );
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => WorkoutDetailScreen(
-                  workoutDetail: fullWorkout,
-                  workoutPlan: fullWorkout,
-                ),
-              ),
-            );
-          },
-        );
+        final exercise = activeWorkout.exercises[index];
+        return _buildExerciseCard(context, exercise, colorScheme);
       },
     );
   }
 
-  Widget _buildWorkoutPlanTabContent(List<Workout> generatedWorkouts) {
+  Widget _buildExerciseCard(
+    BuildContext context,
+    ActiveWorkoutExercise exercise,
+    ColorScheme colorScheme,
+  ) {
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline.withOpacity(0.2), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Exercise Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.fitness_center_rounded,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        exercise.baseExercise.name,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Equipment: ${exercise.baseExercise.equipments.join(', ')}",
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Sets
+            ...exercise.sets.asMap().entries.map((entrySet) {
+              int setIndex = entrySet.key;
+              ActiveWorkoutSet currentSet = entrySet.value;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color:
+                      currentSet.isCompleted
+                          ? colorScheme.primaryContainer.withOpacity(0.3)
+                          : colorScheme.surfaceVariant.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color:
+                        currentSet.isCompleted
+                            ? colorScheme.primary.withOpacity(0.3)
+                            : colorScheme.outline.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Set Number
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color:
+                            currentSet.isCompleted
+                                ? colorScheme.primary
+                                : colorScheme.outline.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          "${setIndex + 1}",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelMedium?.copyWith(
+                            color:
+                                currentSet.isCompleted
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Weight Input
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: currentSet.weight,
+                        decoration: InputDecoration(
+                          labelText: "Weight",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        onChanged:
+                            (val) => ref
+                                .read(activeWorkoutProvider.notifier)
+                                .updateSet(
+                                  exercise.id,
+                                  setIndex,
+                                  val,
+                                  currentSet.reps,
+                                  currentSet.isCompleted,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Reps Input
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: currentSet.reps,
+                        decoration: InputDecoration(
+                          labelText: "Reps",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        onChanged:
+                            (val) => ref
+                                .read(activeWorkoutProvider.notifier)
+                                .updateSet(
+                                  exercise.id,
+                                  setIndex,
+                                  currentSet.weight,
+                                  val,
+                                  currentSet.isCompleted,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Completion Checkbox
+                    Checkbox(
+                      value: currentSet.isCompleted,
+                      onChanged: (bool? value) {
+                        ref
+                            .read(activeWorkoutProvider.notifier)
+                            .toggleSetComplete(exercise.id, setIndex);
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+
+            // Add Set Button
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed:
+                    () => ref
+                        .read(activeWorkoutProvider.notifier)
+                        .addSetToExercise(exercise.id),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text("Add Set"),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(
+    BuildContext context,
+    ActiveWorkoutState activeWorkout,
+    ColorScheme colorScheme,
+  ) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
+        // Add Exercise Button
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () {
+              ref
+                  .read(activeWorkoutProvider.notifier)
+                  .addExercise(
+                    exercise_db.Exercise(
+                      exerciseId: 'dummyEx002',
+                      name: 'Bicep Curls',
+                      gifUrl: '',
+                      bodyParts: ['Arms'],
+                      equipments: ['Dumbbell'],
+                      targetMuscles: ['Biceps'],
+                      secondaryMuscles: [],
+                      instructions: [],
+                    ),
+                  );
+            },
+            icon: const Icon(Icons.add_rounded, size: 20),
+            label: const Text("Add Exercise (Demo)"),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.secondaryContainer,
+              foregroundColor: colorScheme.onSecondaryContainer,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+
+        // Finish Workout Button
+        if (activeWorkout.isStarted && !activeWorkout.isFinished) ...[
+          const SizedBox(height: 12),
+          SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: FilledButton.icon(
+              onPressed: _handleSaveWorkout,
+              icon: const Icon(Icons.check_circle_rounded, size: 20),
+              label: const Text("Finish & Save Workout"),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildWorkoutPlanTabContent(
+    BuildContext context,
+    List<Workout> generatedWorkouts,
+    ColorScheme colorScheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Generate Plan Button
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -350,163 +701,463 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                   ),
                 );
               },
+              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
               label: const Text('Generate New Workout Plan'),
-              icon: const Icon(Icons.add),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.primaryForeground,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child:
-              generatedWorkouts.isEmpty
-                  ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.auto_awesome, size: 80, color: Colors.grey),
-                        SizedBox(height: 20),
-                        Text(
-                          "No generated workout plans yet.",
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          "Tap 'Generate New Workout Plan' above.",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                  : _buildWorkoutListTab(
-                    generatedWorkouts
-                        .map((w) => WorkoutSummary.fromWorkout(w))
-                        .toList(),
-                  ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMealPlanTabContent(List<MealPlan> generatedMealPlans) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MealPlanGeneratorScreen(),
-                  ),
-                );
-              },
-              label: const Text('Generate New Meal Plan'),
-              icon: const Icon(Icons.add),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.primaryForeground,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child:
-              generatedMealPlans.isEmpty
-                  ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.restaurant_menu,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 20),
-                        Text(
-                          "No generated meal plans yet.",
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          "Tap 'Generate New Meal Plan' above.",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                  : _buildMealPlanListTab(generatedMealPlans),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMealPlanListTab(List<MealPlan> mealPlans) {
-    if (mealPlans.isEmpty) {
-      return const Center(child: Text("No meal plans found in this section."));
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: mealPlans.length,
-      itemBuilder: (context, index) {
-        final mealPlan = mealPlans[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MealPlanDetailScreen(mealPlan: mealPlan),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
-              );
-            },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Plans List
+          Expanded(
+            child:
+                generatedWorkouts.isEmpty
+                    ? _buildEmptyWorkoutState(context, colorScheme)
+                    : _buildWorkoutPlansList(
+                      context,
+                      generatedWorkouts,
+                      colorScheme,
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyWorkoutState(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 64,
+              color: colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            "No workout plans yet",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Generate your first AI-powered workout plan tailored to your goals and equipment.",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkoutPlansList(
+    BuildContext context,
+    List<Workout> workouts,
+    ColorScheme colorScheme,
+  ) {
+    final workoutSummaries =
+        workouts.map((w) => WorkoutSummary.fromWorkout(w)).toList();
+
+    return ListView.separated(
+      itemCount: workoutSummaries.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final workout = workoutSummaries[index];
+        return _buildWorkoutPlanCard(
+          context,
+          workout,
+          workouts[index],
+          colorScheme,
+        );
+      },
+    );
+  }
+
+  Widget _buildWorkoutPlanCard(
+    BuildContext context,
+    WorkoutSummary workout,
+    Workout fullWorkout,
+    ColorScheme colorScheme,
+  ) {
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline.withOpacity(0.2), width: 1),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) => WorkoutDetailScreen(
+                    workoutDetail: fullWorkout,
+                    workoutPlan: fullWorkout,
+                  ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.fitness_center_rounded,
+                      color: colorScheme.onPrimaryContainer,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          workout.name,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${workout.exerciseCount} exercises",
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 16,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Exercise Preview
+              if (workout.exercisesPreview.isNotEmpty) ...[
+                Text(
+                  "Exercises Preview:",
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...workout.exercisesPreview
+                    .take(3)
+                    .map(
+                      (exercise) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "${exercise.name} (${exercise.setsReps})",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                if (workout.exerciseCount > 3)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      "+${workout.exerciseCount - 3} more exercises",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrainerTabContent(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Personal Trainer Card
+          Card(
+            elevation: 0,
+            color: colorScheme.primaryContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    mealPlan.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    mealPlan.description ?? '',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Total Calories: ${mealPlan.meals.fold<int>(0, (sum, meal) => sum + (meal.calories ?? 0))}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    'Total Protein: ${mealPlan.meals.fold<double>(0.0, (sum, meal) => sum + (meal.macronutrients?['protein'] ?? 0.0)).toStringAsFixed(1)}g',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    'Total Carbs: ${mealPlan.meals.fold<double>(0.0, (sum, meal) => sum + (meal.macronutrients?['carbs'] ?? 0.0)).toStringAsFixed(1)}g',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    'Total Fat: ${mealPlan.meals.fold<double>(0.0, (sum, meal) => sum + (meal.macronutrients?['fat'] ?? 0.0)).toStringAsFixed(1)}g',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.person_4_rounded,
+                          color: colorScheme.onPrimary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Personal AI Trainer",
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Get personalized guidance and tips",
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onPrimaryContainer
+                                    .withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-        );
-      },
+          const SizedBox(height: 24),
+
+          // Trainer Features
+          Expanded(
+            child: ListView(
+              children: [
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.fitness_center_rounded,
+                  "Exercise Form Analysis",
+                  "Get real-time feedback on your exercise form",
+                  () {
+                    // Navigate to form analysis screen
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.psychology_rounded,
+                  "Find Personal Trainer",
+                  "Connect with certified trainers in your area",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TrainerListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.app_registration_rounded,
+                  "Become a Trainer",
+                  "Apply to become a certified trainer on our platform",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TrainerRegistrationScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.schedule_rounded,
+                  "My Sessions",
+                  "View and manage your booked training sessions",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MySessionsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.assignment_rounded,
+                  "Application Status",
+                  "Check your trainer application status",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => const TrainerApplicationStatusScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrainerFeatureCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    IconData icon,
+    String title,
+    String description,
+    VoidCallback onTap,
+  ) {
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline.withOpacity(0.2), width: 1),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: colorScheme.onSecondaryContainer,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: colorScheme.onSurfaceVariant,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

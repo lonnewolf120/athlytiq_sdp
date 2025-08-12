@@ -1,0 +1,22 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitness_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount your application code for live reloading during development
+      - ./app:/app/app
+      # If main.py is in root:
+      # - ./main.py:/app/main.py
+    env_file:
+      - .env # Load environment variables from .env file
+    # DATABASE_URL will be read directly from the .env file
+    # It should be your Supabase connection string
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # Enable reload for dev
+    restart: unless-stopped
+
+# No 'volumes' needed here unless your app needs other persistent local storage,
+# which is unlikely for this setup.

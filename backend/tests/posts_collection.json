@@ -1,0 +1,321 @@
+{
+	"info": {
+		"_postman_id": "YOUR_POSTMAN_COLLECTION_ID",
+		"name": "Fitness App Posts API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_collection_link": "https://www.postman.com/collections/YOUR_COLLECTION_LINK"
+	},
+	"item": [
+		{
+			"name": "Create Text Post",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"This is my first text post! #fitness #motivation\",\n    \"mediaUrl\": \"https://example.com/image1.jpg\",\n    \"postType\": [\"text\"]\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Workout Post",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"Just crushed a leg day workout! Feeling strong. 💪\",\n    \"postType\": [\"workout\"],\n    \"workoutData\": {\n        \"workoutType\": \"Leg Day\",\n        \"durationMinutes\": 60,\n        \"caloriesBurned\": 450,\n        \"notes\": \"Focused on squats and deadlifts. PR on squats!\",\n        \"exercises\": [\n            {\n                \"exercise_id\": \"5f9d7b3b-9d7e-4e1a-8b0a-9d7e4e1a8b0a\",\n                \"name\": \"Barbell Squat\",\n                \"gif_url\": \"https://example.com/squat.gif\",\n                \"body_parts\": [\"legs\", \"glutes\"],\n                \"equipments\": [\"barbell\"],\n                \"target_muscles\": [\"quadriceps\"],\n                \"secondary_muscles\": [\"hamstrings\", \"calves\"],\n                \"instructions\": [\"Stand with feet shoulder-width apart...\"],\n                \"sets\": \"3\",\n                \"reps\": \"8\",\n                \"weight\": \"100kg\"\n            },\n            {\n                \"exercise_id\": \"6a8c9d0e-1f2b-3c4d-5e6f-7a8b9c0d1e2f\",\n                \"name\": \"Deadlift\",\n                \"gif_url\": \"https://example.com/deadlift.gif\",\n                \"body_parts\": [\"back\", \"legs\"],\n                \"equipments\": [\"barbell\"],\n                \"target_muscles\": [\"hamstrings\", \"glutes\"],\n                \"secondary_muscles\": [\"lower back\"],\n                \"instructions\": [\"Bend at your hips and knees...\"],\n                \"sets\": \"3\",\n                \"reps\": \"5\",\n                \"weight\": \"120kg\"\n            }\n        ]\n    }\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Challenge Post",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"Join our 30-day plank challenge!\",\n    \"postType\": [\"challenge\"],\n    \"challengeData\": {\n        \"title\": \"30-Day Plank Challenge\",\n        \"description\": \"Improve your core strength with this daily plank challenge.\",\n        \"startDate\": \"2025-06-01T00:00:00Z\",\n        \"durationDays\": 30,\n        \"coverImageUrl\": \"https://example.com/plank_challenge.jpg\",\n        \"participantCount\": 0\n    }\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Post by ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/{{POST_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						"{{POST_ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Posts",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/?skip=0&limit=10&user_id={{USER_ID}}&post_type=text,workout",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						""
+					],
+					"query": [
+						{
+							"key": "skip",
+							"value": "0"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "user_id",
+							"value": "{{USER_ID}}",
+							"optional": true
+						},
+						{
+							"key": "post_type",
+							"value": "text,workout",
+							"optional": true,
+							"description": "Comma-separated list of post types (e.g., 'workout,challenge')"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post (Content Only)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"Updated content for my post!\"\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/{{POST_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						"{{POST_ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post (Workout Data)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"postType\": [\"workout\"],\n    \"workoutData\": {\n        \"workoutType\": \"Upper Body\",\n        \"durationMinutes\": 75,\n        \"caloriesBurned\": 500,\n        \"notes\": \"Heavy lifting day!\",\n        \"exercises\": [\n            {\n                \"exercise_id\": \"5f9d7b3b-9d7e-4e1a-8b0a-9d7e4e1a8b0a\",\n                \"name\": \"Bench Press\",\n                \"gif_url\": \"https://example.com/bench.gif\",\n                \"body_parts\": [\"chest\", \"shoulders\"],\n                \"equipments\": [\"barbell\"],\n                \"target_muscles\": [\"pectorals\"],\n                \"secondary_muscles\": [\"triceps\"],\n                \"instructions\": [\"Lie on a flat bench...\"],\n                \"sets\": \"4\",\n                \"reps\": \"6\",\n                \"weight\": \"80kg\"\n            }\n        ]\n    }\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/{{POST_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						"{{POST_ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Post",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{AUTH_TOKEN}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/posts/{{POST_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"posts",
+						"{{POST_ID}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "AUTH_TOKEN",
+			"value": "YOUR_AUTH_TOKEN_HERE",
+			"type": "string"
+		},
+		{
+			"key": "POST_ID",
+			"value": "YOUR_POST_ID_HERE",
+			"type": "string"
+		},
+		{
+			"key": "USER_ID",
+			"value": "YOUR_USER_ID_HERE",
+			"type": "string"
+		}
+	]
+}

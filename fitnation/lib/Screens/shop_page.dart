@@ -4,9 +4,13 @@ import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 import 'product_detail_page.dart';
+import 'cart_page.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
 
 class ShopPage extends StatefulWidget {
-  const ShopPage({super.key});
+  final String? initialCategory;
+
+  const ShopPage({super.key, this.initialCategory});
 
   @override
   State<ShopPage> createState() => _ShopPageState();
@@ -21,6 +25,7 @@ class _ShopPageState extends State<ShopPage> {
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategory ?? 'all';
     _loadProducts();
     _searchController.addListener(_filterProducts);
   }
@@ -38,12 +43,20 @@ class _ShopPageState extends State<ShopPage> {
 
   void _filterProducts() {
     setState(() {
-      _filteredProducts = _products.where((product) {
-        final matchesCategory = _selectedCategory == 'all' || product.category == _selectedCategory;
-        final matchesSearch = product.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-            product.description.toLowerCase().contains(_searchController.text.toLowerCase());
-        return matchesCategory && matchesSearch;
-      }).toList();
+      _filteredProducts =
+          _products.where((product) {
+            final matchesCategory =
+                _selectedCategory == 'all' ||
+                product.category == _selectedCategory;
+            final matchesSearch =
+                product.name.toLowerCase().contains(
+                  _searchController.text.toLowerCase(),
+                ) ||
+                product.description.toLowerCase().contains(
+                  _searchController.text.toLowerCase(),
+                );
+            return matchesCategory && matchesSearch;
+          }).toList();
     });
   }
 
@@ -57,21 +70,23 @@ class _ShopPageState extends State<ShopPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Athlytiq Store',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: CustomAppBar(
+        title: 'Athlytiq Store',
+        showLogo: false,
+        showMenuButton: false, // Disable menu button
+        showProfileMenu: true, // Enable profile menu
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart, color: Colors.white),
             onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartPage()),
+              );
             },
           ),
         ],
@@ -80,19 +95,39 @@ class _ShopPageState extends State<ShopPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.surface,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
               child: TextField(
                 controller: _searchController,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                decoration: InputDecoration(
                   hintText: 'Search products...',
-                  prefixIcon: Icon(Icons.search),
+                  hintStyle: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
@@ -101,6 +136,7 @@ class _ShopPageState extends State<ShopPage> {
           Container(
             height: 60,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -135,57 +171,91 @@ class _ShopPageState extends State<ShopPage> {
                   isSelected: _selectedCategory == 'clothing',
                   onTap: () => _selectCategory('clothing'),
                 ),
+                CategoryChip(
+                  category: 'Footwear',
+                  icon: '👟',
+                  isSelected: _selectedCategory == 'footwear',
+                  onTap: () => _selectCategory('footwear'),
+                ),
+                CategoryChip(
+                  category: 'Nutrition',
+                  icon: '🥗',
+                  isSelected: _selectedCategory == 'nutrition',
+                  onTap: () => _selectCategory('nutrition'),
+                ),
+
+                CategoryChip(
+                  category: 'Dumbbells',
+                  icon: '🏋️',
+                  isSelected: _selectedCategory == 'dumbbells',
+                  onTap: () => _selectCategory('dumbbells'),
+                ),
+                CategoryChip(
+                  category: 'Barbell',
+                  icon: '🏋️',
+                  isSelected: _selectedCategory == 'barbell',
+                  onTap: () => _selectCategory('barbell'),
+                ),
+                CategoryChip(
+                  category: 'Kettlebell',
+                  icon: '🏋️',
+                  isSelected: _selectedCategory == 'kettlebell',
+                  onTap: () => _selectCategory('kettlebell'),
+                ),
+                CategoryChip(
+                  category: 'Treadmill',
+                  icon: '',
+                  isSelected: _selectedCategory == 'treadmill',
+                  onTap: () => _selectCategory('treadmill'),
+                ),
               ],
             ),
           ),
 
           // Products Grid
           Expanded(
-            child: _filteredProducts.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No products found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
+            child:
+                _filteredProducts.isEmpty
+                    ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'No products found',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                    : GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.75,
+                          ),
+                      itemCount: _filteredProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = _filteredProducts[index];
+                        return Product_card(
+                          product: product,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        ProductDetailPage(product: product),
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      return Product_card(
-                        product: product,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProductDetailPage(product: product),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
           ),
         ],
       ),

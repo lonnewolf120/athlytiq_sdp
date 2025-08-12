@@ -11,6 +11,7 @@ import 'package:fitnation/widgets/Activities/StatsCard.dart'; // Reuse StatsCard
 import 'package:fitnation/widgets/Activities/WeeklyActivityChart.dart'; // Import charts
 import 'package:fitnation/widgets/Activities/WorkoutDistributionChart.dart';
 import 'package:fitnation/widgets/Activities/IntensityTrend.dart';
+import 'package:fitnation/widgets/common/CustomAppBar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // For state management
 import 'package:cached_network_image/cached_network_image.dart'; // For avatar
@@ -23,7 +24,6 @@ import 'package:fitnation/providers/auth_provider.dart'
     as auth_provider; // Alias auth_provider
 import 'package:fitnation/providers/data_providers.dart'
     as data_providers; // Alias data_providers
-
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -40,6 +40,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // Controllers for editable fields
   late TextEditingController _fullNameController;
   late TextEditingController _usernameController;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
+  late TextEditingController _healthConditionsController;
+  late TextEditingController _injuriesController;
+
+  // Dropdown values
+  String? _selectedGender;
+  String? _selectedActivityLevel;
+  String? _selectedFitnessGoal;
+  List<String> _selectedDietaryPreferences = [];
 
   File? _newAvatarImage; // To hold a newly picked avatar image
 
@@ -52,11 +62,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // These should be populated with actual user data when fetched
     _fullNameController = TextEditingController();
     _usernameController = TextEditingController();
+    _heightController = TextEditingController();
+    _weightController = TextEditingController();
+    _healthConditionsController = TextEditingController();
+    _injuriesController = TextEditingController();
 
     // Fetch initial user data and populate controllers
     ref.read(data_providers.currentUserProvider).whenData((user) {
       _fullNameController.text = user.profile?.displayName ?? user.username;
       _usernameController.text = user.username;
+      _heightController.text = user.profile?.height_cm?.toString() ?? '';
+      _weightController.text = user.profile?.weight_kg?.toString() ?? '';
+      _healthConditionsController.text = ''; // TODO: Add to Profile model
+      _injuriesController.text = ''; // TODO: Add to Profile model
+      _selectedGender = user.profile?.gender;
+      _selectedActivityLevel = user.profile?.activity_level;
+      _selectedFitnessGoal = user.profile?.fitnessGoals;
+      _selectedDietaryPreferences = []; // TODO: Add to Profile model
     });
   }
 
@@ -65,6 +87,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     _tabController.dispose();
     _fullNameController.dispose();
     _usernameController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _healthConditionsController.dispose();
+    _injuriesController.dispose();
     super.dispose();
   }
 
@@ -72,7 +98,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Future<void> _pickAvatarImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -83,35 +112,84 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   void _saveProfileChanges() async {
     if (_profileFormKey.currentState!.validate()) {
-      _profileFormKey.currentState!.save(); // Save form fields (if using onSaved)
+      _profileFormKey.currentState!
+          .save(); // Save form fields (if using onSaved)
 
       // Check if any changes were actually made
-      // TODO: Compare controller text with original user data
+      final currentUser = ref.read(auth_provider.currentUserProvider);
       final bool nameChanged =
           _fullNameController.text.trim() !=
-          (ref.read(auth_provider.currentUserProvider)?.profile?.displayName ??
-              ref.read(auth_provider.currentUserProvider)?.username);
+          (currentUser?.profile?.displayName ?? currentUser?.username);
       final bool usernameChanged =
-          _usernameController.text.trim() !=
-          (ref.read(auth_provider.currentUserProvider)?.username ?? '');
+          _usernameController.text.trim() != (currentUser?.username ?? '');
+      final bool heightChanged =
+          _heightController.text.trim() !=
+          (currentUser?.profile?.height_cm?.toString() ?? '');
+      final bool weightChanged =
+          _weightController.text.trim() !=
+          (currentUser?.profile?.weight_kg?.toString() ?? '');
+      final bool genderChanged =
+          _selectedGender != currentUser?.profile?.gender;
+      final bool activityLevelChanged =
+          _selectedActivityLevel != currentUser?.profile?.activity_level;
+      final bool fitnessGoalChanged =
+          _selectedFitnessGoal != currentUser?.profile?.fitnessGoals;
       final bool avatarChanged = _newAvatarImage != null;
+      final bool healthConditionsChanged =
+          _healthConditionsController.text.trim().isNotEmpty;
+      final bool injuriesChanged = _injuriesController.text.trim().isNotEmpty;
+      final bool dietaryPreferencesChanged =
+          _selectedDietaryPreferences.isNotEmpty;
 
-      if (!nameChanged && !usernameChanged && !avatarChanged) {
+      if (!nameChanged &&
+          !usernameChanged &&
+          !heightChanged &&
+          !weightChanged &&
+          !genderChanged &&
+          !activityLevelChanged &&
+          !fitnessGoalChanged &&
+          !avatarChanged &&
+          !healthConditionsChanged &&
+          !injuriesChanged &&
+          !dietaryPreferencesChanged) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No changes to save.'), backgroundColor: Colors.orangeAccent),
+          const SnackBar(
+            content: Text('No changes to save.'),
+            backgroundColor: Colors.orangeAccent,
+          ),
         );
         return;
       }
 
+      // Create profile update data
+      final profileUpdateData = {
+        if (nameChanged) 'display_name': _fullNameController.text.trim(),
+        if (usernameChanged) 'username': _usernameController.text.trim(),
+        if (heightChanged && _heightController.text.trim().isNotEmpty)
+          'height_cm': double.tryParse(_heightController.text.trim()),
+        if (weightChanged && _weightController.text.trim().isNotEmpty)
+          'weight_kg': double.tryParse(_weightController.text.trim()),
+        if (genderChanged) 'gender': _selectedGender,
+        if (activityLevelChanged) 'activity_level': _selectedActivityLevel,
+        if (fitnessGoalChanged) 'fitness_goals': _selectedFitnessGoal,
+        if (healthConditionsChanged)
+          'health_conditions': _healthConditionsController.text.trim(),
+        if (injuriesChanged) 'injuries': _injuriesController.text.trim(),
+        if (dietaryPreferencesChanged)
+          'dietary_preferences': _selectedDietaryPreferences,
+      };
+
       // TODO: Implement actual profile update logic using a provider
-      // For now, just print a message
+      // For now, just show what would be saved
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile update logic not yet implemented.'),
+        SnackBar(
+          content: Text(
+            'Profile would be updated with: ${profileUpdateData.keys.join(', ')}',
+          ),
           backgroundColor: Colors.blueAccent,
         ),
       );
-      print("Save Changes tapped"); // Placeholder
+      print("Profile update data: $profileUpdateData");
     }
   }
 
@@ -155,12 +233,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     // Sort data points by date
-    final processedData = dailyMinutes.entries
+    final processedData =
+        dailyMinutes.entries
             .map(
               (entry) =>
                   WeeklyActivityData(date: entry.key, minutes: entry.value),
             )
-        .toList();
+            .toList();
     processedData.sort(
       (a, b) => a.date.compareTo(b.date),
     ); // Ensure chronological order
@@ -182,10 +261,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (totalWorkouts == 0) return [];
 
     return workoutCounts.entries
-        .map((entry) => WorkoutDistributionData(
-              type: entry.key,
-              percentage: (entry.value / totalWorkouts) * 100,
-            ))
+        .map(
+          (entry) => WorkoutDistributionData(
+            type: entry.key,
+            percentage: (entry.value / totalWorkouts) * 100,
+          ),
+        )
         .toList();
   }
 
@@ -198,19 +279,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     // Limit to a reasonable number of recent workouts for the trend line
     const int maxTrendPoints = 10; // Example: show last 10 workouts
-    final trendWorkouts = sortedWorkouts.length > maxTrendPoints
-        ? sortedWorkouts.sublist(sortedWorkouts.length - maxTrendPoints)
-        : sortedWorkouts;
-
+    final trendWorkouts =
+        sortedWorkouts.length > maxTrendPoints
+            ? sortedWorkouts.sublist(sortedWorkouts.length - maxTrendPoints)
+            : sortedWorkouts;
 
     return trendWorkouts
-        .map((workout) => IntensityTrendData(
-              date: workout.endTime,
-              intensity: workout.intensityScore,
-            ))
+        .map(
+          (workout) => IntensityTrendData(
+            date: workout.endTime,
+            intensity: workout.intensityScore,
+          ),
+        )
         .toList();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -241,7 +323,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
                     );
                   },
                   child: const Text('Login / Sign Up'),
@@ -258,16 +342,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       // final profileUpdateState = ref.watch(profileUpdateProvider);
       // final isSaving = profileUpdateState.isLoading;
       return Scaffold(
-        appBar: AppBar(
-          // leading: IconButton(
-          //   icon: const Icon(Icons.arrow_back),
-          //   onPressed: () => Navigator.pop(context),
-          //   tooltip: 'Back',
-          // ),
-          leading: Image.asset('assets/logos/logo.png', width: 50, height: 50),
-
-          title: Text('Profile', style: textTheme.titleLarge),
-          centerTitle: true,
+        appBar: CustomAppBar(
+          title: 'Profile',
+          showProfileMenu:
+              false, // Don't show profile menu on profile screen itself
+          showMenuButton: false,
           bottom: TabBar(
             controller: _tabController,
             tabs: const [Tab(text: 'Progress'), Tab(text: 'Settings')],
@@ -367,7 +446,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ],
           ),
           const SizedBox(height: 24), // Margin between sections
-
           // Weekly Activity Chart
           WeeklyActivityChart(data: weeklyActivityData),
           const SizedBox(height: 24),
@@ -388,22 +466,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  Widget _buildProfileTab(BuildContext context, User user, {required bool isSaving}) {
+  Widget _buildProfileTab(
+    BuildContext context,
+    User user, {
+    required bool isSaving,
+  }) {
     final textTheme = Theme.of(context).textTheme;
     final currentAppThemeMode =
         ref.watch(themeNotifierProvider.notifier).currentAppThemeMode;
     // debugPrint("User profile: ${user.profile!.profilePictureUrl ?? ''}");
     // debugPrint("${user.profile}");
-     // TODO: Handle loading/error states from providers
-     // final currentUserAsyncValue = ref.watch(currentUserProvider);
-     // if (currentUserAsyncValue.isLoading) {
-     //   return const Center(child: CircularProgressIndicator());
-     // }
-     // if (currentUserAsyncValue.hasError) {
-     //   return Center(child: Text('Error loading profile: ${currentUserAsyncValue.error}'));
-     // }
-     // final user = currentUserAsyncValue.value!; // Get the actual user data
-
+    // TODO: Handle loading/error states from providers
+    // final currentUserAsyncValue = ref.watch(currentUserProvider);
+    // if (currentUserAsyncValue.isLoading) {
+    //   return const Center(child: CircularProgressIndicator());
+    // }
+    // if (currentUserAsyncValue.hasError) {
+    //   return Center(child: Text('Error loading profile: ${currentUserAsyncValue.error}'));
+    // }
+    // final user = currentUserAsyncValue.value!; // Get the actual user data
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0), // Section padding
@@ -417,8 +498,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               CircleAvatar(
                 radius: 50,
                 backgroundColor: AppColors.mutedBackground,
-                backgroundImage: _newAvatarImage != null
-                    ? FileImage(_newAvatarImage!) as ImageProvider // Use new image if picked
+                backgroundImage:
+                    _newAvatarImage != null
+                        ? FileImage(_newAvatarImage!)
+                            as ImageProvider // Use new image if picked
                         : ((user.profile != null &&
                                 user.profile!.profilePictureUrl != null)
                             ? CachedNetworkImageProvider(
@@ -431,17 +514,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     _newAvatarImage == null &&
                             (user.profile == null ||
                                 user.profile!.profilePictureUrl == null)
-                    ? Icon(Icons.person_outline, size: 50, color: AppColors.mutedForeground) // Default icon
-                    : null,
+                        ? Icon(
+                          Icons.person_outline,
+                          size: 50,
+                          color: AppColors.mutedForeground,
+                        ) // Default icon
+                        : null,
               ),
               Positioned(
                 right: 0,
-                child: GestureDetector( // Make camera icon tappable
-                   onTap: isSaving ? null : _pickAvatarImage, // Disable if saving
+                child: GestureDetector(
+                  // Make camera icon tappable
+                  onTap:
+                      isSaving ? null : _pickAvatarImage, // Disable if saving
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: AppColors.primary, // Red background for camera icon
-                    child: Icon(Icons.camera_alt_outlined, size: 16, color: AppColors.primary),
+                    backgroundColor:
+                        AppColors.primary, // Red background for camera icon
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -456,9 +550,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               color: AppColors.foreground,
             ),
           ),
-          Text('@${user.username ?? 'nousername'}', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+          Text(
+            '@${user.username ?? 'nousername'}',
+            style: AppTextStyles.bodyMedium?.copyWith(
+              color: AppColors.mutedForeground,
+            ),
+          ),
           const SizedBox(height: 24), // Margin before form card
-
           // Account Information Card
           Card(
             margin: EdgeInsets.zero, // No margin needed for this card
@@ -469,34 +567,68 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Account Information', style: AppTextStyles.headlineSmall?.copyWith(color: AppColors.foreground)),
+                    Text(
+                      'Account Information',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Email Field (Read-only)
-                    Text('Email', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Email',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     TextFormField(
-                      initialValue: user.email ?? 'N/A', // Assuming email is in User model
+                      initialValue:
+                          user.email ??
+                          'N/A', // Assuming email is in User model
                       readOnly: true,
                       decoration: InputDecoration(
                         // Use theme's input decoration, but maybe no border for readOnly
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
                         filled: true,
-                        fillColor: AppColors.mutedBackground, // Slightly different background for read-only
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        fillColor:
+                            AppColors
+                                .mutedBackground, // Slightly different background for read-only
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                       ),
-                      style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.foreground),
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.foreground,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text('Email cannot be changed', style: AppTextStyles.labelSmall?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Email cannot be changed',
+                      style: AppTextStyles.labelSmall?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Full Name Field (Editable)
-                    Text('Full Name', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Full Name',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     TextFormField(
                       controller: _fullNameController,
-                      decoration: const InputDecoration(hintText: 'Enter your full name'),
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your full name',
+                      ),
                       keyboardType: TextInputType.name,
                       textCapitalization: TextCapitalization.words,
                       validator: (value) {
@@ -505,26 +637,332 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         }
                         return null;
                       },
-                       enabled: !isSaving, // Disable while saving
+                      enabled: !isSaving, // Disable while saving
                     ),
                     const SizedBox(height: 16),
 
                     // Username Field (Editable)
-                    Text('Username', style: AppTextStyles.bodyMedium?.copyWith(color: AppColors.mutedForeground)),
+                    Text(
+                      'Username',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(hintText: 'Enter your username'),
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your username',
+                      ),
                       keyboardType: TextInputType.text,
                       // Add input formatter for username format if needed
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Username cannot be empty';
                         }
-                         // TODO: Add username format validation (e.g., no spaces, allowed characters)
+                        // TODO: Add username format validation (e.g., no spaces, allowed characters)
                         return null;
                       },
-                       enabled: !isSaving, // Disable while saving
+                      enabled: !isSaving, // Disable while saving
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Physical Information Section
+                    Text(
+                      'Physical Information',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Height and Weight Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Height (cm)',
+                                style: AppTextStyles.bodyMedium?.copyWith(
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _heightController,
+                                decoration: const InputDecoration(
+                                  hintText: '170',
+                                  suffixText: 'cm',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value != null && value.isNotEmpty) {
+                                    final height = double.tryParse(value);
+                                    if (height == null ||
+                                        height <= 0 ||
+                                        height > 300) {
+                                      return 'Enter valid height';
+                                    }
+                                  }
+                                  return null;
+                                },
+                                enabled: !isSaving,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Weight (kg)',
+                                style: AppTextStyles.bodyMedium?.copyWith(
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _weightController,
+                                decoration: const InputDecoration(
+                                  hintText: '70',
+                                  suffixText: 'kg',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value != null && value.isNotEmpty) {
+                                    final weight = double.tryParse(value);
+                                    if (weight == null ||
+                                        weight <= 0 ||
+                                        weight > 500) {
+                                      return 'Enter valid weight';
+                                    }
+                                  }
+                                  return null;
+                                },
+                                enabled: !isSaving,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Gender Dropdown
+                    Text(
+                      'Gender',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      value: _selectedGender,
+                      decoration: const InputDecoration(
+                        hintText: 'Select your gender',
+                      ),
+                      items:
+                          ['Male', 'Female', 'Other', 'Prefer not to say']
+                              .map(
+                                (gender) => DropdownMenuItem(
+                                  value: gender,
+                                  child: Text(gender),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          isSaving
+                              ? null
+                              : (value) {
+                                setState(() {
+                                  _selectedGender = value;
+                                });
+                              },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Activity Level Dropdown
+                    Text(
+                      'Activity Level',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      value: _selectedActivityLevel,
+                      decoration: const InputDecoration(
+                        hintText: 'Select your activity level',
+                      ),
+                      items:
+                          [
+                                'Sedentary',
+                                'Lightly active',
+                                'Moderately active',
+                                'Very active',
+                                'Extremely active',
+                              ]
+                              .map(
+                                (level) => DropdownMenuItem(
+                                  value: level,
+                                  child: Text(
+                                    level,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          isSaving
+                              ? null
+                              : (value) {
+                                setState(() {
+                                  _selectedActivityLevel = value;
+                                });
+                              },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Fitness Goal Dropdown
+                    Text(
+                      'Fitness Goal',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      value: _selectedFitnessGoal,
+                      decoration: const InputDecoration(
+                        hintText: 'Select your fitness goal',
+                      ),
+                      items:
+                          [
+                                'Lose Weight',
+                                'Maintain Weight',
+                                'Gain Weight',
+                                'Build Muscle',
+                                'Improve Endurance',
+                                'General Fitness',
+                              ]
+                              .map(
+                                (goal) => DropdownMenuItem(
+                                  value: goal,
+                                  child: Text(goal),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          isSaving
+                              ? null
+                              : (value) {
+                                setState(() {
+                                  _selectedFitnessGoal = value;
+                                });
+                              },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Health Information Section
+                    Text(
+                      'Health Information',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Dietary Preferences
+                    Text(
+                      'Dietary Preferences',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          [
+                            'Vegetarian',
+                            'Vegan',
+                            'Keto',
+                            'Paleo',
+                            'Mediterranean',
+                            'Low Carb',
+                            'High Protein',
+                            'Gluten Free',
+                            'Dairy Free',
+                            'Halal',
+                            'Kosher',
+                          ].map((preference) {
+                            final isSelected = _selectedDietaryPreferences
+                                .contains(preference);
+                            return FilterChip(
+                              label: Text(preference),
+                              selected: isSelected,
+                              onSelected:
+                                  isSaving
+                                      ? null
+                                      : (selected) {
+                                        setState(() {
+                                          if (selected) {
+                                            _selectedDietaryPreferences.add(
+                                              preference,
+                                            );
+                                          } else {
+                                            _selectedDietaryPreferences.remove(
+                                              preference,
+                                            );
+                                          }
+                                        });
+                                      },
+                              selectedColor: AppColors.primary.withOpacity(0.2),
+                              checkmarkColor: AppColors.primary,
+                            );
+                          }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Health Conditions
+                    Text(
+                      'Health Conditions',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _healthConditionsController,
+                      decoration: const InputDecoration(
+                        hintText:
+                            'e.g., diabetes, hypertension, allergies (optional)',
+                      ),
+                      maxLines: 3,
+                      enabled: !isSaving,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Injuries
+                    Text(
+                      'Injuries or Physical Limitations',
+                      style: AppTextStyles.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _injuriesController,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g., knee injury, back problems (optional)',
+                      ),
+                      maxLines: 3,
+                      enabled: !isSaving,
                     ),
                     const SizedBox(height: 24),
 
@@ -532,31 +970,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded( // Use Expanded to make buttons take equal space
-                          child: OutlinedButton( // Sign Out button
-                            onPressed: isSaving ? null : _signOut, // Disable if saving
+                        Expanded(
+                          // Use Expanded to make buttons take equal space
+                          child: OutlinedButton(
+                            // Sign Out button
+                            onPressed:
+                                isSaving ? null : _signOut, // Disable if saving
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary, // Red text/border
+                              foregroundColor:
+                                  AppColors.primary, // Red text/border
                               side: BorderSide(color: AppColors.primary),
-                              padding: const EdgeInsets.symmetric(vertical: 12), // Match ElevatedButton height
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ), // Match ElevatedButton height
                             ),
-                            child: Row( // Icon and text
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 Icon(Icons.logout_outlined, size: 20),
-                                 SizedBox(width: 8),
-                                 Text('Sign Out'),
-                               ],
-                             ),
+                            child: Row(
+                              // Icon and text
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.logout_outlined, size: 20),
+                                SizedBox(width: 8),
+                                Text('Sign Out'),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Expanded( // Use Expanded
-                          child: ElevatedButton( // Save Changes button
+                        Expanded(
+                          // Use Expanded
+                          child: ElevatedButton(
+                            // Save Changes button
                             onPressed: isSaving ? null : _saveProfileChanges,
-                            child: isSaving
-                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Text('Save Changes'),
+                            child:
+                                isSaving
+                                    ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : const Text('Save Changes'),
                           ),
                         ),
                       ],
@@ -576,11 +1031,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Trainer Tools', style: AppTextStyles.headlineSmall?.copyWith(color: AppColors.foreground)),
+                    Text(
+                      'Trainer Tools',
+                      style: AppTextStyles.headlineSmall?.copyWith(
+                        color: AppColors.foreground,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/trainer_nutrition_plans');
+                        Navigator.pushNamed(
+                          context,
+                          '/trainer_nutrition_plans',
+                        );
                       },
                       icon: Icon(Icons.restaurant_menu),
                       label: Text('Manage Nutrition Plans'),

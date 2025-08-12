@@ -15,8 +15,7 @@ class NutritionQuizScreen extends ConsumerStatefulWidget {
 
 class _NutritionQuizScreenState extends ConsumerState<NutritionQuizScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _activityLevel =
-      'Moderate (moderate exercise/sports 3-5 days/week)'; // Default
+  String _activityLevel = 'Moderate (3-5 d/wk)'; // Default
   String _goal = 'Maintain Weight'; // Default
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
@@ -209,7 +208,7 @@ class _NutritionQuizScreenState extends ConsumerState<NutritionQuizScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submitQuiz,
-                child: const Text('Submit Quiz'),
+                child: const Text('Submit Info'),
               ),
             ],
           ),

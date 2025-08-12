@@ -15,8 +15,13 @@ class Product_card extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.grey.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -33,7 +38,7 @@ class Product_card extends StatelessWidget {
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
-                color: Colors.grey[200],
+                color: Colors.white,
               ),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
@@ -42,11 +47,11 @@ class Product_card extends StatelessWidget {
                 ),
                 child: Image.network(
                   product.imageUrl,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
-                      color: Colors.grey[300],
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
                       child: const Center(
                         child: CircularProgressIndicator(),
                       ),
@@ -54,11 +59,11 @@ class Product_card extends StatelessWidget {
                   },
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: Colors.grey[300],
-                      child: const Icon(
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                      child: Icon(
                         Icons.fitness_center,
                         size: 40,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                       ),
                     );
                   },
@@ -78,9 +83,10 @@ class Product_card extends StatelessWidget {
                     Flexible(
                       child: Text(
                         product.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -100,9 +106,10 @@ class Product_card extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${product.rating}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -111,7 +118,7 @@ class Product_card extends StatelessWidget {
                             '(${product.reviewCount})',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -124,10 +131,10 @@ class Product_card extends StatelessWidget {
                     // Price
                     Text(
                       '৳${product.price.toStringAsFixed(0)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ],
