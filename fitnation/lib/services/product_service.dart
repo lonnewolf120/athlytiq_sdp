@@ -316,6 +316,165 @@ class ProductService {
         reviewCount: 78,
         features: ['Cast iron construction', 'Wide handle', 'Flat bottom'],
       ),
+
+      // Running Gear
+      const Product(
+        id: '500',
+        name: 'Men\'s Running Shoes',
+        description: 'Lightweight running shoes with superior cushioning and breathable mesh upper.',
+        price: 12999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/71vqccKqizL._AC_SX575_.jpg',
+        images: [
+          'https://m.media-amazon.com/images/I/71vqccKqizL._AC_SX575_.jpg',
+          'https://m.media-amazon.com/images/I/71tNwiY0iFL._AC_SX575_.jpg',
+          'https://m.media-amazon.com/images/I/71hbCUwvGIL._AC_SY695_.jpg',
+        ],
+        category: 'footwear',
+        rating: 4.8,
+        reviewCount: 2456,
+        features: ['Responsive foam cushioning', 'Breathable mesh', 'Lightweight design', 'All-day comfort'],
+      ),
+      const Product(
+        id: '501',
+        name: 'Women\'s Running Shoes',
+        description: 'Performance running shoes designed for women with adaptive fit and energy return.',
+        price: 11999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/71RipFkA7yL._AC_SY575_.jpg',
+        images: [
+         'https://m.media-amazon.com/images/I/71RipFkA7yL._AC_SY575_.jpg',
+        ],
+        category: 'footwear',
+        rating: 4.7,
+        reviewCount: 1834,
+        features: ['Adaptive fit technology', 'Energy return foam', 'Women-specific design', 'Reflective details'],
+      ),
+      const Product(
+        id: '502',
+        name: 'GPS Running Watch',
+        description: 'Advanced GPS running watch with heart rate monitoring and training analytics.',
+        price: 24999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/61m+fKy7wzL._AC_SY300_SX300_.jpg',
+        category: 'accessories',
+        rating: 4.6,
+        reviewCount: 892,
+        features: ['Built-in GPS', 'Heart rate monitor', '7-day battery', 'Water resistant'],
+      ),
+      const Product(
+        id: '503',
+        name: 'Running Hydration Belt',
+        description: 'Comfortable hydration belt with multiple pockets and bounce-free design.',
+        price: 3999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/71acFE0O5YL._AC_SX679_.jpg',
+        category: 'accessories',
+        rating: 4.5,
+        reviewCount: 456,
+        features: ['Bounce-free design', '2 water bottles', 'Multiple pockets', 'Adjustable fit'],
+      ),
+
+      // Cycling Gear
+      const Product(
+        id: '600',
+        name: 'Road Bike Helmet',
+        description: 'Lightweight aerodynamic cycling helmet with superior ventilation.',
+        price: 8999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/61XqNkn9DaL._AC_SX466_.jpg',
+        category: 'accessories',
+        rating: 4.7,
+        reviewCount: 678,
+        features: ['Aerodynamic design', '22 vents', 'Lightweight', 'MIPS protection'],
+      ),
+      const Product(
+        id: '601',
+        name: 'Cycling Shoes',
+        description: 'Performance cycling shoes with stiff sole and secure closure system.',
+        price: 15999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/61v5S25noiL._AC_SY575_.jpg',
+        category: 'footwear',
+        rating: 4.6,
+        reviewCount: 234,
+        features: ['Carbon fiber sole', 'BOA closure', 'Breathable upper', 'Professional fit'],
+      ),
+      const Product(
+        id: '602',
+        name: 'Bike Computer',
+        description: 'Advanced bike computer with GPS navigation and performance metrics.',
+        price: 29999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/61QaZ-QlNHL._AC_SX679_.jpg',
+        category: 'accessories',
+        rating: 4.8,
+        reviewCount: 345,
+        features: ['GPS navigation', 'Performance tracking', 'Long battery life', 'ANT+ connectivity'],
+      ),
+
+      // Swimming Gear
+      const Product(
+        id: '700',
+        name: 'Swim Goggles Pro',
+        description: 'Professional swimming goggles with anti-fog and UV protection.',
+        price: 2999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/71Y+spVpwuL._AC_SY300_SX300_.jpg',
+        category: 'accessories',
+        rating: 4.6,
+        reviewCount: 1234,
+        features: ['Anti-fog coating', 'UV protection', 'Comfortable seal', 'Adjustable strap'],
+      ),
+      const Product(
+        id: '701',
+        name: 'Swim Cap Silicone',
+        description: 'High-quality silicone swim cap for competitive and recreational swimming.',
+        price: 1299.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/510YGPJDS+L._AC_SY300_SX300_.jpg',
+        category: 'accessories',
+        rating: 4.4,
+        reviewCount: 567,
+        features: ['100% silicone', 'Tear-resistant', 'Comfortable fit', 'Multiple colors'],
+      ),
+      const Product(
+        id: '702',
+        name: 'Waterproof Fitness Tracker',
+        description: 'Advanced fitness tracker designed for swimming and water sports.',
+        price: 18999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/51CtR+quteL._AC_SY300_SX300_.jpg',
+        category: 'accessories',
+        rating: 4.5,
+        reviewCount: 789,
+        features: ['50m water resistance', 'Swim stroke detection', 'Heart rate monitor', '14-day battery'],
+      ),
+
+      // Hiking Gear
+      const Product(
+        id: '800',
+        name: 'Hiking Boots',
+        description: 'Durable waterproof hiking boots with excellent traction and support.',
+        price: 16999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/710OLYAZw5L._AC_SY575_.jpg',
+        category: 'footwear',
+        rating: 4.7,
+        reviewCount: 1456,
+        features: ['Waterproof membrane', 'Vibram sole', 'Ankle support', 'Breathable lining'],
+      ),
+      const Product(
+        id: '801',
+        name: 'Hiking Backpack 40L',
+        description: 'Lightweight hiking backpack with hydration system and multiple compartments.',
+        price: 12999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/81siwI2UxEL.__AC_SX300_SY300_QL70_FMwebp_.jpg',
+        category: 'accessories',
+        rating: 4.6,
+        reviewCount: 678,
+        features: ['40L capacity', 'Hydration compatible', 'Adjustable fit', 'Rain cover included'],
+      ),
+      const Product(
+        id: '802',
+        name: 'Hiking Poles',
+        description: 'Adjustable trekking poles with shock absorption and comfortable grips.',
+        price: 6999.99,
+        imageUrl: 'https://m.media-amazon.com/images/I/71TJLm0G1HL.__AC_SX300_SY300_QL70_FMwebp_.jpg',
+        category: 'accessories',
+        rating: 4.5,
+        reviewCount: 892,
+        features: ['Adjustable length', 'Shock absorption', 'Tungsten tips', 'Lightweight carbon'],
+      ),
     ];
   }
 
@@ -328,6 +487,41 @@ class ProductService {
   }
 
   static List<String> getCategories() {
-    return ['equipment', 'supplements', 'accessories', 'clothing'];
+    return ['equipment', 'supplements', 'accessories', 'clothing', 'footwear'];
+  }
+
+  static List<Product> getSuggestedProductsForActivity(String activityType) {
+    switch (activityType.toLowerCase()) {
+      case 'run':
+        return getAllProducts().where((product) => 
+          product.id == '500' || // Men's Running Shoes
+          product.id == '501' || // Women's Running Shoes
+          product.id == '502' || // GPS Running Watch
+          product.id == '503'    // Running Hydration Belt
+        ).toList();
+      case 'ride':
+        return getAllProducts().where((product) => 
+          product.id == '600' || // Road Bike Helmet
+          product.id == '601' || // Cycling Shoes
+          product.id == '602'    // Bike Computer
+        ).toList();
+      case 'swim':
+        return getAllProducts().where((product) => 
+          product.id == '700' || // Swim Goggles Pro
+          product.id == '701' || // Swim Cap Silicone
+          product.id == '702'    // Waterproof Fitness Tracker
+        ).toList();
+      case 'hike':
+        return getAllProducts().where((product) => 
+          product.id == '800' || // Hiking Boots
+          product.id == '801' || // Hiking Backpack 40L
+          product.id == '802'    // Hiking Poles
+        ).toList();
+      default:
+        // Return general fitness equipment for other activities
+        return getAllProducts().where((product) => 
+          product.category == 'equipment' && product.rating >= 4.5
+        ).take(4).toList();
+    }
   }
 }

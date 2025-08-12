@@ -33,6 +33,7 @@ enum ProductCategory {
   supplements,
   accessories,
   clothing,
+  footwear,
 }
 
 extension ProductCategoryExtension on ProductCategory {
@@ -46,6 +47,8 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Accessories';
       case ProductCategory.clothing:
         return 'Clothing';
+      case ProductCategory.footwear:
+        return 'Footwear';
     }
   }
 
@@ -59,6 +62,8 @@ extension ProductCategoryExtension on ProductCategory {
         return '🎒';
       case ProductCategory.clothing:
         return '👕';
+      case ProductCategory.footwear:
+        return '👟';
     }
   }
 }
