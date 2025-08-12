@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'ChallengesScreen.dart';
+import '../../services/product_service.dart';
+import '../../widgets/compact_product_card.dart';
+import '../product_detail_page.dart';
+import '../shop_page.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final Challenge challenge;
@@ -548,6 +552,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       _participantCount += _isJoined ? 1 : -1;
     });
 
+    if (_isJoined) {
+      _showSuggestedProductsDialog();
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_isJoined 
@@ -557,6 +565,182 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  void _showSuggestedProductsDialog() {
+    final suggestedProducts = ProductService.getSuggestedProductsForActivity(widget.challenge.activityType);
+    
+    if (suggestedProducts.isEmpty) return;
+
+    String getActivityMessage(String activityType) {
+      switch (activityType.toLowerCase()) {
+        case 'run':
+          return 'Get the perfect running gear to boost your performance!';
+        case 'ride':
+          return 'Enhance your cycling experience with premium gear!';
+        case 'swim':
+          return 'Dive in with the best swimming equipment!';
+        case 'hike':
+          return 'Conquer trails with professional hiking gear!';
+        default:
+          return 'Here are some recommended products to help you succeed:';
+      }
+    }
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+            minHeight: 400,
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    _getActivityIcon(widget.challenge.activityType),
+                    color: widget.challenge.brandColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Gear up for your ${widget.challenge.activityType.toLowerCase()}ning challenge!',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                getActivityMessage(widget.challenge.activityType),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[300],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 16),
+              
+              // Products Grid
+              Flexible(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final availableHeight = constraints.maxHeight - 60; 
+                    final itemHeight = availableHeight / 2 - 6; 
+                    final itemWidth = (constraints.maxWidth - 12) / 2; 
+                    final aspectRatio = (itemWidth / itemHeight).clamp(0.7, 1.2);
+                    
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const ClampingScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: aspectRatio,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: suggestedProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = suggestedProducts[index];
+                        return CompactProductCard(
+                          product: product,
+                          onTap: () {
+                            Navigator.of(context).pop(); // Close dialog
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductDetailPage(product: product),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        'Maybe Later',
+                        style: TextStyle(color: Colors.grey[400]),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // Navigate to shop page
+                        String getCategoryForActivity(String activityType) {
+                          switch (activityType.toLowerCase()) {
+                            case 'run':
+                            case 'hike':
+                              return 'footwear';
+                            case 'ride':
+                              return 'accessories';
+                            case 'swim':
+                              return 'accessories';
+                            default:
+                              return 'equipment';
+                          }
+                        }
+                        
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ShopPage(
+                              initialCategory: getCategoryForActivity(widget.challenge.activityType),
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.challenge.brandColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Shop Now'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
