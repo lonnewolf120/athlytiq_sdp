@@ -76,15 +76,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         iconTheme: IconThemeData(color: Theme.of(context).colorScheme.onSurface),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            onPressed: () {},
-          ),
-        ],
+      
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -664,7 +656,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
           );
           
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            /* ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('bKash app not found. Opening Play Store...'),
                 backgroundColor: Color(0xFFE2136E),
@@ -673,7 +665,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            );
+            ); */
           }
         } else {
           await launchUrl(

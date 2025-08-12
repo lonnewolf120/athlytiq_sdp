@@ -556,7 +556,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       _showSuggestedProductsDialog();
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    /* ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_isJoined 
             ? 'Successfully joined ${widget.challenge.title}!' 
@@ -567,7 +567,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-    );
+    ); */
   }
 
   void _showSuggestedProductsDialog() {

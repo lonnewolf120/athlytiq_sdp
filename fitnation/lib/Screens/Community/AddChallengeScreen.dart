@@ -281,15 +281,7 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
                 }).toList(),
               ),
               
-              const SizedBox(height: 16),
               
-              _buildTextFormField(
-                controller: _imageUrlController,
-                label: 'Background Image URL (Optional)',
-                hint: 'https://example.com/image.jpg',
-                validator: null,
-              ),
-
               const SizedBox(height: 32),
               
               SizedBox(
