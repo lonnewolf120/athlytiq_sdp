@@ -121,32 +121,32 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     ],
                   ),
                 ),
-                PopupMenuItem<String>(
-                  value: 'reminders',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.notifications,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text('Reminders'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'notifications',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.notification_important,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text('Notifications'),
-                    ],
-                  ),
-                ),
+                // PopupMenuItem<String>(
+                //   value: 'reminders',
+                //   child: Row(
+                //     children: [
+                //       Icon(
+                //         Icons.notifications,
+                //         color: theme.colorScheme.onSurface,
+                //       ),
+                //       const SizedBox(width: 12),
+                //       const Text('Reminders'),
+                //     ],
+                //   ),
+                // ),
+                // PopupMenuItem<String>(
+                //   value: 'notifications',
+                //   child: Row(
+                //     children: [
+                //       Icon(
+                //         Icons.notification_important,
+                //         color: theme.colorScheme.onSurface,
+                //       ),
+                //       const SizedBox(width: 12),
+                //       const Text('Notifications'),
+                //     ],
+                //   ),
+                // ),
                 PopupMenuItem<String>(
                   value: 'themes',
                   child: Row(

@@ -57,7 +57,7 @@ class SidebarMenuView extends ConsumerWidget {
                 _buildMenuItem(
                   context: context,
                   icon: Icons.navigation_outlined,
-                  title: 'Navigation Settings',
+                  title: 'Menu Settings',
                   onTap: () => _showNavigationSettingsDialog(context),
                 ),
 

@@ -1,4 +1,3 @@
-// lib/Screens/Activities/WorkoutScreen.dart
 import 'package:fitnation/Screens/Activities/WorkoutHistoryScreen.dart';
 import 'package:fitnation/models/Workout.dart';
 import 'package:fitnation/Screens/Activities/WorkoutDetailScreen.dart';
@@ -12,6 +11,10 @@ import 'package:fitnation/models/Exercise.dart' as exercise_db;
 import 'package:fitnation/providers/gemini_workout_provider.dart';
 import 'package:fitnation/Screens/Activities/WorkoutPlanGeneratorScreen.dart';
 import 'package:fitnation/widgets/common/CustomAppBar.dart';
+import 'package:fitnation/Screens/Trainer/TrainerRegistrationScreen.dart';
+import 'package:fitnation/Screens/Trainer/TrainerApplicationStatusScreen.dart';
+import 'package:fitnation/Screens/Trainer/TrainerListScreen.dart';
+import 'package:fitnation/Screens/Trainer/MySessionsScreen.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({super.key});
@@ -22,7 +25,6 @@ class WorkoutScreen extends ConsumerStatefulWidget {
 
 class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     with SingleTickerProviderStateMixin {
-  // Added a comment to trigger re-analysis
   late TabController _tabController;
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -30,9 +32,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
-    ); // Changed length to 2 to match actual tabs
+    ); // Changed length to 3 to include Trainer tab
   }
 
   @override
@@ -163,7 +165,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           unselectedLabelStyle: textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w500,
           ),
-          tabs: const [Tab(text: 'WORKOUT PLANS'), Tab(text: 'ACTIVE SESSION')],
+          tabs: const [
+            Tab(text: 'PLANS'),
+            Tab(text: 'TRAINER'),
+            Tab(text: 'SESSION'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -171,6 +177,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
         children: [
           // Workout Plan Tab
           _buildWorkoutPlanTabContent(context, generatedWorkouts, colorScheme),
+
+          // Trainer Tab
+          _buildTrainerTabContent(context, colorScheme),
 
           // Active Session Tab
           _buildActiveWorkoutTab(context, activeWorkout, colorScheme),
@@ -187,8 +196,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     ActiveWorkoutState activeWorkout,
     ColorScheme colorScheme,
   ) {
-    // Only show FAB on active workout tab (index 1)
-    if (_tabController.index != 1) return null;
+    // Only show FAB on active workout tab (index 2)
+    if (_tabController.index != 2) return null;
 
     return !activeWorkout.isStarted
         ? FloatingActionButton.extended(
@@ -921,6 +930,230 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                     ),
                   ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrainerTabContent(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Personal Trainer Card
+          Card(
+            elevation: 0,
+            color: colorScheme.primaryContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.person_4_rounded,
+                          color: colorScheme.onPrimary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Personal AI Trainer",
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Get personalized guidance and tips",
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onPrimaryContainer
+                                    .withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Trainer Features
+          Expanded(
+            child: ListView(
+              children: [
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.fitness_center_rounded,
+                  "Exercise Form Analysis",
+                  "Get real-time feedback on your exercise form",
+                  () {
+                    // Navigate to form analysis screen
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.psychology_rounded,
+                  "Find Personal Trainer",
+                  "Connect with certified trainers in your area",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TrainerListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.app_registration_rounded,
+                  "Become a Trainer",
+                  "Apply to become a certified trainer on our platform",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TrainerRegistrationScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.schedule_rounded,
+                  "My Sessions",
+                  "View and manage your booked training sessions",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MySessionsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildTrainerFeatureCard(
+                  context,
+                  colorScheme,
+                  Icons.assignment_rounded,
+                  "Application Status",
+                  "Check your trainer application status",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => const TrainerApplicationStatusScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrainerFeatureCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    IconData icon,
+    String title,
+    String description,
+    VoidCallback onTap,
+  ) {
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline.withOpacity(0.2), width: 1),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: colorScheme.onSecondaryContainer,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: colorScheme.onSurfaceVariant,
+                size: 16,
+              ),
             ],
           ),
         ),

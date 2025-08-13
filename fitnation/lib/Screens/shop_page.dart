@@ -8,7 +8,9 @@ import 'cart_page.dart';
 import 'package:fitnation/widgets/common/CustomAppBar.dart';
 
 class ShopPage extends StatefulWidget {
-  const ShopPage({super.key});
+  final String? initialCategory;
+
+  const ShopPage({super.key, this.initialCategory});
 
   @override
   State<ShopPage> createState() => _ShopPageState();
@@ -23,6 +25,7 @@ class _ShopPageState extends State<ShopPage> {
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategory ?? 'all';
     _loadProducts();
     _searchController.addListener(_filterProducts);
   }
@@ -167,6 +170,43 @@ class _ShopPageState extends State<ShopPage> {
                   icon: '👕',
                   isSelected: _selectedCategory == 'clothing',
                   onTap: () => _selectCategory('clothing'),
+                ),
+                CategoryChip(
+                  category: 'Footwear',
+                  icon: '👟',
+                  isSelected: _selectedCategory == 'footwear',
+                  onTap: () => _selectCategory('footwear'),
+                ),
+                CategoryChip(
+                  category: 'Nutrition',
+                  icon: '🥗',
+                  isSelected: _selectedCategory == 'nutrition',
+                  onTap: () => _selectCategory('nutrition'),
+                ),
+
+                CategoryChip(
+                  category: 'Dumbbells',
+                  icon: '🏋️',
+                  isSelected: _selectedCategory == 'dumbbells',
+                  onTap: () => _selectCategory('dumbbells'),
+                ),
+                CategoryChip(
+                  category: 'Barbell',
+                  icon: '🏋️',
+                  isSelected: _selectedCategory == 'barbell',
+                  onTap: () => _selectCategory('barbell'),
+                ),
+                CategoryChip(
+                  category: 'Kettlebell',
+                  icon: '🏋️',
+                  isSelected: _selectedCategory == 'kettlebell',
+                  onTap: () => _selectCategory('kettlebell'),
+                ),
+                CategoryChip(
+                  category: 'Treadmill',
+                  icon: '',
+                  isSelected: _selectedCategory == 'treadmill',
+                  onTap: () => _selectCategory('treadmill'),
                 ),
               ],
             ),

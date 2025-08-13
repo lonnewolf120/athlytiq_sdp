@@ -1,0 +1,16 @@
+fastapi==0.111.0
+uvicorn==0.22.0
+python-dotenv==1.0.0
+sqlalchemy==2.0.15
+pydantic==2.7.1
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+pydantic-settings==2.2.1
+firebase-admin
+psycopg2-binary
+bcrypt==3.2.2
+asyncpg==0.30.0
+pytest
+httpx
+cloudinary

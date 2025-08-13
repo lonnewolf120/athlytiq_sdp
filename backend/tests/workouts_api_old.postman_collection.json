@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "YOUR_COLLECTION_ID",
+		"name": "Workouts API v1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"description": "Collection for the /api/v1/workouts endpoints"
+	},
+	"item": [
+		{
+			"name": "Create Workout Session",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"workout_plan_id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"start_time\": \"2024-05-29T10:00:00Z\",\n    \"end_time\": \"2024-05-29T11:00:00Z\",\n    \"duration_seconds\": 3600,\n    \"calories_burned\": 350,\n    \"notes\": \"Good session, felt strong.\",\n    \"exercises_completed\": [\n        {\n            \"exercise_id\": \"a1b2c3d4-e5f6-7890-1234-567890abcdef\",\n            \"sets_completed\": [\n                {\n                    \"set_number\": 1,\n                    \"reps\": 10,\n                    \"weight_kg\": 50,\n                    \"duration_seconds\": null,\n                    \"distance_km\": null,\n                    \"notes\": \"Warm-up set\"\n                },\n                {\n                    \"set_number\": 2,\n                    \"reps\": 8,\n                    \"weight_kg\": 60,\n                    \"duration_seconds\": null,\n                    \"distance_km\": null,\n                    \"notes\": \"Working set\"\n                }\n            ],\n            \"notes\": \"Focused on form.\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/workouts/session",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workouts",
+						"session"
+					]
+				},
+				"description": "Create a new completed workout session for the current user."
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Workout History",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/workouts/history?skip=0&limit=20",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workouts",
+						"history"
+					],
+					"query": [
+						{
+							"key": "skip",
+							"value": "0"
+						},
+						{
+							"key": "limit",
+							"value": "20"
+						}
+					]
+				},
+				"description": "Retrieve the current user's completed workout history, paginated."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Workout Session Details",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/workouts/session/{{sessionId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workouts",
+						"session",
+						"{{sessionId}}"
+					],
+					"variable": [
+						{
+							"key": "sessionId",
+							"value": "your_session_uuid_here",
+							"description": "The UUID of the workout session"
+						}
+					]
+				},
+				"description": "Retrieve details for a specific completed workout session for the current user."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "YOUR_AUTH_TOKEN_HERE",
+			"type": "string"
+		},
+		{
+			"key": "sessionId",
+			"value": "YOUR_SESSION_ID_HERE",
+			"type": "string"
+		}
+	]
+}
