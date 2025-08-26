@@ -195,10 +195,15 @@ class _AddChallengeScreenState extends ConsumerState<AddChallengeScreen> {
               _buildTextFormField(
                 controller: _distanceController,
                 label: 'Target Distance/Goal',
-                hint: 'e.g., 5.0 km or 10k steps',
+                hint: 'e.g., 5.0 (in km)',
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a target goal';
+                  }
+                  final distance = double.tryParse(value);
+                  if (distance == null || distance <= 0) {
+                    return 'Please enter a valid positive number';
                   }
                   return null;
                 },
@@ -369,6 +374,7 @@ class _AddChallengeScreenState extends ConsumerState<AddChallengeScreen> {
     required String hint,
     int maxLines = 1,
     String? Function(String?)? validator,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,6 +392,7 @@ class _AddChallengeScreenState extends ConsumerState<AddChallengeScreen> {
           controller: controller,
           maxLines: maxLines,
           validator: validator,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
@@ -523,16 +530,17 @@ class _AddChallengeScreenState extends ConsumerState<AddChallengeScreen> {
       try {
         final challengeService = ref.read(challengeServiceProvider);
         
-        String distanceStr = '0 km';
+        // Parse distance as numeric value
+        double distanceValue = 0.0;
         if (_distanceController.text.isNotEmpty) {
-          final distance = double.tryParse(_distanceController.text);
-          if (distance != null) {
-            distanceStr = '${distance.toStringAsFixed(1)} km';
-          }
+          distanceValue = double.tryParse(_distanceController.text) ?? 0.0;
         }
         
+        // Calculate duration in days as numeric value
         int durationDays = _endDate.difference(_startDate).inDays;
-        String durationStr = '$durationDays days';
+        if (durationDays <= 0) {
+          durationDays = 1; // Minimum 1 day
+        }
         
         String brandName = _brandController.text.trim();
         if (brandName.isEmpty) {
@@ -547,12 +555,12 @@ class _AddChallengeScreenState extends ConsumerState<AddChallengeScreen> {
           backgroundImage: _imageUrlController.text.isEmpty 
             ? 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
             : _imageUrlController.text,
-          distance: distanceStr,
-          duration: durationStr,
+          distance: distanceValue,
+          duration: durationDays,
           startDate: _startDate,
           endDate: _endDate,
           activityType: _selectedActivityType.toLowerCase(),
-          brandColor: '#${_selectedBrandColor.value.toRadixString(16).substring(2).toUpperCase()}',
+          brandColor: Colors.blueAccent,
           maxParticipants: 100, // Default value
           isPublic: true,
         );
