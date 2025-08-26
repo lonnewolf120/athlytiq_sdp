@@ -696,3 +696,49 @@ class ChallengeParticipant(Base):
 # Add relationships to User model
 User.created_challenges = relationship("Challenge", back_populates="creator")
 User.challenge_participations = relationship("ChallengeParticipant", back_populates="participant")
+
+
+
+class TrainerProfile(Base):
+    __tablename__ = 'trainer_profiles'
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    bio = Column(Text, nullable=True)
+    certifications = Column(Text, nullable=True)
+    specialties = Column(Text, nullable=True)
+    rating = Column(Float, nullable=True, default=0.0)
+    hourly_rate = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship('User')
+    availabilities = relationship('TrainerAvailability', back_populates='trainer', cascade='all, delete-orphan')
+    sessions = relationship('TrainerSession', back_populates='trainer', cascade='all, delete-orphan')
+
+
+class TrainerAvailability(Base):
+    __tablename__ = 'trainer_availabilities'
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    weekday = Column(Integer, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    trainer = relationship('TrainerProfile', back_populates='availabilities')
+
+
+class TrainerSession(Base):
+    __tablename__ = 'trainer_sessions'
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String(50), nullable=False, default='pending')
+    notes = Column(Text, nullable=True)
+    price = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    trainer = relationship('TrainerProfile', back_populates='sessions')
+    user = relationship('User')
