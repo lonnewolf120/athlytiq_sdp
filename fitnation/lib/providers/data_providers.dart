@@ -570,23 +570,57 @@ final completedWorkoutsProvider = FutureProvider.family<
   WorkoutHistoryFilters
 >((ref, filters) async {
   final apiService = ref.watch(apiServiceProvider);
+  final connectivity = ref.watch(connectivityServiceProvider);
+  final db = DatabaseHelper();
 
-  print(
-    "completedWorkoutsProvider: Fetching from API with filters - userId: ${filters.userId}, type: ${filters.workoutType}, time: ${filters.timeRange}, skip: ${filters.skip}, limit: ${filters.limit}",
+  // Require a userId for user-specific history
+  if (filters.userId.isEmpty) return [];
+
+  // Load local workouts first (offline-first)
+  List<CompletedWorkout> localWorkouts = await db.getCompletedWorkouts(
+    filters.userId,
   );
 
-  // Fetch all workouts from the API using skip and limit
-  List<CompletedWorkout> allUserWorkouts;
+  // If we have internet, try to sync unsynced local workouts and merge remote entries
+  bool online = false;
   try {
-    allUserWorkouts = await apiService.getWorkoutHistory(
-      skip: filters.skip,
-      limit: filters.limit,
-    );
-  } on NoInternetException catch (e) {
-    throw Exception(e.message);
+    online = await connectivity.hasInternetConnection();
+  } catch (e) {
+    online = false;
   }
 
-  // Apply workoutType filter client-side
+  if (online) {
+    // Sync unsynced workouts to server
+    try {
+      final unsynced = await db.getUnsyncedWorkouts(filters.userId);
+      for (var w in unsynced) {
+        try {
+          await apiService.saveWorkoutSession(w);
+          await db.updateWorkoutSyncedStatus(w.id, true);
+        } catch (e) {
+          // keep unsynced if upload fails for any workout
+        }
+      }
+
+      // Fetch remote workouts and merge any that are not present locally
+      List<CompletedWorkout> remoteWorkouts = await apiService
+          .getWorkoutHistory(skip: filters.skip, limit: filters.limit);
+      final Map<String, CompletedWorkout> merged = {
+        for (var lw in localWorkouts) lw.id: lw,
+      };
+      for (var rw in remoteWorkouts) {
+        if (!merged.containsKey(rw.id)) merged[rw.id] = rw;
+      }
+      localWorkouts = merged.values.toList();
+    } on NoInternetException {
+      // no-op: fall back to local only
+    } catch (_) {
+      // ignore and return local results
+    }
+  }
+
+  // Apply workoutType filter client-side (same behavior as before)
+  List<CompletedWorkout> allUserWorkouts = localWorkouts;
   if (filters.workoutType != 'All Workouts') {
     allUserWorkouts =
         allUserWorkouts
@@ -615,7 +649,6 @@ final completedWorkoutsProvider = FutureProvider.family<
     allUserWorkouts =
         allUserWorkouts.where((w) => w.endTime.isAfter(ninetyDaysAgo)).toList();
   }
-  // 'All Time' requires no additional time filtering.
 
   return allUserWorkouts;
 });
@@ -624,6 +657,28 @@ final workoutTypesProvider = FutureProvider<List<String>>((ref) async {
   final workoutNames = await DatabaseHelper().getDistinctWorkoutNames();
   return ['All Workouts', ...workoutNames];
 });
+
+// Utility: Trigger a one-off sync of unsynced local workouts for a user
+final syncUnsyncedWorkoutsProvider =
+    Provider.family<Future<void> Function(), String>((ref, userId) {
+      return () async {
+        if (userId.isEmpty) return;
+        final connectivity = ref.watch(connectivityServiceProvider);
+        final online = await connectivity.hasInternetConnection();
+        if (!online) return;
+        final apiService = ref.watch(apiServiceProvider);
+        final db = DatabaseHelper();
+        final unsynced = await db.getUnsyncedWorkouts(userId);
+        for (var w in unsynced) {
+          try {
+            await apiService.saveWorkoutSession(w);
+            await db.updateWorkoutSyncedStatus(w.id, true);
+          } catch (_) {
+            // keep unsynced if upload fails
+          }
+        }
+      };
+    });
 
 // final mockRideActivitiesProvider = Provider<List<RideActivity>>((ref) {
 //   // Using a consistent organizer for simplicity, or vary by activity type
@@ -774,7 +829,7 @@ final postsFeedProvider = FutureProvider<List<Post>>((ref) async {
 final createPostProvider = FutureProvider.family<void, Post>((ref, post) async {
   debugPrint("=== createPostProvider called ===");
   debugPrint("Post data: ${post.toCreateJson()}");
-  
+
   final apiService = ref.watch(apiServiceProvider);
   try {
     debugPrint("Calling apiService.createPost...");
