@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/product.dart';
+import '../providers/cart_provider.dart';
+import '../widgets/cart_summary_widget.dart';
 import 'cart_page.dart';
 import 'product_reviews_page.dart';
 
-class ProductDetailPage extends StatefulWidget {
+class ProductDetailPage extends ConsumerStatefulWidget {
   final Product product;
 
   const ProductDetailPage({
@@ -12,10 +15,10 @@ class ProductDetailPage extends StatefulWidget {
   });
 
   @override
-  State<ProductDetailPage> createState() => _ProductDetailPageState();
+  ConsumerState<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
-class _ProductDetailPageState extends State<ProductDetailPage> {
+class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   int _quantity = 1;
   int _selectedImageIndex = 0;
   late PageController _imagePageController;
@@ -60,16 +63,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         iconTheme: IconThemeData(color: Theme.of(context).colorScheme.onSurface),
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.shopping_cart_outlined, color: Theme.of(context).colorScheme.onSurface),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CartPage()),
-              );
-            },
+          CartIconWidget(
+            iconColor: Theme.of(context).colorScheme.onSurface,
           ),
-          
         ],
       ),
       body: Column(
@@ -530,13 +526,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       child: ElevatedButton(
                         onPressed: widget.product.isInStock
                             ? () {
+                                
+                                ref.read(cartProvider.notifier).addToCart(
+                                  widget.product,
+                                  quantity: _quantity,
+                                );
+                                
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Added ${widget.product.name} to cart'),
-                                    backgroundColor: Theme.of(context).primaryColor,
+                                    content: Text(
+                                      'Added ${widget.product.name} to cart (Qty: $_quantity)',
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.black,
                                     behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 1), 
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    action: SnackBarAction(
+                                      label: 'View Cart',
+                                      textColor: Colors.white,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const CartPage(),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 );

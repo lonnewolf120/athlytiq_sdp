@@ -1,92 +1,19 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cart_item.dart';
+import '../providers/cart_provider.dart';
 import 'payment_methods_page.dart';
 
-class CartPage extends StatefulWidget {
+class CartPage extends ConsumerWidget {
   const CartPage({super.key});
 
   @override
-  State<CartPage> createState() => _CartPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cartItems = ref.watch(cartProvider);
+    final cartNotifier = ref.read(cartProvider.notifier);
+    final totalAmount = ref.watch(cartTotalAmountProvider);
+    final isEmpty = ref.watch(cartIsEmptyProvider);
 
-class _CartPageState extends State<CartPage> {
-  List<CartItem> cartItems = [
-    CartItem(
-      id: '1',
-      product: Product(
-        id: '1',
-        name: 'Whey Protein Powder',
-        description: 'Premium quality whey protein for muscle building',
-        price: 2500.0,
-        imageUrl: 'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/msc/msc70329/g/65.jpg',
-        category: 'supplements',
-        rating: 4.5,
-        reviewCount: 120,
-        isInStock: true,
-        features: ['25g protein per serving', 'Fast absorption'],
-      ),
-      quantity: 1,
-    ),
-    CartItem(
-      id: '2',
-      product: Product(
-        id: '2',
-        name: 'Resistance Bands Set',
-        description: 'Set of 5 resistance bands with different resistance levels',
-        price: 1200.0,
-        imageUrl: 'https://i5.walmartimages.com/seo/New-11-Piece-Resistance-Band-Set-Heavy-Duty-Yoga-Pilates-Abs-Exercise-Fitness-Workout-Bands_0371214a-7d43-4f19-ba27-ea3bd752f072.b81b750f2724c81c0989fdf12b0009a6.jpeg',
-        category: 'equipment',
-        rating: 4.8,
-        reviewCount: 85,
-        isInStock: true,
-        features: ['5 resistance levels', 'Portable design'],
-      ),
-      quantity: 2,
-    ),
-    CartItem(
-      id: '3',
-      product: Product(
-        id: '3',
-        name: 'Adjustable Dumbbells Set',
-        description: 'Professional grade adjustable dumbbells with quick-lock system. Perfect for home workouts.',
-        price:  30000,
-        imageUrl: 'https://m.media-amazon.com/images/I/619B8uw9JnL._AC_SX679_.jpg',
-        category: 'equipment',
-        rating: 4.3,
-        reviewCount: 95,
-        isInStock: true,
-        features: ['Natural caffeine', 'No crash formula'],
-      ),
-      quantity: 1,
-    ),
-  ];
-
-  double get totalAmount {
-    return cartItems.fold(0.0, (sum, item) => sum + (item.product.price * item.quantity));
-  }
-
-  void _updateQuantity(String itemId, int newQuantity) {
-    setState(() {
-      if (newQuantity <= 0) {
-        cartItems.removeWhere((item) => item.id == itemId);
-      } else {
-        final index = cartItems.indexWhere((item) => item.id == itemId);
-        if (index != -1) {
-          cartItems[index] = cartItems[index].copyWith(quantity: newQuantity);
-        }
-      }
-    });
-  }
-
-  void _removeItem(String itemId) {
-    setState(() {
-      cartItems.removeWhere((item) => item.id == itemId);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -137,9 +64,7 @@ class _CartPageState extends State<CartPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              setState(() {
-                                cartItems.clear();
-                              });
+                              cartNotifier.clearCart();
                               Navigator.pop(context);
                             },
                             child: Text(
@@ -155,8 +80,8 @@ class _CartPageState extends State<CartPage> {
           ),
         ],
       ),
-      body: cartItems.isEmpty
-          ? _buildEmptyCart()
+      body: isEmpty
+          ? _buildEmptyCart(context)
           : Column(
               children: [
                 Expanded(
@@ -165,17 +90,17 @@ class _CartPageState extends State<CartPage> {
                     itemCount: cartItems.length,
                     itemBuilder: (context, index) {
                       final item = cartItems[index];
-                      return _buildCartItem(item);
+                      return _buildCartItem(context, item, cartNotifier);
                     },
                   ),
                 ),
-                _buildCheckoutSection(),
+                _buildCheckoutSection(context, totalAmount),
               ],
             ),
     );
   }
 
-  Widget _buildEmptyCart() {
+  Widget _buildEmptyCart(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -225,7 +150,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildCartItem(CartItem item) {
+  Widget _buildCartItem(BuildContext context, CartItem item, CartNotifier cartNotifier) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -343,7 +268,7 @@ class _CartPageState extends State<CartPage> {
                             Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () => _updateQuantity(item.id, item.quantity - 1),
+                                  onTap: () => cartNotifier.updateQuantity(item.id, item.quantity - 1),
                                   child: Container(
                                     width: 32,
                                     height: 32,
@@ -374,7 +299,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                                 GestureDetector(
-                                  onTap: () => _updateQuantity(item.id, item.quantity + 1),
+                                  onTap: () => cartNotifier.updateQuantity(item.id, item.quantity + 1),
                                   child: Container(
                                     width: 32,
                                     height: 32,
@@ -395,7 +320,7 @@ class _CartPageState extends State<CartPage> {
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
-                              onTap: () => _removeItem(item.id),
+                              onTap: () => cartNotifier.removeFromCart(item.id),
                               child: Container(
                                 width: 32,
                                 height: 32,
@@ -426,7 +351,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildCheckoutSection() {
+  Widget _buildCheckoutSection(BuildContext context, double totalAmount) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -473,13 +398,12 @@ class _CartPageState extends State<CartPage> {
               height: 56,
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigate to payment methods page
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => PaymentMethodsPage(
                         totalAmount: totalAmount,
-                        subtotal: totalAmount * 0.9, // Assuming 10% discount applied later
+                        subtotal: totalAmount * 0.9,
                         deliveryFee: 50.0,
                         discount: totalAmount * 0.1,
                       ),
