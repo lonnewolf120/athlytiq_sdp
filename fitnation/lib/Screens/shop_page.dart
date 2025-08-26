@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/cart_summary_widget.dart';
 import 'product_detail_page.dart';
-import 'cart_page.dart';
 import 'package:fitnation/widgets/common/CustomAppBar.dart';
 
-class ShopPage extends StatefulWidget {
+class ShopPage extends ConsumerStatefulWidget {
   final String? initialCategory;
 
   const ShopPage({super.key, this.initialCategory});
 
   @override
-  State<ShopPage> createState() => _ShopPageState();
+  ConsumerState<ShopPage> createState() => _ShopPageState();
 }
 
-class _ShopPageState extends State<ShopPage> {
+class _ShopPageState extends ConsumerState<ShopPage> {
   String _selectedCategory = 'all';
   List<Product> _products = [];
   List<Product> _filteredProducts = [];
@@ -80,14 +81,8 @@ class _ShopPageState extends State<ShopPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CartPage()),
-              );
-            },
+          CartIconWidget(
+            iconColor: Colors.white,
           ),
         ],
       ),
