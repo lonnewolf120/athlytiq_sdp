@@ -788,10 +788,13 @@ class ProductService {
             'Lightweight and breathable running shorts for men, with a 7-inch inseam and internal brief for comfort during runs.',
         price: 1999.99,
         imageUrl:
-            'https://m.media-amazon.com/images/I/61+9X8Gf2xL._AC_SX425_.jpg',
+            'https://m.media-amazon.com/images/I/811vwORLFxL._AC_SX679_.jpg',
         images: [
-          'https://m.media-amazon.com/images/I/61+9X8Gf2xL._AC_SX425_.jpg',
-          'https://m.media-amazon.com/images/I/61b1bL71pVL._AC_SY355_.jpg',
+          'https://m.media-amazon.com/images/I/71dlZOJEczL._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/710LcQG25YL._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/81RVXR-docL._AC_SX679_.jpg',
+          
+
         ],
         category: 'clothing',
         subCategory: 'men\'s activewear',
@@ -806,7 +809,6 @@ class ProductService {
         ],
       ),
       
-      // CATEGORY: FOOTWEAR
       const Product(
         id: 'foot1_mens_running_shoes',
         name: 'Men\'s Lightweight Running Shoes',
@@ -925,7 +927,6 @@ class ProductService {
   }
 
   static List<Product> getFeaturedProducts() {
-    // Returns products with a high rating, prioritizing equipment first then other popular items
     return getAllProducts()
         .where((product) => product.rating >= 4.5)
         .take(6)
@@ -943,7 +944,6 @@ class ProductService {
     ];
   }
 
-  // Example of getting suggested products for a specific activity, now using new IDs and structure
   static List<Product> getSuggestedProductsForActivity(String activityType) {
     switch (activityType.toLowerCase()) {
       case 'running':
@@ -961,8 +961,10 @@ class ProductService {
         return getAllProducts()
             .where(
               (product) =>
-                  product.subCategory == 'cycling shoes' ||
-                  product.subCategory == 'cycling gear',
+                  product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
@@ -970,8 +972,10 @@ class ProductService {
         return getAllProducts()
             .where(
               (product) =>
-                  product.subCategory == 'swimming gear' ||
-                  product.id == 'acc9_waterproof_tracker', // specific tracker
+                product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
@@ -979,32 +983,34 @@ class ProductService {
         return getAllProducts()
             .where(
               (product) =>
-                  product.subCategory == 'hiking boots' ||
-                  product.subCategory == 'hiking gear',
+               product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
-      case 'strength training': // Added for equipment heavy activities
+      case 'strength training': 
       case 'weightlifting':
       case 'home workout':
         return getAllProducts()
             .where(
               (product) =>
-                  product.category == 'equipment' &&
-                  (product.subCategory == 'dumbbells' ||
-                      product.subCategory == 'barbells' ||
-                      product.subCategory == 'kettlebells' ||
-                      product.subCategory == 'resistance bands' ||
-                      product.subCategory == 'benches'),
+                 product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
       default:
-        // Fallback to general popular equipment
         return getAllProducts()
             .where(
               (product) =>
-                  product.category == 'equipment' && product.rating >= 4.5,
+                  product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                  product.category == 'accessories',
             )
             .take(4)
             .toList();
