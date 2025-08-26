@@ -1,12 +1,13 @@
 import 'package:fitnation/models/challenge.dart';
 import 'package:flutter/material.dart';
-import 'ChallengesScreen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/product_service.dart';
+import '../../services/challenge_service.dart';
 import '../../widgets/compact_product_card.dart';
 import '../product_detail_page.dart';
 import '../shop_page.dart';
 
-class ChallengeDetailScreen extends StatefulWidget {
+class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final Challenge challenge;
 
   const ChallengeDetailScreen({
@@ -15,25 +16,101 @@ class ChallengeDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ChallengeDetailScreen> createState() => _ChallengeDetailScreenState();
+  ConsumerState<ChallengeDetailScreen> createState() => _ChallengeDetailScreenState();
 }
 
-class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
+class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   bool _isJoined = false;
-  int _participantCount = 4;
+  int _participantCount = 0;
+  List<ChallengeParticipant> _participants = [];
+  bool _isLoading = false;
+  Challenge? _currentChallenge;
+  double _userProgress = 0.0;
+  final TextEditingController _progressController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _currentChallenge = widget.challenge;
     _isJoined = widget.challenge.isJoined;
     _participantCount = widget.challenge.friendsJoined;
+    _loadChallengeDetails();
+    _loadParticipants();
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadChallengeDetails() async {
+    try {
+      final challengeService = ref.read(challengeServiceProvider);
+      final updatedChallenge = await challengeService.getChallenge(widget.challenge.id);
+      if (mounted) {
+        setState(() {
+          _currentChallenge = updatedChallenge;
+          _isJoined = updatedChallenge.isJoined;
+          _participantCount = updatedChallenge.friendsJoined;
+          
+          if (_isJoined && updatedChallenge.participants != null) {
+            final currentUserId = _getCurrentUserId();
+            if (currentUserId != null) {
+              final userParticipants = updatedChallenge.participants!
+                  .where((p) => p.userId == currentUserId);
+              if (userParticipants.isNotEmpty) {
+                _userProgress = userParticipants.first.progress;
+              }
+            }
+          }
+        });
+      }
+    } catch (e) {
+      print('Error loading challenge details: $e');
+    }
+  }
+
+  Future<void> _loadParticipants() async {
+    setState(() => _isLoading = true);
+    try {
+      final challengeService = ref.read(challengeServiceProvider);
+      final participants = await challengeService.getChallengeParticipants(widget.challenge.id);
+      if (mounted) {
+        setState(() {
+          _participants = participants;
+        });
+      }
+    } catch (e) {
+      print('Error loading participants: $e');
+      if (_currentChallenge?.participants != null) {
+        setState(() {
+          _participants = _currentChallenge!.participants!;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _refreshData() async {
+    await Future.wait([
+      _loadChallengeDetails(),
+      _loadParticipants(),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
+    final challenge = _currentChallenge ?? widget.challenge;
+    
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
@@ -45,7 +122,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    widget.challenge.backgroundImage!,
+                    challenge.backgroundImage ?? 'https://via.placeholder.com/400x300?text=Challenge',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -53,7 +130,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         child: Icon(
                           _getActivityIcon(widget.challenge.activityType),
                           size: 80,
-                          color: widget.challenge.brandColor,
+                          color: challenge.brandColor,
                         ),
                       );
                     },
@@ -83,7 +160,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            widget.challenge.brand!.toUpperCase(),
+                            challenge.brand?.toUpperCase() ?? 'CHALLENGE',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -94,7 +171,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                           const SizedBox(width: 8),
                           Icon(
                             Icons.verified,
-                            color: widget.challenge.brandColor,
+                            color: challenge.brandColor,
                             size: 16,
                           ),
                         ],
@@ -117,12 +194,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: widget.challenge.brandColor!.withOpacity(0.1),
+                          color: challenge.brandColor?.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          _getActivityIcon(widget.challenge.activityType),
-                          color: widget.challenge.brandColor,
+                          _getActivityIcon(challenge.activityType),
+                          color: challenge.brandColor ?? Colors.grey,
                           size: 24,
                         ),
                       ),
@@ -132,17 +209,17 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.challenge.activityType.toUpperCase(),
+                              challenge.activityType.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: widget.challenge.brandColor,
+                                color: challenge.brandColor ?? Colors.grey,
                                 letterSpacing: 1,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              widget.challenge.title,
+                              challenge.title,
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -172,7 +249,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         Expanded(
                           child: _buildStatItem(
                             'Duration',
-                            "${widget.challenge.duration}",
+                            "${challenge.duration ?? 0} days",
                             Icons.calendar_month,
                           ),
                         ),
@@ -184,7 +261,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         Expanded(
                           child: _buildStatItem(
                             'Distance',
-                            "${widget.challenge.distance} km",
+                            "${challenge.distance ?? 0} km",
                             Icons.straighten,
                           ),
                         ),
@@ -216,7 +293,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.challenge.description,
+                    challenge.description,
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.5,
@@ -236,22 +313,36 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   const SizedBox(height: 32),
                   
                   if (_isJoined) ...[
-                    Text(
-                      'Your Progress',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Your Progress',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _showProgressUpdateDialog(),
+                          icon: Icon(
+                            Icons.edit,
+                            color: challenge.brandColor ?? Colors.blue,
+                            size: 20,
+                          ),
+                          tooltip: 'Update Progress',
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: widget.challenge.brandColor!.withOpacity(0.1),
+                        color: challenge.brandColor?.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: widget.challenge.brandColor!.withOpacity(0.3),
+                          color: challenge.brandColor?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -269,28 +360,58 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                                 ),
                               ),
                               Text(
-                                '3.2 km / 5.0 km',
+                                '${_userProgress.toStringAsFixed(1)} km / ${challenge.distance ?? 0} km',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: widget.challenge.brandColor,
+                                  color: challenge.brandColor ?? Colors.grey,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
                           LinearProgressIndicator(
-                            value: 0.64,
+                            value: _getProgressPercentage(challenge),
                             backgroundColor: Colors.grey.withOpacity(0.3),
-                            valueColor: AlwaysStoppedAnimation<Color>(widget.challenge.brandColor!),
+                            valueColor: AlwaysStoppedAnimation<Color>(challenge.brandColor ?? Colors.grey),
                             minHeight: 8,
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            '64% Complete • 1.8 km to go',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${(_getProgressPercentage(challenge) * 100).toStringAsFixed(0)}% Complete',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                              if (_userProgress < (challenge.distance ?? 0))
+                                Text(
+                                  '${((challenge.distance ?? 0) - _userProgress).toStringAsFixed(1)} km to go',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _showProgressUpdateDialog(),
+                              icon: Icon(Icons.update, size: 18),
+                              label: Text('Update Progress'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: challenge.brandColor ?? Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -309,7 +430,15 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  ..._buildLeaderboardItems(),
+                  if (_isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else
+                    ..._buildLeaderboardItems(),
                   
                   const SizedBox(height: 32),
                   
@@ -331,6 +460,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
             ),
           ),
         ],
+        ),
       ),
       floatingActionButton: Container(
         width: double.infinity,
@@ -339,7 +469,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           onPressed: _toggleJoinChallenge,
           backgroundColor: _isJoined 
               ? Colors.grey.withOpacity(0.2)
-              : widget.challenge.brandColor,
+              : (challenge.brandColor ?? Colors.blue),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -400,7 +530,327 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     );
   }
 
+  String? _getCurrentUserId() {
+    return null; 
+  }
+
+  double _getProgressPercentage(Challenge challenge) {
+    if (challenge.distance == null || challenge.distance == 0) return 0.0;
+    return (_userProgress / challenge.distance!).clamp(0.0, 1.0);
+  }
+
+  Future<void> _showProgressUpdateDialog() async {
+    final challenge = _currentChallenge ?? widget.challenge;
+    _progressController.text = _userProgress.toString();
+    
+    final activityInfo = _getActivityInfo(challenge.activityType);
+    
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                _getActivityIcon(challenge.activityType),
+                color: challenge.brandColor ?? Colors.blue,
+              ),
+              SizedBox(width: 8),
+              Text('Update Progress'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Enter your progress for ${challenge.title}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: _progressController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: '${activityInfo['label']} (${activityInfo['unit']})',
+                    hintText: 'Enter ${activityInfo['label']?.toLowerCase() ?? 'progress'} completed',
+                    suffixText: activityInfo['unit'],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: challenge.brandColor ?? Colors.blue,
+                        width: 2,
+                      ),
+                    ),
+                    prefixIcon: Icon(
+                      _getActivityIcon(challenge.activityType),
+                      color: challenge.brandColor ?? Colors.blue,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: challenge.brandColor?.withOpacity(0.1) ?? Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.flag,
+                            color: challenge.brandColor ?? Colors.blue,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Target: ${challenge.distance ?? 0} ${activityInfo['unit']}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: challenge.brandColor ?? Colors.blue,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_userProgress > 0) ...[
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.analytics,
+                              color: challenge.brandColor ?? Colors.blue,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Current: $_userProgress ${activityInfo['unit']} (${(_getProgressPercentage(challenge) * 100).toStringAsFixed(1)}%)',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: challenge.brandColor ?? Colors.blue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _updateProgress();
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: challenge.brandColor ?? Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Update Progress'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Map<String, String> _getActivityInfo(String activityType) {
+    switch (activityType.toLowerCase()) {
+      case 'run':
+      case 'walk':
+      case 'hike':
+        return {'label': 'Distance', 'unit': 'km'};
+      case 'ride':
+        return {'label': 'Distance', 'unit': 'km'};
+      case 'swim':
+        return {'label': 'Distance', 'unit': 'km'};
+      case 'workout':
+        return {'label': 'Sessions', 'unit': 'count'};
+      default:
+        return {'label': 'Progress', 'unit': 'units'};
+    }
+  }
+
+  Future<void> _updateProgress() async {
+    final challenge = _currentChallenge ?? widget.challenge;
+    final progressText = _progressController.text.trim();
+    
+    if (progressText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid progress value'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final progress = double.tryParse(progressText);
+    if (progress == null || progress < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (progress > (challenge.distance ?? 0) * 1.5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Progress cannot exceed target by more than 50%'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final challengeService = ref.read(challengeServiceProvider);
+      final progressPercentage = challenge.distance != null && challenge.distance! > 0
+          ? (progress / challenge.distance!) * 100
+          : 0.0;
+
+      await challengeService.updateProgress(
+        challenge.id,
+        {
+          'progress': progress,
+          'progress_percentage': progressPercentage.clamp(0.0, 100.0),
+          'notes': 'Progress updated via app',
+        },
+      );
+
+      setState(() {
+        _userProgress = progress;
+      });
+
+      await _loadParticipants();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Progress updated successfully!'),
+          backgroundColor: challenge.brandColor ?? Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error updating progress: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update progress: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
   List<Widget> _buildLeaderboardItems() {
+    final challenge = _currentChallenge ?? widget.challenge;
+    
+    if (_participants.isNotEmpty) {
+      return _participants.asMap().entries.map((entry) {
+        final int index = entry.key;
+        final ChallengeParticipant participant = entry.value;
+        final int rank = index + 1;
+        final bool isCurrentUser = _getCurrentUserId() != null && participant.userId == _getCurrentUserId();
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isCurrentUser 
+                ? challenge.brandColor?.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1)
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isCurrentUser 
+                  ? challenge.brandColor?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getRankColor(rank).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    '$rank',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _getRankColor(rank),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  participant.username ?? 'Anonymous',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Text(
+                '${participant.progress.toStringAsFixed(1)} km',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: challenge.brandColor ?? Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList();
+    }
+    
     final leaders = [
       {'name': 'Rafid Rahman', 'progress': '5.0 km', 'rank': 1},
       {'name': 'Kamrul Hasan', 'progress': '4.8 km', 'rank': 2},
@@ -413,12 +863,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: leader['name'] == 'You' 
-            ? widget.challenge.brandColor!.withOpacity(0.1)
+            ? challenge.brandColor?.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1)
             : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: leader['name'] == 'You' 
-              ? widget.challenge.brandColor!.withOpacity(0.3)
+              ? challenge.brandColor?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3)
               : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
@@ -459,7 +909,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: widget.challenge.brandColor,
+              color: challenge.brandColor ?? Colors.grey,
             ),
           ),
         ],
@@ -516,6 +966,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   }
 
   Color _getRankColor(int rank) {
+    final challenge = _currentChallenge ?? widget.challenge;
     switch (rank) {
       case 1:
         return Colors.amber;
@@ -524,7 +975,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       case 3:
         return Colors.brown;
       default:
-        return widget.challenge.brandColor!;
+        return challenge.brandColor ?? Colors.grey;
     }
   }
 
@@ -547,28 +998,65 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     }
   }
 
-  void _toggleJoinChallenge() {
-    setState(() {
-      _isJoined = !_isJoined;
-      _participantCount += _isJoined ? 1 : -1;
-    });
-
-    if (_isJoined) {
-      _showSuggestedProductsDialog();
-    }
-
-    /* ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_isJoined 
-            ? 'Successfully joined ${widget.challenge.title}!' 
-            : 'Left ${widget.challenge.title}'),
-        backgroundColor: widget.challenge.brandColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+  void _toggleJoinChallenge() async {
+    final challenge = _currentChallenge ?? widget.challenge;
+    final challengeService = ref.read(challengeServiceProvider);
+    
+    try {
+      if (_isJoined) {
+        await challengeService.leaveChallenge(challenge.id);
+        setState(() {
+          _isJoined = false;
+          _participantCount -= 1;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Left ${challenge.title}'),
+            backgroundColor: Colors.grey,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      } else {
+        await challengeService.joinChallenge(challenge.id);
+        setState(() {
+          _isJoined = true;
+          _participantCount += 1;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully joined ${challenge.title}!'),
+            backgroundColor: challenge.brandColor ?? Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+        
+        _showSuggestedProductsDialog();
+      }
+      
+      await _loadChallengeDetails();
+      await _loadParticipants();
+      
+    } catch (e) {
+      print('Error toggling challenge participation: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-    ); */
+      );
+    }
   }
 
   void _showSuggestedProductsDialog() {
@@ -608,7 +1096,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
               Row(
                 children: [
                   Icon(
@@ -646,7 +1133,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Products Grid
               Flexible(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -670,7 +1156,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         return CompactProductCard(
                           product: product,
                           onTap: () {
-                            Navigator.of(context).pop(); // Close dialog
+                            Navigator.of(context).pop(); 
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -687,7 +1173,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
               
               const SizedBox(height: 12),
               
-              // Action Buttons
               Row(
                 children: [
                   Expanded(
@@ -704,7 +1189,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pop();
-                        // Navigate to shop page
                         String getCategoryForActivity(String activityType) {
                           switch (activityType.toLowerCase()) {
                             case 'run':

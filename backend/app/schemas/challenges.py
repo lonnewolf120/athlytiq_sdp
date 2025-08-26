@@ -140,7 +140,7 @@ class LeaveChallengeRequest(BaseModel):
     pass  
 
 class UpdateProgressRequest(BaseModel):
-    progress: Optional[str] = None
+    progress: Optional[float] = Field(None, ge=0.0)
     progress_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
     completion_proof_url: Optional[str] = None
     notes: Optional[str] = None
