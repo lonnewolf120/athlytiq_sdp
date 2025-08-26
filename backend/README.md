@@ -90,7 +90,7 @@ poetry shell
 ```
 ### Running Locally
 
-```uvicorn app.main:app --reload```
+```uvicorn app.main:app --reload --host 0.0.0.0```
 
 Swagger UI → http://127.0.0.1:8000/docs
 

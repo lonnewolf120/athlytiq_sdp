@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from pydantic import ValidationError
+from typing import Optional
 
 from app.database.base import get_db # Assuming get_db is here for session
 import app.models_db # Import the entire module to ensure all models are loaded
@@ -11,6 +12,7 @@ from app.core.config import settings # Access to SECRET_KEY, ALGORITHM
 from app.crud import user as user_crud # Access to get_user_by_id or similar
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login") # Adjust tokenUrl if needed
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
 async def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
@@ -53,6 +55,35 @@ async def get_current_active_user(
     # if not current_user.is_active: # Add is_active check if your User model has it
     #     raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+async def get_current_user_optional(
+    db: Session = Depends(get_db), 
+    token: Optional[str] = Depends(oauth2_scheme_optional)
+) -> Optional[app.models_db.User]:
+    """
+    Optional authentication - returns User if valid token provided, None otherwise.
+    Does not raise exceptions for missing or invalid tokens.
+    """
+    if not token:
+        return None
+    
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        token_data = TokenData(
+            user_id=user_id, 
+            username=payload.get("username"), 
+            email=payload.get("email")
+        )
+    except (JWTError, ValidationError):
+        return None
+    
+    user = user_crud.get_user_by_id(db, user_id=token_data.user_id)
+    if user is None:
+        return None
+    return user
 
 # If you need a superuser check:
 # async def get_current_active_superuser(
