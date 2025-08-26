@@ -38,10 +38,7 @@ enum ProductCategory {
   accessories,
   clothing,
   footwear,
-  treadmill,
-  kettlebell,
-  barbell,
-  dumbbells,
+ 
 }
 
 extension ProductCategoryExtension on ProductCategory {
@@ -57,14 +54,7 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Clothing';
       case ProductCategory.footwear:
         return 'Footwear';
-      case ProductCategory.treadmill:
-        return 'Treadmill';
-      case ProductCategory.kettlebell:
-        return 'Kettlebell';
-      case ProductCategory.barbell:
-        return 'Barbell';
-      case ProductCategory.dumbbells:
-        return 'Dumbbells';
+   
     }
   }
 
@@ -80,14 +70,7 @@ extension ProductCategoryExtension on ProductCategory {
         return '👕';
       case ProductCategory.footwear:
         return '👟';
-      case ProductCategory.treadmill:
-        return '🏃';
-      case ProductCategory.kettlebell:
-        return '🏋️';
-      case ProductCategory.barbell:
-        return '🏋️';
-      case ProductCategory.dumbbells:
-        return '🏋️';
+      
     }
   }
 }

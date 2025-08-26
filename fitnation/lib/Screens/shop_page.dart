@@ -74,8 +74,8 @@ class _ShopPageState extends State<ShopPage> {
       appBar: CustomAppBar(
         title: 'Athlytiq Store',
         showLogo: false,
-        showMenuButton: false, // Disable menu button
-        showProfileMenu: true, // Enable profile menu
+        showMenuButton: false,
+        showProfileMenu: true, 
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -177,37 +177,7 @@ class _ShopPageState extends State<ShopPage> {
                   isSelected: _selectedCategory == 'footwear',
                   onTap: () => _selectCategory('footwear'),
                 ),
-                CategoryChip(
-                  category: 'Nutrition',
-                  icon: '🥗',
-                  isSelected: _selectedCategory == 'nutrition',
-                  onTap: () => _selectCategory('nutrition'),
-                ),
-
-                CategoryChip(
-                  category: 'Dumbbells',
-                  icon: '🏋️',
-                  isSelected: _selectedCategory == 'dumbbells',
-                  onTap: () => _selectCategory('dumbbells'),
-                ),
-                CategoryChip(
-                  category: 'Barbell',
-                  icon: '🏋️',
-                  isSelected: _selectedCategory == 'barbell',
-                  onTap: () => _selectCategory('barbell'),
-                ),
-                CategoryChip(
-                  category: 'Kettlebell',
-                  icon: '🏋️',
-                  isSelected: _selectedCategory == 'kettlebell',
-                  onTap: () => _selectCategory('kettlebell'),
-                ),
-                CategoryChip(
-                  category: 'Treadmill',
-                  icon: '',
-                  isSelected: _selectedCategory == 'treadmill',
-                  onTap: () => _selectCategory('treadmill'),
-                ),
+              
               ],
             ),
           ),
