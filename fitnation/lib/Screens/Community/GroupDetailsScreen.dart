@@ -420,7 +420,15 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               ),
             ),
           ),
-        ..._dummyGroupPosts.map((post) => PostCard(post: post)).toList(),
+        ..._dummyGroupPosts.map((post) => PostCard(
+          post: post,
+          onAvatarTap: () {
+            // Add avatar tap functionality if needed
+          },
+          onPostTap: () {
+            // Add post tap functionality if needed
+          },
+        )).toList(),
         if (_dummyGroupPosts.isEmpty)
           const Center(
             child: Padding(

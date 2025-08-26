@@ -46,6 +46,23 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           _passwordController.text.trim(),
         );
   }
+  Future<void> _loginWithGoogle() async {
+    // Call the signInWithGoogle method from AuthNotifier
+    await ref.read(authProvider.notifier).signInWithGoogle();
+  }
+
+  void _loginWithFacebook() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Facebook login not yet implemented with custom backend.',
+          ),
+        ),
+      );
+    }
+  }
+
 
   void _signUpWithGoogle() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -255,8 +272,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
                 _buildSocialButton(
                   icon: Icons.g_mobiledata_sharp,
-                  text: 'Sign up with Google',
-                  onPressed: _isLoading ? null : () => _signUpWithGoogle(), // Disable if loading
+                  text: 'Login with Google',
+                  onPressed: _isLoading ? null : () => _loginWithGoogle(), // Disable if loading
                   iconColor: Colors.redAccent,
                   width: double.infinity,
                   height: 50,

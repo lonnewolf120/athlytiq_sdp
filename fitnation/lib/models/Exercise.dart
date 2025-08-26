@@ -47,11 +47,11 @@ class Exercise {
   // Factory constructor to create an Exercise object from JSON
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
-      exerciseId: json['exerciseId'] as String?, // Use exerciseId
+      exerciseId: json['exercise_id'] as String? ?? json['exerciseId'] as String?,
       name: json['name'] as String,
-      gifUrl: json['gifUrl'] as String?, // Use gifUrl
+      gifUrl: json['gif_url'] as String? ?? json['gifUrl'] as String?,
       bodyParts:
-          (json['bodyParts'] as List<dynamic>?)
+          (json['body_parts'] as List<dynamic>? ?? json['bodyParts'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -61,12 +61,12 @@ class Exercise {
               .toList() ??
           [],
       targetMuscles:
-          (json['targetMuscles'] as List<dynamic>?)
+          (json['target_muscles'] as List<dynamic>? ?? json['targetMuscles'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
       secondaryMuscles:
-          (json['secondaryMuscles'] as List<dynamic>?)
+          (json['secondary_muscles'] as List<dynamic>? ?? json['secondaryMuscles'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -76,16 +76,16 @@ class Exercise {
               .toList() ??
           [],
       // Parse optional fields
-      imageUrl: json['imageUrl'] as String?,
-      exerciseType: json['exerciseType'] as String?,
+      imageUrl: json['image_url'] as String? ?? json['imageUrl'] as String?,
+      exerciseType: json['exercise_type'] as String? ?? json['exerciseType'] as String?,
       keywords:
           (json['keywords'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList(),
       overview: json['overview'] as String?,
-      videoUrl: json['videoUrl'] as String?,
+      videoUrl: json['video_url'] as String? ?? json['videoUrl'] as String?,
       exerciseTips:
-          (json['exerciseTips'] as List<dynamic>?)
+          (json['exercise_tips'] as List<dynamic>? ?? json['exerciseTips'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList(),
       variations:
@@ -93,7 +93,7 @@ class Exercise {
               ?.map((e) => e as String)
               .toList(),
       relatedExerciseIds:
-          (json['relatedExerciseIds'] as List<dynamic>?)
+          (json['related_exercise_ids'] as List<dynamic>? ?? json['relatedExerciseIds'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList(),
       sets: json['sets'] as String?,
@@ -105,23 +105,23 @@ class Exercise {
   // Optional: toJson method
   Map<String, dynamic> toJson() {
     return {
-      if (exerciseId != null) 'exerciseId': exerciseId,
+      if (exerciseId != null) 'exercise_id': exerciseId,
       'name': name,
-      if (gifUrl != null) 'gifUrl': gifUrl,
-      'bodyParts': bodyParts,
+      if (gifUrl != null) 'gif_url': gifUrl,
+      'body_parts': bodyParts,
       'equipments': equipments,
-      'targetMuscles': targetMuscles,
-      'secondaryMuscles': secondaryMuscles,
+      'target_muscles': targetMuscles,
+      'secondary_muscles': secondaryMuscles,
       'instructions': instructions,
       // Include optional fields if not null
-      if (imageUrl != null) 'imageUrl': imageUrl,
-      if (exerciseType != null) 'exerciseType': exerciseType,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (exerciseType != null) 'exercise_type': exerciseType,
       if (keywords != null) 'keywords': keywords,
       if (overview != null) 'overview': overview,
-      if (videoUrl != null) 'videoUrl': videoUrl,
-      if (exerciseTips != null) 'exerciseTips': exerciseTips,
+      if (videoUrl != null) 'video_url': videoUrl,
+      if (exerciseTips != null) 'exercise_tips': exerciseTips,
       if (variations != null) 'variations': variations,
-      if (relatedExerciseIds != null) 'relatedExerciseIds': relatedExerciseIds,
+      if (relatedExerciseIds != null) 'related_exercise_ids': relatedExerciseIds,
       if (sets != null) 'sets': sets,
       if (reps != null) 'reps': reps,
       if (weight != null) 'weight': weight,

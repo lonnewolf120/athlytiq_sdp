@@ -49,6 +49,27 @@ class Post {
     // this.communityId,
   });
 
+  // Factory constructor for creating new posts (without ID and userId)
+  factory Post.create({
+    String? content,
+    String? mediaUrl,
+    required List<PostType> postType,
+    WorkoutPostData? workoutData,
+    ChallengePostData? challengeData,
+  }) {
+    return Post(
+      id: '', // Will be set by backend
+      userId: '', // Will be set by backend
+      content: content,
+      mediaUrl: mediaUrl,
+      postType: postType,
+      workoutData: workoutData,
+      challengeData: challengeData,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   factory Post.fromJson(Map<String, dynamic> json) {
     String? createdAtString = json['created_at'] as String?;
     String? updatedAtString = json['updated_at'] as String?;
@@ -127,6 +148,17 @@ class Post {
       'comment_count': commentCount,
       'react_count': reactCount,
       // 'community_id': communityId,
+    };
+  }
+
+  // Method for creating posts (only includes fields expected by backend)
+  Map<String, dynamic> toCreateJson() {
+    return {
+      'content': content,
+      'media_url': mediaUrl,
+      'post_type': postType.map((pt) => pt.name).toList(),
+      if (workoutData != null) 'workout_data': workoutData!.toJson(),
+      if (challengeData != null) 'challenge_data': challengeData!.toJson(),
     };
   }
 }
