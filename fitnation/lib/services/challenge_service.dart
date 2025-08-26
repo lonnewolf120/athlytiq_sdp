@@ -139,6 +139,23 @@ class ChallengeService {
     }
   }
 
+  Future<List<ChallengeParticipant>> getChallengeParticipants(
+    String challengeId, {
+    int skip = 0,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await _apiService.get(
+        '/challenges/$challengeId/participants?skip=$skip&limit=$limit',
+      );
+      
+      final participantsData = response.data['participants'] as List;
+      return participantsData.map((json) => ChallengeParticipant.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in getChallengeParticipants: $e');
+      rethrow;
+    }
+  }
   
   Future<Map<String, dynamic>> getChallengeStats() async {
     try {
