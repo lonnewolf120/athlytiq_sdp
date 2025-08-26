@@ -61,8 +61,8 @@ class ChallengeBase(BaseModel):
     brand: str = Field(..., min_length=1, max_length=100)
     brand_logo: Optional[str] = Field(None, max_length=10)
     background_image: Optional[str] = None
-    distance: str = Field(..., min_length=1, max_length=100)
-    duration: str = Field(..., min_length=1, max_length=200)
+    distance: float = Field(..., ge=0)
+    duration: int = Field(..., gt=0)
     activity_type: ActivityTypeEnum = ActivityTypeEnum.run
     brand_color: str = Field(default="#FF6B35", pattern=r'^#[0-9A-Fa-f]{6}$')
     max_participants: Optional[int] = Field(None, gt=0)
@@ -84,8 +84,8 @@ class ChallengeUpdate(BaseModel):
     brand: Optional[str] = Field(None, min_length=1, max_length=100)
     brand_logo: Optional[str] = Field(None, max_length=10)
     background_image: Optional[str] = None
-    distance: Optional[str] = Field(None, min_length=1, max_length=100)
-    duration: Optional[str] = Field(None, min_length=1, max_length=200)
+    distance: Optional[float] = Field(None, ge=0)
+    duration: Optional[int] = Field(None, gt=0)
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     activity_type: Optional[ActivityTypeEnum] = None

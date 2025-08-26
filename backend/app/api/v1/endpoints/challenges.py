@@ -65,8 +65,8 @@ async def get_challenges(
             "brand": challenge.brand,
             "brand_logo": challenge.brand_logo,
             "background_image": challenge.background_image,
-            "distance": str(challenge.distance) if challenge.distance is not None else "0 km",
-            "duration": str(challenge.duration) if challenge.duration is not None else "0 days",
+            "distance": challenge.distance if challenge.distance is not None else 0.0,
+            "duration": challenge.duration if challenge.duration is not None else 0,
             "start_date": challenge.start_date,
             "end_date": challenge.end_date,
             "activity_type": challenge.activity_type,
@@ -128,8 +128,8 @@ async def get_challenge(
         "brand": challenge.brand,
         "brand_logo": challenge.brand_logo,
         "background_image": challenge.background_image,
-        "distance": str(challenge.distance) if challenge.distance is not None else "0 km",
-        "duration": str(challenge.duration) if challenge.duration is not None else "0 days",
+        "distance": challenge.distance if challenge.distance is not None else 0.0,
+        "duration": challenge.duration if challenge.duration is not None else 0,
         "start_date": challenge.start_date,
         "end_date": challenge.end_date,
         "activity_type": challenge.activity_type,
@@ -171,49 +171,14 @@ async def create_challenge(
     current_user = Depends(get_current_user)
 ):
     """Create a new challenge."""
-    import re
-    
-    # Parse distance to extract numeric value
-    distance_value = None
-    if challenge.distance:
-        # Extract numeric value from strings like "66.0 km", "5 miles", "10.5"
-        match = re.search(r'(\d+\.?\d*)', challenge.distance)
-        if match:
-            distance_value = float(match.group(1))
-    
-    # Parse duration to extract numeric value  
-    duration_value = None
-    if challenge.duration:
-        # Extract numeric value from strings like "30 days", "2 weeks", "7"
-        match = re.search(r'(\d+)', challenge.duration)
-        if match:
-            duration_value = int(match.group(1))
-    
-    # Create a new ChallengeCreate object with parsed values
-    processed_challenge = ChallengeCreate(
-        title=challenge.title,
-        description=challenge.description,
-        brand=challenge.brand,
-        brand_logo=challenge.brand_logo,
-        background_image=challenge.background_image,
-        distance=distance_value,
-        duration=duration_value,
-        start_date=challenge.start_date,
-        end_date=challenge.end_date,
-        activity_type=challenge.activity_type,
-        brand_color=challenge.brand_color,
-        max_participants=challenge.max_participants,
-        is_public=challenge.is_public
-    )
-    
-    # Create challenge using the CRUD function with Pydantic object
+    # Create challenge using the CRUD function directly
     db_challenge = crud_challenges.create_challenge(
         db=db,
-        challenge=processed_challenge,  # Pass Pydantic object
+        challenge=challenge,
         user_id=str(current_user.id)
     )
     
-    # Return response with proper string formatting
+    # Return response with proper formatting
     challenge_response = {
         "id": str(db_challenge.id),
         "title": db_challenge.title,
@@ -221,8 +186,8 @@ async def create_challenge(
         "brand": db_challenge.brand,
         "brand_logo": db_challenge.brand_logo,
         "background_image": db_challenge.background_image,
-        "distance": f"{db_challenge.distance} km" if db_challenge.distance else "0 km",
-        "duration": f"{db_challenge.duration} days" if db_challenge.duration else "0 days",
+        "distance": db_challenge.distance,
+        "duration": db_challenge.duration,
         "start_date": db_challenge.start_date,
         "end_date": db_challenge.end_date,
         "activity_type": db_challenge.activity_type,
@@ -534,8 +499,8 @@ async def get_my_challenges(
             "brand": challenge.brand,
             "brand_logo": challenge.brand_logo,
             "background_image": challenge.background_image,
-            "distance": str(challenge.distance) if challenge.distance is not None else "0 km",
-            "duration": str(challenge.duration) if challenge.duration is not None else "0 days",
+            "distance": challenge.distance if challenge.distance is not None else 0.0,
+            "duration": challenge.duration if challenge.duration is not None else 0,
             "start_date": challenge.start_date,
             "end_date": challenge.end_date,
             "activity_type": challenge.activity_type,
@@ -588,8 +553,8 @@ async def get_my_created_challenges(
             "brand": challenge.brand,
             "brand_logo": challenge.brand_logo,
             "background_image": challenge.background_image,
-            "distance": str(challenge.distance) if challenge.distance is not None else "0 km",
-            "duration": str(challenge.duration) if challenge.duration is not None else "0 days",
+            "distance": challenge.distance if challenge.distance is not None else 0.0,
+            "duration": challenge.duration if challenge.duration is not None else 0,
             "start_date": challenge.start_date,
             "end_date": challenge.end_date,
             "activity_type": challenge.activity_type,

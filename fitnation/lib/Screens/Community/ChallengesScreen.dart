@@ -2,94 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ChallengeDetailScreen.dart';
 import 'AddChallengeScreen.dart';
-import '../../models/challenge.dart' as ChallengeModel;
+import 'package:fitnation/models/challenge.dart';
 import '../../services/challenge_service.dart';
-
-class Challenge {
-  final String id;
-  final String title;
-  final String description;
-  final String brand;
-  final String brandLogo;
-  final String backgroundImage;
-  final String distance;
-  final String duration;
-  final int friendsJoined;
-  final bool isJoined;
-  final Color brandColor;
-  final String activityType;
-
-  const Challenge({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.brand,
-    required this.brandLogo,
-    required this.backgroundImage,
-    required this.distance,
-    required this.duration,
-    required this.friendsJoined,
-    required this.isJoined,
-    required this.brandColor,
-    required this.activityType,
-  });
-
-  factory Challenge.fromBackendChallenge(ChallengeModel.Challenge backendChallenge) {
-    return Challenge(
-      id: backendChallenge.id,
-      title: backendChallenge.title,
-      description: backendChallenge.description,
-      brand: backendChallenge.brand ?? 'FitNation',
-      brandLogo: _getActivityEmoji(backendChallenge.activityType),
-      backgroundImage: backendChallenge.backgroundImage ?? 'https://images.unsplash.com/photo-1590333748338-d629e4564ad9?q=80&w=1249&auto=format&fit=crop',
-      distance: '${backendChallenge.distance ?? 0} km',
-      duration: '${_formatDate(backendChallenge.startDate)} to ${_formatDate(backendChallenge.endDate)}',
-      friendsJoined: backendChallenge.friendsJoined,
-      isJoined: backendChallenge.isJoined,
-      brandColor: _getActivityColor(backendChallenge.activityType),
-      activityType: _capitalizeFirst(backendChallenge.activityType),
-    );
-  }
-
-  static String _getActivityEmoji(String activityType) {
-    switch (activityType.toLowerCase()) {
-      case 'run': return '🏃';
-      case 'ride': return '🚴';
-      case 'swim': return '🏊';
-      case 'walk': return '🚶';
-      case 'hike': return '⛰️';
-      case 'workout': return '💪';
-      default: return '🏃';
-    }
-  }
-
-  static Color _getActivityColor(String activityType) {
-    switch (activityType.toLowerCase()) {
-      case 'run': return Colors.orange;
-      case 'ride': return Colors.blue;
-      case 'swim': return Colors.cyan;
-      case 'walk': return Colors.purple;
-      case 'hike': return Colors.green;
-      case 'workout': return Colors.red;
-      default: return Colors.orange;
-    }
-  }
-
-  static String _formatDate(DateTime date) {
-    return '${date.day} ${_getMonthName(date.month)} ${date.year}';
-  }
-
-  static String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[month - 1];
-  }
-
-  static String _capitalizeFirst(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1).toLowerCase();
-  }
-}
 
 class ChallengesScreen extends ConsumerStatefulWidget {
   const ChallengesScreen({Key? key}) : super(key: key);
@@ -152,42 +66,49 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
         description: 'Complete a 5 km (3.1 mi) run.',
         brand: 'FitNation',
         brandLogo: '🏃',
+        startDate: DateTime(2025, 7, 1),
+        endDate: DateTime(2025, 7, 31),
+        status: 'upcoming',
+        isPublic: true,
+        createdAt: DateTime(2025, 1, 1),
+        updatedAt: DateTime(2025, 1, 1),
+        createdBy: "Shadman",
         backgroundImage: 'https://images.unsplash.com/photo-1590333748338-d629e4564ad9?q=80&w=1249&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        distance: '5.0 km',
-        duration: '1 Jul 2025 to 31 Jul 2025',
+        distance: 5.0,
+        duration: 280,
         friendsJoined: 0,
         isJoined: false,
         brandColor: Colors.orange,
         activityType: 'Run',
       ),
-      Challenge(
-        id: 'ch2',
-        title: 'August 5K x FitNation Challenge',
-        description: 'Complete a 5 km (3.1 mi) run.',
-        brand: 'FitNation',
-        brandLogo: '🏃',
-        backgroundImage: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        distance: '5.0 km',
-        duration: '1 Aug 2025 to 31 Aug 2025',
-        friendsJoined: 0,
-        isJoined: false,
-        brandColor: Colors.orange,
-        activityType: 'Run',
-      ),
-      Challenge(
-        id: 'ch3',
-        title: 'Cycling Century Challenge',
-        description: 'Complete a 100 km ride in one session.',
-        brand: 'CycleMax',
-        brandLogo: '🚴',
-        backgroundImage: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        distance: '100 km',
-        duration: '1 Jul 2025 to 31 Jul 2025',
-        friendsJoined: 3,
-        isJoined: true,
-        brandColor: Colors.blue,
-        activityType: 'Ride',
-      ),
+      // Challenge(
+      //   id: 'ch2',
+      //   title: 'August 5K x FitNation Challenge',
+      //   description: 'Complete a 5 km (3.1 mi) run.',
+      //   brand: 'FitNation',
+      //   brandLogo: '🏃',
+      //   backgroundImage: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      //   distance: '5.0 km',
+      //   duration: '1 Aug 2025 to 31 Aug 2025',
+      //   friendsJoined: 0,
+      //   isJoined: false,
+      //   brandColor: Colors.orange,
+      //   activityType: 'Run',
+      // ),
+      // Challenge(
+      //   id: 'ch3',
+      //   title: 'Cycling Century Challenge',
+      //   description: 'Complete a 100 km ride in one session.',
+      //   brand: 'CycleMax',
+      //   brandLogo: '🚴',
+      //   backgroundImage: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      //   distance: '100 km',
+      //   duration: '1 Jul 2025 to 31 Jul 2025',
+      //   friendsJoined: 3,
+      //   isJoined: true,
+      //   brandColor: Colors.blue,
+      //   activityType: 'Ride',
+      // ),
     ];
   }
 
@@ -240,7 +161,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () async {
-              final Challenge? newChallenge = await Navigator.push(
+              final Challenge newChallenge = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AddChallengeScreen(),
@@ -461,7 +382,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () async {
-              final Challenge? newChallenge = await Navigator.push(
+              final Challenge newChallenge = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AddChallengeScreen(),
@@ -513,11 +434,11 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
               height: 280,
               width: double.infinity,
               child: Image.network(
-                challenge.backgroundImage,
+                challenge.backgroundImage??'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: challenge.brandColor.withOpacity(0.3),
+                    color: challenge.brandColor!.withOpacity(0.3),
                     child: Icon(
                       _getActivityIcon(challenge.activityType),
                       size: 60,
@@ -552,7 +473,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  challenge.brandLogo,
+                  challenge.brandLogo??'🏃',
                   style: const TextStyle(fontSize: 20),
                 ),
               ),
@@ -592,7 +513,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      challenge.brand.toUpperCase(),
+                      challenge.brand!.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -650,7 +571,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      challenge.duration,
+                      "${challenge.duration} | ${challenge.distance} km",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 12,

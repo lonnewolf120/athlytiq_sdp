@@ -1,3 +1,4 @@
+import 'package:fitnation/models/challenge.dart';
 import 'package:flutter/material.dart';
 import 'ChallengesScreen.dart';
 import '../../services/product_service.dart';
@@ -44,11 +45,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    widget.challenge.backgroundImage,
+                    widget.challenge.backgroundImage!,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: widget.challenge.brandColor.withOpacity(0.3),
+                        color: widget.challenge.brandColor!.withOpacity(0.3),
                         child: Icon(
                           _getActivityIcon(widget.challenge.activityType),
                           size: 80,
@@ -82,7 +83,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            widget.challenge.brand.toUpperCase(),
+                            widget.challenge.brand!.toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -116,7 +117,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: widget.challenge.brandColor.withOpacity(0.1),
+                          color: widget.challenge.brandColor!.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -171,7 +172,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         Expanded(
                           child: _buildStatItem(
                             'Duration',
-                            widget.challenge.duration,
+                            "${widget.challenge.duration}",
                             Icons.calendar_month,
                           ),
                         ),
@@ -183,7 +184,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         Expanded(
                           child: _buildStatItem(
                             'Distance',
-                            widget.challenge.distance,
+                            "${widget.challenge.distance} km",
                             Icons.straighten,
                           ),
                         ),
@@ -247,10 +248,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: widget.challenge.brandColor.withOpacity(0.1),
+                        color: widget.challenge.brandColor!.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: widget.challenge.brandColor.withOpacity(0.3),
+                          color: widget.challenge.brandColor!.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -281,7 +282,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                           LinearProgressIndicator(
                             value: 0.64,
                             backgroundColor: Colors.grey.withOpacity(0.3),
-                            valueColor: AlwaysStoppedAnimation<Color>(widget.challenge.brandColor),
+                            valueColor: AlwaysStoppedAnimation<Color>(widget.challenge.brandColor!),
                             minHeight: 8,
                           ),
                           const SizedBox(height: 12),
@@ -412,12 +413,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: leader['name'] == 'You' 
-            ? widget.challenge.brandColor.withOpacity(0.1)
+            ? widget.challenge.brandColor!.withOpacity(0.1)
             : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: leader['name'] == 'You' 
-              ? widget.challenge.brandColor.withOpacity(0.3)
+              ? widget.challenge.brandColor!.withOpacity(0.3)
               : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
@@ -484,7 +485,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: widget.challenge.brandColor.withOpacity(0.1),
+              color: widget.challenge.brandColor!.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -523,7 +524,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       case 3:
         return Colors.brown;
       default:
-        return widget.challenge.brandColor;
+        return widget.challenge.brandColor!;
     }
   }
 
