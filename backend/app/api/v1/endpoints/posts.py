@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.schemas.post_schemas import PostCreate, PostResponse, PostUpdate, PostType
 from app.crud import post_crud
 from app.api import deps
-from app.models_db import User
+from app.models_db import User, Comment, Profile
 
 router = APIRouter()
 
@@ -156,5 +156,117 @@ def read_public_feed(
     """
     Retrieve public posts for the main feed. No authentication required.
     """
+    print(f"DEBUG: Fetching public feed with skip={skip}, limit={limit}")
     posts = post_crud.get_public_feed(db, skip=skip, limit=limit)
+    print(f"DEBUG: Found {len(posts)} posts in public feed")
+    for i, post in enumerate(posts):
+        print(f"DEBUG: Post {i}: id={post.id}, user_id={post.user_id}, content='{post.content[:50] if post.content else 'None'}...', post_type={post.post_type}")
     return posts
+
+@router.get("/{post_id}/comments")
+def get_post_comments(
+    post_id: str,
+    skip: int = 0,
+    limit: int = 50,
+    db: Session = Depends(deps.get_db)
+):
+    """
+    Get comments for a specific post.
+    """
+    try:
+        print(f"DEBUG: Fetching comments for post {post_id}")
+        
+        # First, verify the post exists
+        post = post_crud.get_post(db, post_id=post_id)
+        if not post:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        
+        # Get comments with author details
+        comments = db.query(Comment).join(User, Comment.user_id == User.id).join(
+            Profile, User.id == Profile.user_id, isouter=True
+        ).filter(
+            Comment.post_id == post_id
+        ).order_by(
+            Comment.created_at.desc()
+        ).offset(skip).limit(limit).all()
+        
+        # Format comment response
+        comment_responses = []
+        for comment in comments:
+            comment_data = {
+                "id": str(comment.id),
+                "content": comment.content,
+                "created_at": comment.created_at.isoformat(),
+                "author": {
+                    "id": str(comment.author.id),
+                    "username": comment.author.username,
+                    "display_name": comment.author.profile.display_name if comment.author.profile else comment.author.username,
+                    "profile_picture_url": comment.author.profile.profile_picture_url if comment.author.profile else None
+                }
+            }
+            comment_responses.append(comment_data)
+        
+        print(f"DEBUG: Found {len(comment_responses)} comments for post {post_id}")
+        return comment_responses
+        
+    except Exception as e:
+        print(f"ERROR: Failed to fetch comments for post {post_id}: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch comments")
+
+@router.post("/{post_id}/comments")
+def add_post_comment(
+    post_id: str,
+    comment_data: dict,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Add a comment to a specific post.
+    """
+    try:
+        print(f"DEBUG: Adding comment to post {post_id} by user {current_user.id}")
+        
+        # Verify the post exists
+        post = post_crud.get_post(db, post_id=post_id)
+        if not post:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        
+        # Get content from request
+        content = comment_data.get('content', '').strip()
+        if not content:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment content is required")
+        
+        # Create new comment
+        new_comment = Comment(
+            post_id=post_id,
+            user_id=str(current_user.id),
+            content=content
+        )
+        
+        db.add(new_comment)
+        db.commit()
+        db.refresh(new_comment)
+        
+        print(f"DEBUG: Successfully added comment {new_comment.id}")
+        
+        # Return the created comment with author details
+        author_data = {
+            "id": str(current_user.id),
+            "username": current_user.username,
+            "display_name": current_user.profile.display_name if current_user.profile else current_user.username,
+            "profile_picture_url": current_user.profile.profile_picture_url if current_user.profile else None
+        }
+        
+        return {
+            "id": str(new_comment.id),
+            "content": new_comment.content,
+            "created_at": new_comment.created_at.isoformat(),
+            "author": author_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"ERROR: Failed to add comment to post {post_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to add comment")

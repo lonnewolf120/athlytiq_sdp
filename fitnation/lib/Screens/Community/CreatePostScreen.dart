@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fitnation/core/themes/themes.dart';
 import 'package:fitnation/models/Exercise.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -15,8 +16,6 @@ import 'package:fitnation/providers/data_providers.dart'; // Import data_provide
 import 'package:fitnation/providers/auth_provider.dart'
     as auth; // Import auth_provider with prefix
 import 'package:fitnation/Screens/Auth/Login.dart'; // Import LoginScreen
-import 'package:fitnation/models/User.dart'; // Import User model
-import 'package:fitnation/api/API_Services.dart'; // Import ApiService
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   final String? communityId; // Optional: if posting to a specific community
@@ -70,7 +69,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
     ChallengePostData? challengeData,
     PostType? postType,
   }) async {
+    print("=== _handleSubmit called ===");
+    print("Content: $content");
+    print("MediaFile: ${mediaFile?.path}");
+    print("WorkoutData: $workoutData");
+    print("ChallengeData: $challengeData");
+    print("PostType: $postType");
+    print("_isSubmittingAnyTab: $_isSubmittingAnyTab");
+    
+    // Check if user is authenticated
+    final currentUser = ref.read(auth.currentUserProvider);
+    print("Current user: ${currentUser?.id}");
+    
     if (_isSubmittingAnyTab) return;
+
+    // Set submitting state to true at the start
+    _updateSubmittingState(true);
 
     if (postType == null) {
       if (workoutData != null) {
@@ -87,32 +101,33 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
       mediaUrl = mediaFile.path;
     }
 
-    final newPost = Post(
-      id: '',
-      userId: '',
-      content: content,
-      mediaUrl: mediaUrl,
-      postType: [postType],
-      workoutData: workoutData,
-      challengeData: challengeData,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
     print('Attempting to create post of type: ${postType.name}');
     print('Community ID: ${widget.communityId}');
 
-    // Get ApiService instance
-    final apiService = ref.read(apiServiceProvider);
-
     try {
+      String? finalMediaUrl = mediaUrl;
+      
       // Upload media file if it exists
       if (mediaFile != null) {
-        mediaUrl = await apiService.uploadFile(mediaFile);
+        final apiService = ref.read(apiServiceProvider);
+        finalMediaUrl = await apiService.uploadFile(mediaFile);
       }
 
-      // Create the post using the ApiService
-      await apiService.createPost(newPost);
+      // Update the post with the uploaded media URL
+      final finalPost = Post.create(
+        content: content,
+        mediaUrl: finalMediaUrl,
+        postType: [postType],
+        workoutData: workoutData,
+        challengeData: challengeData,
+      );
+
+      debugPrint("Final post data: ${finalPost.toCreateJson()}");
+
+      // Create the post using the provider
+      debugPrint("About to call createPostProvider...");
+      await ref.read(createPostProvider(finalPost).future);
+      debugPrint("createPostProvider completed successfully!");
 
       print("Post submitted successfully!");
       if (mounted) {
@@ -128,6 +143,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
           ),
         );
       }
+    } finally {
+      _updateSubmittingState(false);
     }
   }
 
@@ -249,16 +266,12 @@ class _CreatePostTabState extends State<CreatePostTab> {
       return;
     }
 
-    widget.onSubmittingStateChange(true);
-    try {
-      await widget.onSubmit(
-        content: _contentController.text.trim(),
-        mediaFile: _selectedImage,
-        postType: PostType.text,
-      );
-    } finally {
-      widget.onSubmittingStateChange(false);
-    }
+    // Don't manage submitting state here - let the parent handle it
+    await widget.onSubmit(
+      content: _contentController.text.trim(),
+      mediaFile: _selectedImage,
+      postType: PostType.text,
+    );
   }
 
   @override
@@ -518,15 +531,11 @@ class _CreateWorkoutTabState extends State<CreateWorkoutTab> {
               : null,
     );
 
-    widget.onSubmittingStateChange(true);
-    try {
-      await widget.onSubmit(
-        workoutData: workoutData,
-        postType: PostType.workout,
-      );
-    } finally {
-      widget.onSubmittingStateChange(false);
-    }
+    // Don't manage submitting state here - let the parent handle it
+    await widget.onSubmit(
+      workoutData: workoutData,
+      postType: PostType.workout,
+    );
   }
 
   @override
@@ -840,16 +849,12 @@ class _CreateChallengeTabState extends State<CreateChallengeTab> {
       coverImageUrl: null,
     );
 
-    widget.onSubmittingStateChange(true);
-    try {
-      await widget.onSubmit(
-        challengeData: challengeData,
-        mediaFile: _coverImage,
-        postType: PostType.challenge,
-      );
-    } finally {
-      widget.onSubmittingStateChange(false);
-    }
+    // Don't manage submitting state here - let the parent handle it
+    await widget.onSubmit(
+      challengeData: challengeData,
+      mediaFile: _coverImage,
+      postType: PostType.challenge,
+    );
   }
 
   @override

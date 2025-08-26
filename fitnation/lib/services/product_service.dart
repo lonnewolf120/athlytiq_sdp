@@ -88,12 +88,12 @@ class ProductService {
             'Compact and powerful electric treadmill with multiple workout programs and a clear LCD display. Perfect for home cardio.',
         price: 49999.99,
         imageUrl:
-            'https://m.media-amazon.com/images/I/61wnRsm+mLL._AC_SX300_SY300_.jpg', // Placeholder, ideally a treadmill specific image
+            'https://m.media-amazon.com/images/I/31chdUGXSAL._AC_.jpg', 
         images: [
-          'https://m.media-amazon.com/images/I/61wnRsm+mLL._AC_SX300_SY300_.jpg',
-          'https://m.media-amazon.com/images/I/81ggsYPTBiL._AC_SY450_.jpg',
-          'https://m.media-amazon.com/images/I/81SNe1qSlKL._AC_SY450_.jpg',
-          'https://m.media-amazon.com/images/I/818vL20BAqL._AC_SY450_.jpg',
+          'https://m.media-amazon.com/images/I/31chdUGXSAL._AC_.jpg',
+          'https://m.media-amazon.com/images/I/712dpGAqHuL._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/71JnGGtcV0L._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/61x-G1r5bmL._AC_SX679_.jpg',
         ],
         category: 'equipment',
         subCategory: 'treadmills',
@@ -461,54 +461,7 @@ class ProductService {
           'Refreshing lemon-lime flavor',
         ],
       ),
-      const Product(
-        id: 'sup5_multivitamin',
-        name: 'Daily Multivitamin (Men\'s/Women\'s)',
-        description:
-            'Comprehensive multivitamin formula tailored for daily nutritional needs, supporting overall health and vitality.',
-        price: 2499.00,
-        imageUrl:
-            'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/opt/opt22789/g/18.jpg',
-        images: [
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/opt/opt22789/g/18.jpg',
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/opt/opt22790/g/17.jpg', // Example for women's
-        ],
-        category: 'supplements',
-        subCategory: 'health & wellness',
-        categoryIcon: '💊',
-        rating: 4.6,
-        reviewCount: 205,
-        features: [
-          'Broad spectrum of vitamins and minerals',
-          'Supports immune function',
-          'Enhances energy metabolism',
-          'Formulated for daily intake',
-        ],
-      ),
-      const Product(
-        id: 'sup6_fish_oil',
-        name: 'Omega-3 Fish Oil Softgels',
-        description:
-            'High-potency Omega-3 fatty acids from fish oil, supporting heart, brain, and joint health.',
-        price: 1899.00,
-        imageUrl:
-            'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/nwg/nwg17120/g/5.jpg',
-        images: [
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/nwg/nwg17120/g/5.jpg',
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/gdn/gdn00020/g/18.jpg',
-        ],
-        category: 'supplements',
-        subCategory: 'health & wellness',
-        categoryIcon: '🐠',
-        rating: 4.7,
-        reviewCount: 178,
-        features: [
-          'Rich in EPA and DHA',
-          'Supports cardiovascular health',
-          'Promotes brain function',
-          'Easy-to-swallow softgels',
-        ],
-      ),
+      
 
       // CATEGORY: ACCESSORIES
       const Product(
@@ -852,31 +805,7 @@ class ProductService {
           'Elastic waistband with drawstring',
         ],
       ),
-      const Product(
-        id: 'cloth4_womens_sports_bra',
-        name: 'Women\'s High Support Sports Bra',
-        description:
-            'Designed for high-impact activities, this sports bra offers maximum support and comfort with breathable fabric.',
-        price: 2899.99,
-        imageUrl:
-            'https://m.media-amazon.com/images/I/61Wf4t2GzBL._AC_UX679_.jpg',
-        images: [
-          'https://m.media-amazon.com/images/I/61Wf4t2GzBL._AC_UX679_.jpg',
-          'https://m.media-amazon.com/images/I/71u-IjdWlwL._AC_SX425_.jpg',
-        ],
-        category: 'clothing',
-        subCategory: 'women\'s activewear',
-        categoryIcon: '👙',
-        rating: 4.7,
-        reviewCount: 910,
-        features: [
-          'Maximum support for high impact',
-          'Breathable, sweat-wicking material',
-          'Adjustable straps and hook-and-eye closure',
-          'Removable pads',
-        ],
-      ),
-
+      
       // CATEGORY: FOOTWEAR
       const Product(
         id: 'foot1_mens_running_shoes',

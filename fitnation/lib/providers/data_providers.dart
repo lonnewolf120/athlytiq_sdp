@@ -756,20 +756,35 @@ final workoutTypesProvider = FutureProvider<List<String>>((ref) async {
 
 final postsFeedProvider = FutureProvider<List<Post>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
-  debugPrint("Fetching posts");
+  debugPrint("postsFeedProvider: Fetching posts");
   // Fetch posts from the public feed endpoint
   try {
-    return await apiService.getPublicFeed();
+    final posts = await apiService.getPublicFeed();
+    debugPrint("postsFeedProvider: Successfully fetched ${posts.length} posts");
+    return posts;
   } on NoInternetException catch (e) {
+    debugPrint("postsFeedProvider: No internet exception: ${e.message}");
     throw Exception(e.message);
+  } catch (e) {
+    debugPrint("postsFeedProvider: Error fetching posts: $e");
+    throw Exception("Failed to fetch posts: $e");
   }
 });
 
 final createPostProvider = FutureProvider.family<void, Post>((ref, post) async {
+  debugPrint("=== createPostProvider called ===");
+  debugPrint("Post data: ${post.toCreateJson()}");
+  
   final apiService = ref.watch(apiServiceProvider);
   try {
+    debugPrint("Calling apiService.createPost...");
     await apiService.createPost(post);
+    debugPrint("Post created successfully!");
   } on NoInternetException catch (e) {
+    debugPrint("No internet exception: ${e.message}");
     throw Exception(e.message);
+  } catch (e) {
+    debugPrint("Error creating post: $e");
+    throw Exception("Failed to create post: $e");
   }
 });
