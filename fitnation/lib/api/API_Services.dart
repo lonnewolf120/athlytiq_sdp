@@ -562,7 +562,9 @@ class ApiService {
 
   Future<Post> createPost(Post post) async {
     try {
-      final response = await _dio.post('/posts', data: post.toJson());
+      debugPrint("ApiService.createPost: Sending data: ${post.toCreateJson()}");
+      final response = await _dio.post('/posts/', data: post.toCreateJson());
+      debugPrint("ApiService.createPost: Received response status: ${response.statusCode}");
       return Post.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e, "Failed to create post");
@@ -582,11 +584,29 @@ class ApiService {
       debugPrint(
         "ApiService: Successfully fetched public feed. Status: ${response.statusCode}",
       );
-      // debugPrint(response as String?);
+      debugPrint("ApiService: Raw response data type: ${response.data.runtimeType}");
+      debugPrint("ApiService: Raw response data length: ${response.data is List ? (response.data as List).length : 'not a list'}");
+      
       if (response.data is List) {
-        return (response.data as List)
+        final dataList = response.data as List;
+        debugPrint("ApiService: Response contains ${dataList.length} items");
+        
+        // Log first few items for debugging
+        for (int i = 0; i < (dataList.length > 3 ? 3 : dataList.length); i++) {
+          debugPrint("ApiService: Item $i: ${dataList[i]}");
+        }
+        
+        return dataList
             .whereType<Map<String, dynamic>>()
-            .map((json) => Post.fromJson(json))
+            .map((json) {
+              try {
+                return Post.fromJson(json);
+              } catch (e) {
+                debugPrint("ApiService: Error parsing post JSON: $e");
+                debugPrint("ApiService: Problematic JSON: $json");
+                rethrow;
+              }
+            })
             .toList();
       } else {
         debugPrint(
@@ -830,6 +850,84 @@ class ApiService {
       return await _dio.delete(path);
     } on DioException catch (e) {
       throw _handleDioError(e, "DELETE request failed for $path");
+    }
+  }
+
+  // Get user profile by user ID
+  Future<User> getUserProfile(String userId) async {
+    try {
+      debugPrint("ApiService: Fetching user profile for userId: $userId");
+      final response = await _dio.get('/users/$userId');
+      debugPrint("ApiService: User profile response status: ${response.statusCode}");
+      debugPrint("ApiService: User profile response data: ${response.data}");
+      
+      if (response.statusCode == 200 && response.data != null) {
+        return User.fromJson(response.data);
+      } else {
+        throw Exception('Failed to load user profile');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error fetching user profile: ${e.message}");
+      throw _handleDioError(e, "Failed to fetch user profile for user $userId");
+    }
+  }
+
+  // Get post by ID with details
+  Future<Post> getPostById(String postId) async {
+    try {
+      debugPrint("ApiService: Fetching post details for postId: $postId");
+      final response = await _dio.get('/posts/$postId');
+      debugPrint("ApiService: Post details response status: ${response.statusCode}");
+      debugPrint("ApiService: Post details response data: ${response.data}");
+      
+      if (response.statusCode == 200 && response.data != null) {
+        return Post.fromJson(response.data);
+      } else {
+        throw Exception('Failed to load post details');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error fetching post details: ${e.message}");
+      throw _handleDioError(e, "Failed to fetch post details for post $postId");
+    }
+  }
+
+  // Get comments for a post
+  Future<List<dynamic>> getPostComments(String postId) async {
+    try {
+      debugPrint("ApiService: Fetching comments for postId: $postId");
+      final response = await _dio.get('/posts/$postId/comments');
+      debugPrint("ApiService: Comments response status: ${response.statusCode}");
+      debugPrint("ApiService: Comments response data: ${response.data}");
+      
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data as List<dynamic>;
+      } else {
+        throw Exception('Failed to load comments');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error fetching comments: ${e.message}");
+      throw _handleDioError(e, "Failed to fetch comments for post $postId");
+    }
+  }
+
+  // Add a comment to a post
+  Future<dynamic> addComment(String postId, String content) async {
+    try {
+      debugPrint("ApiService: Adding comment to postId: $postId");
+      final response = await _dio.post('/posts/$postId/comments', data: {
+        'content': content,
+      });
+      debugPrint("ApiService: Add comment response status: ${response.statusCode}");
+      debugPrint("ApiService: Add comment response data: ${response.data}");
+      
+      if (response.statusCode == 201 && response.data != null) {
+        return response.data;
+      } else {
+        throw Exception('Failed to add comment');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error adding comment: ${e.message}");
+      throw _handleDioError(e, "Failed to add comment to post $postId");
     }
   }
 }

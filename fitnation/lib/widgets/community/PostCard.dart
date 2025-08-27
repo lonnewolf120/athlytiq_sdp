@@ -25,8 +25,15 @@ String timeAgo(DateTime dt) {
 
 class PostCard extends StatelessWidget {
   final Post post;
+  final VoidCallback? onAvatarTap;
+  final VoidCallback? onPostTap;
 
-  const PostCard({super.key, required this.post});
+  const PostCard({
+    super.key, 
+    required this.post,
+    this.onAvatarTap,
+    this.onPostTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +50,22 @@ class PostCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: GestureDetector(
+        onTap: onPostTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // User Info Row
             Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: CachedNetworkImageProvider(userImageUrl),
+                GestureDetector(
+                  onTap: onAvatarTap,
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundImage: CachedNetworkImageProvider(userImageUrl),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -102,7 +114,7 @@ class PostCard extends StatelessWidget {
                   color: AppColors.cardForeground.withOpacity(0.9),
                 ),
               ),
-            if (post.mediaUrl != null)
+            if (post.mediaUrl != null && post.mediaUrl!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 12.0),
                 child: ClipRRect(
@@ -167,6 +179,7 @@ class PostCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

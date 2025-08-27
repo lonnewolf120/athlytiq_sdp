@@ -263,10 +263,16 @@ def delete_post(db: Session, post_id: str):
         return True
     return False
 
-def get_public_feed(db: Session, skip: int = 0, limit: int = 20):
+def get_public_feed(db: Session, skip: int = 0, limit: int = 30):
     """
     Retrieves public posts for the main feed, including author details, comment counts, and react counts.
     """
+    print(f"DEBUG: get_public_feed called with skip={skip}, limit={limit}")
+    
+    # First, let's get a simple count of public posts
+    total_public_posts = db.query(Post).filter(Post.privacy == 'public').count()
+    print(f"DEBUG: Total public posts in database: {total_public_posts}")
+    
     # Subquery for comment counts
     comment_count_sq = db.query(
         Comment.post_id,
@@ -279,6 +285,14 @@ def get_public_feed(db: Session, skip: int = 0, limit: int = 20):
         func.count(React.user_id).label("react_count") # Counting distinct users who reacted
     ).group_by(React.post_id).subquery()
 
+    # Build the main query step by step for better debugging
+    base_query = db.query(Post).filter(Post.privacy == 'public')
+    
+    # Check if we have any posts after the privacy filter
+    posts_after_privacy_filter = base_query.count()
+    print(f"DEBUG: Posts after privacy filter: {posts_after_privacy_filter}")
+    
+    # Add joins - use LEFT JOIN to ensure we don't lose posts
     query = db.query(
         Post,
         User.id.label("author_user_id"),
@@ -286,66 +300,105 @@ def get_public_feed(db: Session, skip: int = 0, limit: int = 20):
         User.email.label("author_email"),
         User.role.label("author_role"),
         User.created_at.label("author_created_at"),
-        cast(Profile.id, String).label("author_profile_id"), # Include Profile.id and cast to String
+        cast(Profile.id, String).label("author_profile_id"),
         Profile.display_name.label("author_display_name"),
         Profile.profile_picture_url.label("author_profile_picture_url"),
         comment_count_sq.c.comment_count,
         react_count_sq.c.react_count
-    ).join(User, Post.user_id == User.id)\
-     .join(Profile, User.id == Profile.user_id)\
+    ).filter(Post.privacy == 'public')\
+     .join(User, Post.user_id == User.id)\
+     .outerjoin(Profile, User.id == Profile.user_id)\
      .outerjoin(comment_count_sq, Post.id == comment_count_sq.c.post_id)\
      .outerjoin(react_count_sq, Post.id == react_count_sq.c.post_id)\
-     .filter(Post.privacy == 'public')\
      .options(
-        joinedload(Post.workout_data).joinedload(WorkoutPost.exercises), # Eager load workout data if needed
-        joinedload(Post.challenge_data) # Eager load challenge data if needed
+        joinedload(Post.workout_data).joinedload(WorkoutPost.exercises),
+        joinedload(Post.challenge_data)
      )\
      .order_by(Post.created_at.desc())\
      .offset(skip)\
      .limit(limit)
     
-    results = query.all()
+    print(f"DEBUG: About to execute final query with offset={skip}, limit={limit}")
+    
+    try:
+        results = query.all()
+        print(f"DEBUG: Query executed successfully, got {len(results)} results")
+    except Exception as e:
+        print(f"DEBUG: Error executing query: {e}")
+        # Fallback to simpler query
+        print("DEBUG: Falling back to simpler query...")
+        simple_query = db.query(Post)\
+            .join(User, Post.user_id == User.id)\
+            .outerjoin(Profile, User.id == Profile.user_id)\
+            .filter(Post.privacy == 'public')\
+            .options(
+                joinedload(Post.author).joinedload(User.profile),
+                joinedload(Post.workout_data).joinedload(WorkoutPost.exercises),
+                joinedload(Post.challenge_data)
+            )\
+            .order_by(Post.created_at.desc())\
+            .offset(skip)\
+            .limit(limit)
+        
+        simple_results = simple_query.all()
+        print(f"DEBUG: Simple query returned {len(simple_results)} results")
+        
+        # Convert to the expected format
+        results = []
+        for post in simple_results:
+            # Create a mock row object
+            class MockRow:
+                def __init__(self, post):
+                    self.Post = post
+                    self.author_user_id = post.author.id if post.author else None
+                    self.author_username = post.author.username if post.author else None
+                    self.author_email = post.author.email if post.author else None
+                    self.author_role = post.author.role if post.author else None
+                    self.author_created_at = post.author.created_at if post.author else None
+                    self.author_profile_id = str(post.author.profile.id) if post.author and post.author.profile else None
+                    self.author_display_name = post.author.profile.display_name if post.author and post.author.profile else None
+                    self.author_profile_picture_url = post.author.profile.profile_picture_url if post.author and post.author.profile else None
+                    self.comment_count = 0  # Will be calculated separately if needed
+                    self.react_count = 0    # Will be calculated separately if needed
+            
+            results.append(MockRow(post))
 
     posts_with_details = []
     for row in results:
         post_obj = row.Post
         
-        # Construct author User and Profile model instances
-        # These are in-memory instances for Pydantic serialization, not new DB records.
-        author_profile_instance = Profile(
-            id=row.author_profile_id, # Pass the profile ID
-            user_id=row.author_user_id, # user_id is required for Profile
-            display_name=row.author_display_name,
-            profile_picture_url=row.author_profile_picture_url
-            # Other Profile fields like bio, fitness_goals, created_at, updated_at
-            # will use their defaults (e.g., None or a default function like uuid.uuid4 for id)
-            # if not explicitly set here. This is generally fine for read operations
-            # as long as the UserPublic schema (used in PostResponse) doesn't strictly require them.
-        )
+        # If post_obj.author is not already loaded, construct it
+        if not hasattr(post_obj, 'author') or post_obj.author is None:
+            # Construct author User and Profile model instances
+            author_profile_instance = Profile(
+                id=row.author_profile_id,
+                user_id=row.author_user_id,
+                display_name=row.author_display_name,
+                profile_picture_url=row.author_profile_picture_url
+            )
 
-        author_user_instance = User(
-            id=row.author_user_id,
-            username=row.author_username,
-            email=row.author_email,
-            role=row.author_role, # This is a string from the DB, matching User.role type
-            created_at=row.author_created_at # This is a datetime object from the DB
-            # password_hash is not needed for this public representation.
-        )
-        # Link the profile to the user instance
-        author_user_instance.profile = author_profile_instance
+            author_user_instance = User(
+                id=row.author_user_id,
+                username=row.author_username,
+                email=row.author_email,
+                role=row.author_role,
+                created_at=row.author_created_at
+            )
+            author_user_instance.profile = author_profile_instance
+            post_obj.author = author_user_instance
+
+        # Set counts, handling None values
+        if hasattr(row, 'comment_count'):
+            post_obj.commentCount = row.comment_count if row.comment_count else 0
+        else:
+            post_obj.commentCount = 0
+            
+        if hasattr(row, 'react_count'):
+            post_obj.reactCount = row.react_count if row.react_count else 0
+        else:
+            post_obj.reactCount = 0
         
-        # Assign the fully formed User instance to the post's author relationship
-        post_obj.author = author_user_instance
-
-        post_obj.commentCount = row.comment_count if row.comment_count else 0
-        post_obj.reactCount = row.react_count if row.react_count else 0
-        
-        # Ensure nested data is loaded if present (already handled by joinedload options)
-        # if post_obj.workout_post_id and not post_obj.workout_data:
-        #     post_obj.workout_data = db.query(WorkoutPost).filter(WorkoutPost.id == post_obj.workout_post_id).first()
-        # if post_obj.challenge_post_id and not post_obj.challenge_data:
-        #     post_obj.challenge_data = db.query(ChallengePost).filter(ChallengePost.id == post_obj.challenge_post_id).first()
-
         posts_with_details.append(post_obj)
         
+    print(f"DEBUG: Returning {len(posts_with_details)} posts")
     return posts_with_details

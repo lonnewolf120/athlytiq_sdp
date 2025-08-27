@@ -48,6 +48,25 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     print(f"Current User: {current_user}")
     return current_user
 
+@router.get("/{user_id}", response_model=UserPublic)
+async def get_user_by_id(user_id: str, db: Session = Depends(get_db)):
+    """Get user profile by user ID"""
+    try:
+        user = db.query(User).options(joinedload(User.profile)).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        print(f"Retrieved user: {user}")
+        return user
+    except Exception as e:
+        print(f"Error retrieving user {user_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user"
+        )
+
 @router.post("/upload-pfp",summary="Upload a profile picture")
 async def upload_profile_picture(
     file:UploadFile=File(...),

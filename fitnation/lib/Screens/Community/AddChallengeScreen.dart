@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'ChallengesScreen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/challenge.dart' as models;
+import '../../services/challenge_service.dart';
+import '../../providers/data_providers.dart';
 
-class AddChallengeScreen extends StatefulWidget {
+class AddChallengeScreen extends ConsumerStatefulWidget {
   const AddChallengeScreen({Key? key}) : super(key: key);
 
   @override
-  State<AddChallengeScreen> createState() => _AddChallengeScreenState();
+  ConsumerState<AddChallengeScreen> createState() => _AddChallengeScreenState();
 }
 
-class _AddChallengeScreenState extends State<AddChallengeScreen> {
+class _AddChallengeScreenState extends ConsumerState<AddChallengeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -20,6 +23,7 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
   Color _selectedBrandColor = Colors.orange;
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 30));
+  bool _isLoading = false;
   
   final List<String> _activityTypes = ['Run', 'Ride', 'Swim', 'Walk', 'Hike', 'Workout'];
   final List<Color> _brandColors = [
@@ -59,15 +63,26 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
         elevation: 0,
         actions: [
           TextButton(
-            onPressed: _saveChallenge,
-            child: Text(
-              'Create',
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            onPressed: _isLoading ? null : _saveChallenge,
+            child: _isLoading 
+              ? SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor,
+                    ),
+                  ),
+                )
+              : Text(
+                  'Create',
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
           ),
         ],
       ),
@@ -180,10 +195,15 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
               _buildTextFormField(
                 controller: _distanceController,
                 label: 'Target Distance/Goal',
-                hint: 'e.g., 5.0 km or 10k steps',
+                hint: 'e.g., 5.0 (in km)',
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a target goal';
+                  }
+                  final distance = double.tryParse(value);
+                  if (distance == null || distance <= 0) {
+                    return 'Please enter a valid positive number';
                   }
                   return null;
                 },
@@ -287,7 +307,7 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _saveChallenge,
+                  onPressed: _isLoading ? null : _saveChallenge,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -295,14 +315,37 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Create Challenge',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Creating...',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Text(
+                        'Create Challenge',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                 ),
               ),
               
@@ -331,6 +374,7 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
     required String hint,
     int maxLines = 1,
     String? Function(String?)? validator,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,6 +392,7 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
           controller: controller,
           maxLines: maxLines,
           validator: validator,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
@@ -476,37 +521,85 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
     }
   }
 
-  void _saveChallenge() {
+  Future<void> _saveChallenge() async {
     if (_formKey.currentState!.validate()) {
-      final newChallenge = Challenge(
-        id: 'ch_${DateTime.now().millisecondsSinceEpoch}',
-        title: _titleController.text,
-        description: _descriptionController.text,
-        brand: _brandController.text,
-        brandLogo: _getActivityEmoji(_selectedActivityType),
-        backgroundImage: _imageUrlController.text.isEmpty 
-          ? 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-          : _imageUrlController.text,
-        distance: _distanceController.text,
-        duration: '${_startDate.day}/${_startDate.month}/${_startDate.year} to ${_endDate.day}/${_endDate.month}/${_endDate.year}',
-        friendsJoined: 0,
-        isJoined: false,
-        brandColor: _selectedBrandColor,
-        activityType: _selectedActivityType,
-      );
+      setState(() {
+        _isLoading = true;
+      });
 
-      Navigator.pop(context, newChallenge);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Challenge created successfully!'),
-          backgroundColor: Theme.of(context).primaryColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+      try {
+        final challengeService = ref.read(challengeServiceProvider);
+        
+        double distanceValue = 0.0;
+        if (_distanceController.text.isNotEmpty) {
+          distanceValue = double.tryParse(_distanceController.text) ?? 0.0;
+        }
+        
+        int durationDays = _endDate.difference(_startDate).inDays;
+        if (durationDays <= 0) {
+          durationDays = 1; 
+        }
+        
+        String brandName = _brandController.text.trim();
+        if (brandName.isEmpty) {
+          brandName = 'Personal Challenge';
+        }
+        
+        final challengeCreate = models.ChallengeCreate(
+          title: _titleController.text,
+          description: _descriptionController.text,
+          brand: brandName,
+          brandLogo: _getActivityEmoji(_selectedActivityType),
+          backgroundImage: _imageUrlController.text.isEmpty 
+            ? 'https://images.unsplash.com/photo-1596727362302-b8d891c42ab8?q=80&w=2585&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+            : _imageUrlController.text,
+          distance: distanceValue,
+          duration: durationDays,
+          startDate: _startDate,
+          endDate: _endDate,
+          activityType: _selectedActivityType.toLowerCase(),
+          brandColor: Colors.blueAccent,
+          maxParticipants: 100, 
+          isPublic: true,
+        );
+
+        final newChallenge = await challengeService.createChallenge(challengeCreate);
+        
+        if (mounted) {
+          Navigator.pop(context, newChallenge);
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Challenge created successfully!'),
+              backgroundColor: Theme.of(context).primaryColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating challenge: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+        print('Error creating challenge: $e');
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 }

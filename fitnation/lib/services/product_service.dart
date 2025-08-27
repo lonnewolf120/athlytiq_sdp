@@ -88,12 +88,12 @@ class ProductService {
             'Compact and powerful electric treadmill with multiple workout programs and a clear LCD display. Perfect for home cardio.',
         price: 49999.99,
         imageUrl:
-            'https://m.media-amazon.com/images/I/61wnRsm+mLL._AC_SX300_SY300_.jpg', // Placeholder, ideally a treadmill specific image
+            'https://m.media-amazon.com/images/I/31chdUGXSAL._AC_.jpg', 
         images: [
-          'https://m.media-amazon.com/images/I/61wnRsm+mLL._AC_SX300_SY300_.jpg',
-          'https://m.media-amazon.com/images/I/81ggsYPTBiL._AC_SY450_.jpg',
-          'https://m.media-amazon.com/images/I/81SNe1qSlKL._AC_SY450_.jpg',
-          'https://m.media-amazon.com/images/I/818vL20BAqL._AC_SY450_.jpg',
+          'https://m.media-amazon.com/images/I/31chdUGXSAL._AC_.jpg',
+          'https://m.media-amazon.com/images/I/712dpGAqHuL._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/71JnGGtcV0L._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/61x-G1r5bmL._AC_SX679_.jpg',
         ],
         category: 'equipment',
         subCategory: 'treadmills',
@@ -461,54 +461,7 @@ class ProductService {
           'Refreshing lemon-lime flavor',
         ],
       ),
-      const Product(
-        id: 'sup5_multivitamin',
-        name: 'Daily Multivitamin (Men\'s/Women\'s)',
-        description:
-            'Comprehensive multivitamin formula tailored for daily nutritional needs, supporting overall health and vitality.',
-        price: 2499.00,
-        imageUrl:
-            'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/opt/opt22789/g/18.jpg',
-        images: [
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/opt/opt22789/g/18.jpg',
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/opt/opt22790/g/17.jpg', // Example for women's
-        ],
-        category: 'supplements',
-        subCategory: 'health & wellness',
-        categoryIcon: '💊',
-        rating: 4.6,
-        reviewCount: 205,
-        features: [
-          'Broad spectrum of vitamins and minerals',
-          'Supports immune function',
-          'Enhances energy metabolism',
-          'Formulated for daily intake',
-        ],
-      ),
-      const Product(
-        id: 'sup6_fish_oil',
-        name: 'Omega-3 Fish Oil Softgels',
-        description:
-            'High-potency Omega-3 fatty acids from fish oil, supporting heart, brain, and joint health.',
-        price: 1899.00,
-        imageUrl:
-            'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/nwg/nwg17120/g/5.jpg',
-        images: [
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/nwg/nwg17120/g/5.jpg',
-          'https://cloudinary.images-iherb.com/image/upload/f_auto,q_auto:eco/images/gdn/gdn00020/g/18.jpg',
-        ],
-        category: 'supplements',
-        subCategory: 'health & wellness',
-        categoryIcon: '🐠',
-        rating: 4.7,
-        reviewCount: 178,
-        features: [
-          'Rich in EPA and DHA',
-          'Supports cardiovascular health',
-          'Promotes brain function',
-          'Easy-to-swallow softgels',
-        ],
-      ),
+      
 
       // CATEGORY: ACCESSORIES
       const Product(
@@ -835,10 +788,13 @@ class ProductService {
             'Lightweight and breathable running shorts for men, with a 7-inch inseam and internal brief for comfort during runs.',
         price: 1999.99,
         imageUrl:
-            'https://m.media-amazon.com/images/I/61+9X8Gf2xL._AC_SX425_.jpg',
+            'https://m.media-amazon.com/images/I/811vwORLFxL._AC_SX679_.jpg',
         images: [
-          'https://m.media-amazon.com/images/I/61+9X8Gf2xL._AC_SX425_.jpg',
-          'https://m.media-amazon.com/images/I/61b1bL71pVL._AC_SY355_.jpg',
+          'https://m.media-amazon.com/images/I/71dlZOJEczL._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/710LcQG25YL._AC_SX679_.jpg',
+          'https://m.media-amazon.com/images/I/81RVXR-docL._AC_SX679_.jpg',
+          
+
         ],
         category: 'clothing',
         subCategory: 'men\'s activewear',
@@ -852,32 +808,7 @@ class ProductService {
           'Elastic waistband with drawstring',
         ],
       ),
-      const Product(
-        id: 'cloth4_womens_sports_bra',
-        name: 'Women\'s High Support Sports Bra',
-        description:
-            'Designed for high-impact activities, this sports bra offers maximum support and comfort with breathable fabric.',
-        price: 2899.99,
-        imageUrl:
-            'https://m.media-amazon.com/images/I/61Wf4t2GzBL._AC_UX679_.jpg',
-        images: [
-          'https://m.media-amazon.com/images/I/61Wf4t2GzBL._AC_UX679_.jpg',
-          'https://m.media-amazon.com/images/I/71u-IjdWlwL._AC_SX425_.jpg',
-        ],
-        category: 'clothing',
-        subCategory: 'women\'s activewear',
-        categoryIcon: '👙',
-        rating: 4.7,
-        reviewCount: 910,
-        features: [
-          'Maximum support for high impact',
-          'Breathable, sweat-wicking material',
-          'Adjustable straps and hook-and-eye closure',
-          'Removable pads',
-        ],
-      ),
-
-      // CATEGORY: FOOTWEAR
+      
       const Product(
         id: 'foot1_mens_running_shoes',
         name: 'Men\'s Lightweight Running Shoes',
@@ -996,7 +927,6 @@ class ProductService {
   }
 
   static List<Product> getFeaturedProducts() {
-    // Returns products with a high rating, prioritizing equipment first then other popular items
     return getAllProducts()
         .where((product) => product.rating >= 4.5)
         .take(6)
@@ -1014,7 +944,6 @@ class ProductService {
     ];
   }
 
-  // Example of getting suggested products for a specific activity, now using new IDs and structure
   static List<Product> getSuggestedProductsForActivity(String activityType) {
     switch (activityType.toLowerCase()) {
       case 'running':
@@ -1032,8 +961,10 @@ class ProductService {
         return getAllProducts()
             .where(
               (product) =>
-                  product.subCategory == 'cycling shoes' ||
-                  product.subCategory == 'cycling gear',
+                  product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
@@ -1041,8 +972,10 @@ class ProductService {
         return getAllProducts()
             .where(
               (product) =>
-                  product.subCategory == 'swimming gear' ||
-                  product.id == 'acc9_waterproof_tracker', // specific tracker
+                product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
@@ -1050,32 +983,34 @@ class ProductService {
         return getAllProducts()
             .where(
               (product) =>
-                  product.subCategory == 'hiking boots' ||
-                  product.subCategory == 'hiking gear',
+               product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
-      case 'strength training': // Added for equipment heavy activities
+      case 'strength training': 
       case 'weightlifting':
       case 'home workout':
         return getAllProducts()
             .where(
               (product) =>
-                  product.category == 'equipment' &&
-                  (product.subCategory == 'dumbbells' ||
-                      product.subCategory == 'barbells' ||
-                      product.subCategory == 'kettlebells' ||
-                      product.subCategory == 'resistance bands' ||
-                      product.subCategory == 'benches'),
+                 product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                      product.category == 'accessories',
             )
             .take(4)
             .toList();
       default:
-        // Fallback to general popular equipment
         return getAllProducts()
             .where(
               (product) =>
-                  product.category == 'equipment' && product.rating >= 4.5,
+                  product.subCategory == 'running shoes' ||
+                  product.subCategory == 'wearables' ||
+                  product.subCategory == 'hydration' &&
+                  product.category == 'accessories',
             )
             .take(4)
             .toList();

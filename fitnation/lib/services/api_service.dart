@@ -1,22 +1,24 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:fitnation/models/User.dart'; // Assuming you have a User model
-import 'package:flutter/foundation.dart'; // For debugPrint
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:fitnation/models/User.dart'; 
+import 'package:flutter/foundation.dart'; 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/services/connectivity_service.dart'; // Import ConnectivityService
 import 'package:dio/dio.dart'; // Import Dio
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Import FlutterSecureStorage
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
 
 class ApiService {
   final Ref _ref;
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
-  final String _baseUrl = 'http://10.0.2.2:8000';
+  final String _baseUrl;
   String? _accessToken;
 
   ApiService(this._ref)
       : _dio = Dio(),
-        _secureStorage = const FlutterSecureStorage();
+        _secureStorage = const FlutterSecureStorage(),
+        _baseUrl = dotenv.env['BASE_URL']?.replaceAll('/api/v1', '') ?? 'http://10.103.135.254:8000';
 
   void setAccessToken(String token) {
     _accessToken = token;
@@ -73,6 +75,58 @@ class ApiService {
       debugPrint("API Error: ${response.statusCode} - ${errorBody['detail']}");
       throw Exception(errorBody['detail'] ?? 'Failed to load data');
     }
+  }
+
+  Future<Map<String, dynamic>> _put(String endpoint, Map<String, dynamic> data, {bool includeAuth = true}) async {
+    await _checkConnectivity(); // Check connectivity before making the request
+    final url = '$_baseUrl$endpoint';
+    final response = await _dio.put(
+      url,
+      options: Options(headers: _getHeaders(includeAuth: includeAuth)),
+      data: json.encode(data),
+    );
+
+    if (response.statusCode! >= 200 && response.statusCode! < 300) {
+      return response.data;
+    } else {
+      final errorBody = response.data;
+      debugPrint("API Error: ${response.statusCode} - ${errorBody['detail']}");
+      throw Exception(errorBody['detail'] ?? 'Failed to load data');
+    }
+  }
+
+  Future<Map<String, dynamic>> _delete(String endpoint, {bool includeAuth = true}) async {
+    await _checkConnectivity(); // Check connectivity before making the request
+    final url = '$_baseUrl$endpoint';
+    final response = await _dio.delete(
+      url,
+      options: Options(headers: _getHeaders(includeAuth: includeAuth)),
+    );
+
+    if (response.statusCode! >= 200 && response.statusCode! < 300) {
+      return response.data;
+    } else {
+      final errorBody = response.data;
+      debugPrint("API Error: ${response.statusCode} - ${errorBody['detail']}");
+      throw Exception(errorBody['detail'] ?? 'Failed to load data');
+    }
+  }
+
+  // Public methods to expose the private methods
+  Future<Map<String, dynamic>> get(String endpoint, {bool includeAuth = true}) {
+    return _get(endpoint, includeAuth: includeAuth);
+  }
+
+  Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> data, {bool includeAuth = true}) {
+    return _post(endpoint, data, includeAuth: includeAuth);
+  }
+
+  Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> data, {bool includeAuth = true}) {
+    return _put(endpoint, data, includeAuth: includeAuth);
+  }
+
+  Future<Map<String, dynamic>> delete(String endpoint, {bool includeAuth = true}) {
+    return _delete(endpoint, includeAuth: includeAuth);
   }
 
   // Auth Endpoints
