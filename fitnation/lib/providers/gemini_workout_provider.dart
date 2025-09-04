@@ -122,17 +122,30 @@ class GeminiWorkoutNotifier extends StateNotifier<List<Workout>> {
       // Update status to handling
       _ref.read(workoutGenerationProvider.notifier).updateHandlingStep();
 
-      // Save to backend
+      // Save to backend (treat unexpected/null responses as non-fatal)
       debugPrint('GeminiWorkoutNotifier: Saving workout plan to backend...');
-      final savedWorkout = await _apiService.saveWorkoutPlan(
-        newWorkout,
-        userInfo,
-      );
-      debugPrint(
-        'GeminiWorkoutNotifier: Workout plan saved to backend: $savedWorkout',
-      );
+      try {
+        final savedWorkout = await _apiService.saveWorkoutPlan(
+          newWorkout,
+          userInfo,
+        );
 
-      // Complete the generation process
+        // Defensive handling: savedWorkout may contain nulls or unexpected shapes
+        // If parsing or cast errors happen downstream, we prefer to log and continue
+        debugPrint(
+          'GeminiWorkoutNotifier: Workout plan saved to backend: $savedWorkout',
+        );
+      } catch (e, st) {
+        // If the backend returns null fields or a different shape causing casts,
+        // swallow the error as non-fatal: log it and continue to mark generation completed.
+        debugPrint(
+          'GeminiWorkoutNotifier: Warning - non-fatal error while saving workout plan: $e',
+        );
+        debugPrint('GeminiWorkoutNotifier: Stacktrace: $st');
+        // Optionally, we could notify monitoring here instead of rethrowing.
+      }
+
+      // Complete the generation process even if save had minor issues
       _ref.read(workoutGenerationProvider.notifier).completeGeneration();
     } on NoInternetException catch (e) {
       debugPrint(

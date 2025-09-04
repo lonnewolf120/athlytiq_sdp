@@ -1,4 +1,5 @@
 import 'package:fitnation/models/PlannedExercise.dart'; // Import PlannedExercise
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class Workout {
   final String id;
@@ -24,18 +25,43 @@ class Workout {
 
   // Factory constructor for JSON (loading plans)
   factory Workout.fromJson(Map<String, dynamic> json) {
+    // Normalize and defensively parse fields
+    final id = json['id']?.toString() ?? '';
+    final name = json['name']?.toString() ?? '';
+    final iconUrl = json['icon_url'] as String?;
+    final equipmentSelected = json['equipment_selected'] as String?;
+    final oneRmGoal = json['one_rm_goal'] as String?;
+    final type = json['type'] as String?;
+    final prompt =
+        json['prompt'] is String
+            ? json['prompt'] as String
+            : (json['prompt']?.toString());
+
+    List<PlannedExercise> exercisesList = [];
+    try {
+      final rawExercises = json['exercises'];
+      if (rawExercises is List) {
+        exercisesList =
+            rawExercises
+                .where((e) => e != null)
+                .map((e) => PlannedExercise.fromJson(e as Map<String, dynamic>))
+                .toList();
+      }
+    } catch (e, st) {
+      debugPrint('Workout.fromJson: Warning - could not parse exercises: $e');
+      debugPrint('Workout.fromJson: Stacktrace: $st');
+      exercisesList = [];
+    }
+
     return Workout(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      iconUrl: json['icon_url'] as String?,
-      equipmentSelected: json['equipment_selected'] as String?,
-      oneRmGoal: json['one_rm_goal'] as String?,
-      type: json['type'] as String?,
-      prompt: json['type'] as String?, // Assign type to prompt
-      exercises:
-          (json['exercises'] as List<dynamic>)
-              .map((e) => PlannedExercise.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      id: id,
+      name: name,
+      iconUrl: iconUrl,
+      equipmentSelected: equipmentSelected,
+      oneRmGoal: oneRmGoal,
+      type: type,
+      prompt: prompt,
+      exercises: exercisesList,
     );
   }
 
