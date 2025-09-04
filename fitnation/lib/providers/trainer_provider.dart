@@ -3,6 +3,7 @@ import 'package:fitnation/models/trainer/trainer_application.dart';
 import 'package:fitnation/models/trainer/trainer_post.dart';
 import 'package:fitnation/models/trainer/trainer_chat.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TrainerNotifier extends StateNotifier<AsyncValue<void>> {
   final Dio _dio;
@@ -164,6 +165,6 @@ class TrainerNotifier extends StateNotifier<AsyncValue<void>> {
 
 final trainerProvider = StateNotifierProvider<TrainerNotifier, AsyncValue<void>>((ref) {
   final dio = Dio();
-  const baseUrl = 'https://api.fitnation.com/v1'; // Replace with your actual API URL
+   final baseUrl = dotenv.env['BASE_URL'] ?? 'http://ap2.shalish.xyz';
   return TrainerNotifier(dio, baseUrl);
 });
