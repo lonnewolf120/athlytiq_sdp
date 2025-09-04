@@ -171,6 +171,37 @@ class GeminiWorkoutNotifier extends StateNotifier<List<Workout>> {
   void clearPlans() {
     state = [];
   }
+
+  /// Add a single plan to the in-memory state
+  void addPlan(Workout plan) {
+    state = [...state, plan];
+  }
+
+  /// Add multiple plans (e.g., imported from backend)
+  void addPlans(List<Workout> plans) {
+    state = [...state, ...plans];
+  }
+
+  /// Save a workout plan locally (and optionally to backend). Returns the final Workout used.
+  Future<Workout> savePlanLocally(
+    Workout plan, {
+    bool saveToBackend = false,
+    Map<String, dynamic>? prompt,
+  }) async {
+    // Add to state
+    addPlan(plan);
+
+    if (saveToBackend) {
+      try {
+        await _apiService.saveWorkoutPlan(plan, prompt ?? {});
+      } catch (e) {
+        debugPrint(
+          'GeminiWorkoutNotifier: Warning - failed to save imported plan to backend: $e',
+        );
+      }
+    }
+    return plan;
+  }
 }
 
 final geminiWorkoutPlanProvider =
