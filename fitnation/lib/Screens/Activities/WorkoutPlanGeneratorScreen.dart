@@ -179,7 +179,7 @@ class _WorkoutPlanGeneratorScreenState
           // Header Section
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -193,18 +193,18 @@ class _WorkoutPlanGeneratorScreenState
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.auto_awesome_rounded,
-                    size: 48,
+                    size: 16,
                     color: colorScheme.onPrimaryContainer,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 Text(
                   'AI-Powered Workout Plan',
                   style: textTheme.headlineSmall?.copyWith(
@@ -213,14 +213,8 @@ class _WorkoutPlanGeneratorScreenState
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tell us about yourself to get a personalized workout plan tailored to your goals and equipment!',
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                
+                 SizedBox(height: MediaQuery.of(context).size.height * 0.01),
               ],
             ),
           ),

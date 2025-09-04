@@ -1203,7 +1203,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
   ) {
     return Card(
       elevation: 0,
-      color: colorScheme.primaryContainer,
+      color: Colors.grey.shade900,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
