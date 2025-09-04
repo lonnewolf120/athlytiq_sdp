@@ -9,6 +9,7 @@ import 'package:fitnation/providers/data_providers.dart';
 import 'package:fitnation/services/database_helper.dart';
 import 'package:fitnation/models/Exercise.dart' as exercise_db;
 import 'package:fitnation/providers/gemini_workout_provider.dart';
+import 'package:fitnation/providers/workout_generation_provider.dart';
 import 'package:fitnation/Screens/Activities/WorkoutPlanGeneratorScreen.dart';
 import 'package:fitnation/widgets/common/CustomAppBar.dart';
 import 'package:fitnation/Screens/Trainer/TrainerRegistrationScreen.dart';
@@ -119,6 +120,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     final generatedWorkouts = ref.watch(
       geminiWorkoutPlanProvider,
     ); // Watch the generated workouts
+    final generationStatus = ref.watch(
+      workoutGenerationProvider,
+    ); // Watch generation status
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -176,7 +180,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
         controller: _tabController,
         children: [
           // Workout Plan Tab
-          _buildWorkoutPlanTabContent(context, generatedWorkouts, colorScheme),
+          _buildWorkoutPlanTabContent(
+            context,
+            generatedWorkouts,
+            generationStatus,
+            colorScheme,
+          ),
 
           // Trainer Tab
           _buildTrainerTabContent(context, colorScheme),
@@ -683,6 +692,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
   Widget _buildWorkoutPlanTabContent(
     BuildContext context,
     List<Workout> generatedWorkouts,
+    WorkoutGenerationState generationStatus,
     ColorScheme colorScheme,
   ) {
     return Container(
@@ -719,10 +729,35 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           ),
           const SizedBox(height: 24),
 
+          // Show generation progress card if generating
+          if (generationStatus.isGenerating) ...[
+            _buildGenerationProgressCard(
+              context,
+              generationStatus,
+              colorScheme,
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          // Show completion card if completed
+          if (generationStatus.isCompleted) ...[
+            _buildGenerationCompletedCard(context, colorScheme),
+            const SizedBox(height: 24),
+          ],
+
+          // Show error card if there's an error
+          if (generationStatus.hasError) ...[
+            _buildGenerationErrorCard(context, generationStatus, colorScheme),
+            const SizedBox(height: 24),
+          ],
+
           // Plans List
           Expanded(
             child:
-                generatedWorkouts.isEmpty
+                generatedWorkouts.isEmpty &&
+                        !generationStatus.isGenerating &&
+                        !generationStatus.isCompleted &&
+                        !generationStatus.hasError
                     ? _buildEmptyWorkoutState(context, colorScheme)
                     : _buildWorkoutPlansList(
                       context,
@@ -1156,6 +1191,374 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenerationProgressCard(
+    BuildContext context,
+    WorkoutGenerationState generationStatus,
+    ColorScheme colorScheme,
+  ) {
+    return Card(
+      elevation: 0,
+      color: Colors.grey.shade900,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: colorScheme.onPrimary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Generating Workout",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        generationStatus.message ??
+                            "Processing your request...",
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onPrimaryContainer.withOpacity(
+                            0.8,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Progress bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Progress",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      "${(generationStatus.progress * 100).round()}%",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: generationStatus.progress,
+                    backgroundColor: colorScheme.onPrimaryContainer.withOpacity(
+                      0.2,
+                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      colorScheme.primary,
+                    ),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Generation steps
+            _buildGenerationSteps(context, generationStatus, colorScheme),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenerationSteps(
+    BuildContext context,
+    WorkoutGenerationState generationStatus,
+    ColorScheme colorScheme,
+  ) {
+    final steps = [
+      (
+        WorkoutGenerationStep.requestSent,
+        "Sending request to AI",
+        Icons.send_rounded,
+      ),
+      (
+        WorkoutGenerationStep.parsing,
+        "Parsing AI response",
+        Icons.psychology_rounded,
+      ),
+      (
+        WorkoutGenerationStep.processing,
+        "Processing workout plan",
+        Icons.settings_rounded,
+      ),
+      (
+        WorkoutGenerationStep.handling,
+        "Finalizing your plan",
+        Icons.check_circle_rounded,
+      ),
+    ];
+
+    return Column(
+      children:
+          steps.map((stepData) {
+            final step = stepData.$1;
+            final title = stepData.$2;
+            final icon = stepData.$3;
+
+            final isCompleted = generationStatus.step.index > step.index;
+            final isCurrent = generationStatus.step == step;
+            Color stepColor;
+            Color iconColor;
+            Color textColor;
+
+            if (isCompleted) {
+              stepColor = colorScheme.primary;
+              iconColor = colorScheme.onPrimary;
+              textColor = colorScheme.onPrimaryContainer;
+            } else if (isCurrent) {
+              stepColor = colorScheme.primary.withOpacity(0.7);
+              iconColor = colorScheme.onPrimary;
+              textColor = colorScheme.onPrimaryContainer;
+            } else {
+              stepColor = colorScheme.onPrimaryContainer.withOpacity(0.2);
+              iconColor = colorScheme.onPrimaryContainer.withOpacity(0.5);
+              textColor = colorScheme.onPrimaryContainer.withOpacity(0.6);
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: stepColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child:
+                        isCompleted
+                            ? Icon(
+                              Icons.check_rounded,
+                              color: iconColor,
+                              size: 18,
+                            )
+                            : isCurrent
+                            ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  iconColor,
+                                ),
+                              ),
+                            )
+                            : Icon(icon, color: iconColor, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: textColor,
+                        fontWeight:
+                            isCurrent ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildGenerationCompletedCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return Card(
+      elevation: 0,
+      color: colorScheme.tertiaryContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Workout Generated Successfully!",
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onTertiaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Your personalized workout plan is ready. Scroll down to view and start your workout!",
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onTertiaryContainer.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                ref.read(workoutGenerationProvider.notifier).reset();
+              },
+              icon: Icon(
+                Icons.close_rounded,
+                color: colorScheme.onTertiaryContainer,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenerationErrorCard(
+    BuildContext context,
+    WorkoutGenerationState generationStatus,
+    ColorScheme colorScheme,
+  ) {
+    return Card(
+      elevation: 0,
+      color: colorScheme.errorContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.error,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.error_rounded,
+                    color: colorScheme.onError,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Generation Failed",
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onErrorContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        generationStatus.errorMessage ??
+                            "Something went wrong while generating your workout plan.",
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onErrorContainer.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    ref.read(workoutGenerationProvider.notifier).reset();
+                  },
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: colorScheme.onErrorContainer,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  ref.read(workoutGenerationProvider.notifier).reset();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WorkoutPlanGeneratorScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Try Again'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colorScheme.error,
+                  foregroundColor: colorScheme.onError,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
