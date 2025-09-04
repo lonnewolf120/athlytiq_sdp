@@ -2,6 +2,7 @@ import 'package:fitnation/Screens/shop_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/providers/gemini_workout_provider.dart';
+import 'package:fitnation/providers/workout_generation_provider.dart';
 import 'dart:async'; // Import for Timer
 
 class WorkoutPlanGeneratorScreen extends ConsumerStatefulWidget {
@@ -119,21 +120,24 @@ class _WorkoutPlanGeneratorScreenState
       };
 
       try {
-        await ref
+        // Reset generation status before starting
+        ref.read(workoutGenerationProvider.notifier).reset();
+
+        // Navigate to WorkoutScreen immediately to show progress
+        Navigator.pop(context);
+
+        // Start the generation process asynchronously (don't await)
+        ref
             .read(geminiWorkoutPlanProvider.notifier)
-            .generateWorkoutPlan(userInfo);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Workout plan generated successfully!'),
-            ),
-          );
-          Navigator.pop(context);
-        }
+            .generateWorkoutPlan(userInfo)
+            .catchError((error) {
+              // Handle error if needed, but don't block UI
+              debugPrint('Workout generation error: $error');
+            });
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to generate plan: $e')),
+            SnackBar(content: Text('Failed to start generation: $e')),
           );
         }
       } finally {
