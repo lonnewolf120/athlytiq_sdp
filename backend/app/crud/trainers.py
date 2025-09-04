@@ -15,9 +15,7 @@ from app.models.trainer import (
 from app.schemas import trainer as schemas
 
 
-async def create_trainer_application(
-    db: Session, application: schemas.TrainerApplicationCreate, user_id: UUID
-) -> TrainerProfile:
+) -> TrainerApplication:
     """Create a new trainer application"""
     db_application = TrainerApplication(
         user_id=user_id,
