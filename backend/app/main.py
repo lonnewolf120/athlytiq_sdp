@@ -12,6 +12,8 @@ from app.api.v1.endpoints import meal_plans # NEW: Import meal_plans router
 from app.api.v1.endpoints import meals # NEW: Import meals router
 from app.api.v1.endpoints import shop # NEW: Import shop router
 from app.api.v1.endpoints import challenges # NEW: Import challenges router
+from app.api.v1.endpoints import exercise # Legacy exercise router
+from app.api.v1.endpoints import exercise_library # Enhanced exercise library router
 from app.database.base import Base, engine # Imports Base and engine
 import app.models_db # This import ensures all models in models_db.py are registered with Base
 from app.middleware.logger import LoggerMiddleware
@@ -58,8 +60,8 @@ app.include_router(user.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(auth.router,prefix="/api/v1/auth",tags=["auth"])
 app.include_router(posts.router, prefix="/api/v1/posts", tags=["posts"]) # Include new posts router
 app.include_router(nutrition.router, prefix="/api/v1/nutrition", tags=["nutrition"]) # Include new nutrition router
-# app.include_router(exercise.router,prefix="/api/v1/exercises",tags=["exercises"])
-# app.include_router(workoutHistory.router,prefix="/api/v1/workoutHistory",tags=["workoutHistory"])
+app.include_router(exercise.router, prefix="/api/v1/exercises", tags=["exercises"]) # Legacy exercise router
+app.include_router(exercise_library.router, prefix="/api/v1/exercise-library", tags=["Exercise Library"]) # Enhanced exercise library
 app.add_middleware(LoggerMiddleware)
 
 
