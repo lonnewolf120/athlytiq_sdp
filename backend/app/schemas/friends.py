@@ -46,4 +46,4 @@ class UserSearchResponse(BaseModel):
 
 
 class FriendRequestAction(BaseModel):
-    action: str = Field(..., regex="^(accepted|rejected)$")
+    action: str = Field(..., pattern="^(accepted|rejected)$")
