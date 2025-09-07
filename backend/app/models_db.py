@@ -479,6 +479,98 @@ class ChallengePost(Base):
     post = relationship("Post", back_populates="challenge_data", uselist=False)
 
 
+# --- CHAT AND FRIENDS MODELS (Phase 1) ---
+
+class FriendRequest(Base):
+    __tablename__ = 'friend_requests'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    status = Column(String(20), nullable=False, default='pending')
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    sender = relationship("User", foreign_keys=[sender_id], backref="sent_friend_requests")
+    receiver = relationship("User", foreign_keys=[receiver_id], backref="received_friend_requests")
+
+
+class Friend(Base):
+    __tablename__ = 'friends'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user1_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user2_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    user1 = relationship("User", foreign_keys=[user1_id])
+    user2 = relationship("User", foreign_keys=[user2_id])
+
+
+class ChatRoom(Base):
+    __tablename__ = 'chat_rooms'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=True)
+    is_group = Column(Boolean, default=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    creator = relationship("User", backref="created_chat_rooms")
+    participants = relationship("ChatParticipant", back_populates="chat_room")
+    messages = relationship("ChatMessage", back_populates="chat_room")
+
+
+class ChatParticipant(Base):
+    __tablename__ = 'chat_participants'
+    
+    chat_room_id = Column(UUID(as_uuid=True), ForeignKey('chat_rooms.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    joined_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    last_read_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True)
+    
+    # Relationships
+    chat_room = relationship("ChatRoom", back_populates="participants")
+    user = relationship("User", backref="chat_participations")
+
+
+class ChatMessage(Base):
+    __tablename__ = 'chat_messages'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chat_room_id = Column(UUID(as_uuid=True), ForeignKey('chat_rooms.id', ondelete='CASCADE'), nullable=False)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message_type = Column(String(20), default='text')
+    content = Column(Text, nullable=False)
+    media_url = Column(Text, nullable=True)
+    reply_to_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id'), nullable=True)
+    is_edited = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    chat_room = relationship("ChatRoom", back_populates="messages")
+    sender = relationship("User", backref="sent_messages")
+    reply_to = relationship("ChatMessage", remote_side=[id])
+
+
+class ChatMessageRead(Base):
+    __tablename__ = 'chat_message_reads'
+    
+    message_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    read_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    message = relationship("ChatMessage", backref="reads")
+    user = relationship("User", backref="message_reads")
+
+
 class Exercise(Base):
     __tablename__="exercises"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
