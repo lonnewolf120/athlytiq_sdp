@@ -67,6 +67,11 @@ class User(Base):
     # ride_participations = relationship("RideActivityParticipant", back_populates="user", cascade="all, delete-orphan") # Handled by association table
     created_communities = relationship("Community", back_populates="creator", foreign_keys="[Community.creator_user_id]", cascade="all, delete-orphan")
     # community_memberships = relationship("CommunityMember", back_populates="user", cascade="all, delete-orphan") # Handled by association table
+    
+    # Shop relationships
+    cart = relationship("Cart", back_populates="user", uselist=False)
+    orders = relationship("Order", back_populates="user")
+    product_reviews = relationship("ProductReview", back_populates="user")
 
 
 class Profile(Base):
@@ -441,7 +446,7 @@ class WorkoutPostExercise(Base):
     __tablename__ = 'workout_post_exercises'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workout_post_id = Column(UUID(as_uuid=True), ForeignKey('workout_posts.id', ondelete='CASCADE'), nullable=False)
-    exercise_id = Column(String(255), nullable=False) # Reference to external exercise ID
+    exercise_id = Column(String(255), nullable=False) 
     name = Column(String(255), nullable=False)
     gif_url = Column(String(1024), nullable=True)
     body_parts = Column(ARRAY(String), nullable=True)
@@ -479,6 +484,112 @@ class ChallengePost(Base):
     post = relationship("Post", back_populates="challenge_data", uselist=False)
 
 
+# Shop Models
+class ShopCategory(Base):
+    __tablename__ = "shop_categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    image_url = Column(String(1024))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationship
+    products = relationship("ShopProduct", back_populates="category")
+
+class ShopProduct(Base):
+    __tablename__ = "shop_products"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    price = Column(Float, nullable=False)
+    sale_price = Column(Float) 
+    image_urls = Column(JSON)  
+    category_id = Column(Integer, ForeignKey("shop_categories.id"))
+    brand = Column(String(255))
+    sku = Column(String(100), unique=True)
+    stock_quantity = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    is_featured = Column(Boolean, default=False)
+    rating = Column(Float, default=0.0)
+    review_count = Column(Integer, default=0)
+    tags = Column(JSON) 
+    specifications = Column(JSON) 
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    category = relationship("ShopCategory", back_populates="products")
+    cart_items = relationship("CartItem", back_populates="product")
+    order_items = relationship("OrderItem", back_populates="product")
+    reviews = relationship("ProductReview", back_populates="product")
+
+class Cart(Base):
+    __tablename__ = "carts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    
+    user = relationship("User", back_populates="cart")
+    items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    cart_id = Column(Integer, ForeignKey("carts.id"))
+    product_id = Column(Integer, ForeignKey("shop_products.id"))
+    quantity = Column(Integer, nullable=False)
+    added_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    cart = relationship("Cart", back_populates="items")
+    product = relationship("ShopProduct", back_populates="cart_items")
+
+class Order(Base):
+    __tablename__ = "orders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    order_number = Column(String(100), unique=True, nullable=False)
+    status = Column(String(50), default="pending")  
+    total_amount = Column(Float, nullable=False)
+    shipping_address = Column(JSON) 
+    payment_method = Column(String(100))
+    payment_status = Column(String(50), default="pending")
+    user = relationship("User", back_populates="orders")
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"))
+    product_id = Column(Integer, ForeignKey("shop_products.id"))
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False) 
+    
+    # Relationships
+    order = relationship("Order", back_populates="items")
+    product = relationship("ShopProduct", back_populates="order_items")
+
+class ProductReview(Base):
+    __tablename__ = "product_reviews"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("shop_products.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    rating = Column(Integer, nullable=False)  # 1-5 stars
+    comment = Column(Text)
+    is_verified_purchase = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    product = relationship("ShopProduct", back_populates="reviews")
+    user = relationship("User", back_populates="product_reviews")
+ 
 # --- CHAT AND FRIENDS MODELS (Phase 1) ---
 
 class FriendRequest(Base):
@@ -511,7 +622,6 @@ class Friend(Base):
 
 class ChatRoom(Base):
     __tablename__ = 'chat_rooms'
-    
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=True)
     is_group = Column(Boolean, default=False)
@@ -570,7 +680,6 @@ class ChatMessageRead(Base):
     message = relationship("ChatMessage", backref="reads")
     user = relationship("User", backref="message_reads")
 
-
 class Exercise(Base):
     __tablename__="exercises"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -588,7 +697,130 @@ class Exercise(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
-# Ensure all models that have an updated_at field also have onupdate=datetime.utcnow for auto-update
-# (Added this to User, Profile, Post, Comment, Workout, Exercise, HealthLog, FoodLog, RidesActivities, Community)
-# CompletedWorkout, CompletedWorkoutExercise, CompletedWorkoutSet typically don't get updated after creation,
-# but added onupdate to CompletedWorkout for consistency if some metadata might change.
+
+
+challenge_activity_type_enum = PGEnum(
+    'run', 'ride', 'swim', 'walk', 'hike', 'workout',
+    name='challenge_activity_type'
+)
+
+challenge_status_enum = PGEnum(
+    'upcoming', 'active', 'completed', 'cancelled',
+    name='challenge_status'
+)
+
+participant_status_enum = PGEnum(
+    'joined', 'left', 'completed', 'failed',
+    name='participant_status'
+)
+
+class Challenge(Base):
+    __tablename__ = 'challenges'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    brand = Column(String(100), nullable=False)
+    brand_logo = Column(String(10), nullable=True) 
+    background_image = Column(String(1024), nullable=True)
+    distance = Column(String(100), nullable=False) 
+    duration = Column(String(200), nullable=False)  
+    start_date = Column(DateTime(timezone=True), nullable=False)
+    end_date = Column(DateTime(timezone=True), nullable=False)
+    activity_type = Column(challenge_activity_type_enum, nullable=False, default='run')
+    status = Column(challenge_status_enum, nullable=False, default='upcoming')
+    brand_color = Column(String(7), nullable=False, default='#FF6B35')  # Hex color code
+    max_participants = Column(Integer, nullable=True)  
+    is_public = Column(Boolean, nullable=False, default=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    creator = relationship("User", back_populates="created_challenges")
+    participants = relationship("ChallengeParticipant", back_populates="challenge", cascade="all, delete-orphan")
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_challenges_activity_type', 'activity_type'),
+        Index('idx_challenges_status', 'status'),
+        Index('idx_challenges_start_date', 'start_date'),
+        Index('idx_challenges_end_date', 'end_date'),
+        Index('idx_challenges_created_by', 'created_by'),
+    )
+
+class ChallengeParticipant(Base):
+    __tablename__ = 'challenge_participants'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    challenge_id = Column(UUID(as_uuid=True), ForeignKey('challenges.id'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    status = Column(participant_status_enum, nullable=False, default='joined')
+    progress = Column(Float, nullable=False, default=0.0)  # Progress value as decimal
+    progress_percentage = Column(Float, nullable=False, default=0.0)  # 0.0 to 100.0
+    completion_proof_url = Column(String(1024), nullable=True)  # Screenshot/proof image
+    joined_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    challenge = relationship("Challenge", back_populates="participants")
+    participant = relationship("User", back_populates="challenge_participations")
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('challenge_id', 'user_id', name='unique_challenge_participant'),
+        Index('idx_challenge_participants_challenge_id', 'challenge_id'),
+        Index('idx_challenge_participants_user_id', 'user_id'),
+        Index('idx_challenge_participants_status', 'status'),
+    )
+
+# Add relationships to User model
+User.created_challenges = relationship("Challenge", back_populates="creator")
+User.challenge_participations = relationship("ChallengeParticipant", back_populates="participant")
+
+
+
+class TrainerProfile(Base):
+    __tablename__ = 'trainer_profiles'
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    bio = Column(Text, nullable=True)
+    certifications = Column(Text, nullable=True)
+    specialties = Column(Text, nullable=True)
+    rating = Column(Float, nullable=True, default=0.0)
+    hourly_rate = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship('User')
+    availabilities = relationship('TrainerAvailability', back_populates='trainer', cascade='all, delete-orphan')
+    sessions = relationship('TrainerSession', back_populates='trainer', cascade='all, delete-orphan')
+
+
+class TrainerAvailability(Base):
+    __tablename__ = 'trainer_availabilities'
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    weekday = Column(Integer, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    trainer = relationship('TrainerProfile', back_populates='availabilities')
+
+
+class TrainerSession(Base):
+    __tablename__ = 'trainer_sessions'
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String(50), nullable=False, default='pending')
+    notes = Column(Text, nullable=True)
+    price = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    trainer = relationship('TrainerProfile', back_populates='sessions')
+    user = relationship('User')

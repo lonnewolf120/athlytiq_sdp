@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:fitnation/models/Exercise.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fitnation/models/User.dart';
-import 'package:fitnation/models/WorkoutPostModel.dart';
 import 'package:fitnation/models/Workout.dart'; // Import Workout model
 import 'package:fitnation/models/CompletedWorkout.dart'; // Import CompletedWorkout model
 import 'package:fitnation/models/MealPlan.dart'; // Import MealPlan model
@@ -214,7 +212,30 @@ class ApiService {
       debugPrint(
         "ApiService.saveWorkoutPlan: Received response status: ${response.statusCode}",
       );
-      return Workout.fromJson(response.data);
+      // Defensive parsing: response.data may be null or missing fields
+      final raw = response.data;
+      if (raw == null) {
+        debugPrint(
+          'ApiService.saveWorkoutPlan: Warning - response.data is null, returning original workoutData',
+        );
+        return workoutData;
+      }
+
+      try {
+        // Normalize exercises field: if null, use empty list
+        if (raw is Map<String, dynamic>) {
+          raw['exercises'] = raw['exercises'] ?? [];
+        }
+
+        return Workout.fromJson(raw as Map<String, dynamic>);
+      } catch (e, st) {
+        debugPrint(
+          'ApiService.saveWorkoutPlan: Error parsing response into Workout: $e',
+        );
+        debugPrint('ApiService.saveWorkoutPlan: Stacktrace: $st');
+        // If parsing fails, return the original workoutData to avoid breaking the flow
+        return workoutData;
+      }
     } on DioException catch (e) {
       throw _handleDioError(e, "Failed to save workout plan");
     }
@@ -562,7 +583,11 @@ class ApiService {
 
   Future<Post> createPost(Post post) async {
     try {
-      final response = await _dio.post('/posts', data: post.toJson());
+      debugPrint("ApiService.createPost: Sending data: ${post.toCreateJson()}");
+      final response = await _dio.post('/posts/', data: post.toCreateJson());
+      debugPrint(
+        "ApiService.createPost: Received response status: ${response.statusCode}",
+      );
       return Post.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e, "Failed to create post");
@@ -582,12 +607,31 @@ class ApiService {
       debugPrint(
         "ApiService: Successfully fetched public feed. Status: ${response.statusCode}",
       );
-      // debugPrint(response as String?);
+      debugPrint(
+        "ApiService: Raw response data type: ${response.data.runtimeType}",
+      );
+      debugPrint(
+        "ApiService: Raw response data length: ${response.data is List ? (response.data as List).length : 'not a list'}",
+      );
+
       if (response.data is List) {
-        return (response.data as List)
-            .whereType<Map<String, dynamic>>()
-            .map((json) => Post.fromJson(json))
-            .toList();
+        final dataList = response.data as List;
+        debugPrint("ApiService: Response contains ${dataList.length} items");
+
+        // Log first few items for debugging
+        for (int i = 0; i < (dataList.length > 3 ? 3 : dataList.length); i++) {
+          debugPrint("ApiService: Item $i: ${dataList[i]}");
+        }
+
+        return dataList.whereType<Map<String, dynamic>>().map((json) {
+          try {
+            return Post.fromJson(json);
+          } catch (e) {
+            debugPrint("ApiService: Error parsing post JSON: $e");
+            debugPrint("ApiService: Problematic JSON: $json");
+            rethrow;
+          }
+        }).toList();
       } else {
         debugPrint(
           "ApiService: Public feed response data is not a List: ${response.data}",
@@ -605,17 +649,9 @@ class ApiService {
     }
   }
 
-  // Helper method for response handling (can be generic)
-  dynamic _handleResponse(Response response) {
-    if (response.statusCode != null &&
-        response.statusCode! >= 200 &&
-        response.statusCode! < 300) {
-      return response.data;
-    } else {
-      print('HTTP Error: ${response.statusCode} - ${response.data}');
-      throw Exception('Failed to load data from API: ${response.statusCode}');
-    }
-  }
+  // NOTE: _handleResponse helper was removed because it's unused. Individual
+  // call sites handle response checks and parsing inline to provide better
+  // diagnostics.
 
   String _handleDioError(DioException e, String defaultMessage) {
     String errorMessage = defaultMessage;
@@ -830,6 +866,93 @@ class ApiService {
       return await _dio.delete(path);
     } on DioException catch (e) {
       throw _handleDioError(e, "DELETE request failed for $path");
+    }
+  }
+
+  // Get user profile by user ID
+  Future<User> getUserProfile(String userId) async {
+    try {
+      debugPrint("ApiService: Fetching user profile for userId: $userId");
+      final response = await _dio.get('/users/$userId');
+      debugPrint(
+        "ApiService: User profile response status: ${response.statusCode}",
+      );
+      debugPrint("ApiService: User profile response data: ${response.data}");
+
+      if (response.statusCode == 200 && response.data != null) {
+        return User.fromJson(response.data);
+      } else {
+        throw Exception('Failed to load user profile');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error fetching user profile: ${e.message}");
+      throw _handleDioError(e, "Failed to fetch user profile for user $userId");
+    }
+  }
+
+  // Get post by ID with details
+  Future<Post> getPostById(String postId) async {
+    try {
+      debugPrint("ApiService: Fetching post details for postId: $postId");
+      final response = await _dio.get('/posts/$postId');
+      debugPrint(
+        "ApiService: Post details response status: ${response.statusCode}",
+      );
+      debugPrint("ApiService: Post details response data: ${response.data}");
+
+      if (response.statusCode == 200 && response.data != null) {
+        return Post.fromJson(response.data);
+      } else {
+        throw Exception('Failed to load post details');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error fetching post details: ${e.message}");
+      throw _handleDioError(e, "Failed to fetch post details for post $postId");
+    }
+  }
+
+  // Get comments for a post
+  Future<List<dynamic>> getPostComments(String postId) async {
+    try {
+      debugPrint("ApiService: Fetching comments for postId: $postId");
+      final response = await _dio.get('/posts/$postId/comments');
+      debugPrint(
+        "ApiService: Comments response status: ${response.statusCode}",
+      );
+      debugPrint("ApiService: Comments response data: ${response.data}");
+
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data as List<dynamic>;
+      } else {
+        throw Exception('Failed to load comments');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error fetching comments: ${e.message}");
+      throw _handleDioError(e, "Failed to fetch comments for post $postId");
+    }
+  }
+
+  // Add a comment to a post
+  Future<dynamic> addComment(String postId, String content) async {
+    try {
+      debugPrint("ApiService: Adding comment to postId: $postId");
+      final response = await _dio.post(
+        '/posts/$postId/comments',
+        data: {'content': content},
+      );
+      debugPrint(
+        "ApiService: Add comment response status: ${response.statusCode}",
+      );
+      debugPrint("ApiService: Add comment response data: ${response.data}");
+
+      if (response.statusCode == 201 && response.data != null) {
+        return response.data;
+      } else {
+        throw Exception('Failed to add comment');
+      }
+    } on DioException catch (e) {
+      debugPrint("ApiService: Error adding comment: ${e.message}");
+      throw _handleDioError(e, "Failed to add comment to post $postId");
     }
   }
 }

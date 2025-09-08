@@ -360,3 +360,174 @@ CREATE TRIGGER set_ride_activities_timestamp
 BEFORE UPDATE ON ride_activities
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
+
+-- ========================================
+-- CHALLENGES SYSTEM TABLES
+-- ========================================
+
+-- Enums for challenges
+CREATE TYPE challenge_status_enum AS ENUM ('draft', 'active', 'completed', 'cancelled');
+CREATE TYPE activity_type_enum AS ENUM ('run', 'ride', 'swim', 'walk', 'hike', 'workout', 'other');
+CREATE TYPE participant_status_enum AS ENUM ('joined', 'active', 'completed', 'dropped_out');
+
+-- Table: challenges
+CREATE TABLE challenges (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    brand VARCHAR(255),
+    brand_logo TEXT, -- URL to brand logo image
+    background_image TEXT, -- URL to background image
+    distance DECIMAL(10,2), -- Distance in kilometers
+    duration INTEGER, -- Duration in days
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    activity_type activity_type_enum NOT NULL,
+    status challenge_status_enum NOT NULL DEFAULT 'draft',
+    brand_color VARCHAR(7), -- Hex color code like #FF5733
+    max_participants INTEGER, -- NULL means unlimited
+    is_public BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT check_valid_dates CHECK (end_date > start_date),
+    CONSTRAINT check_positive_distance CHECK (distance IS NULL OR distance > 0),
+    CONSTRAINT check_positive_duration CHECK (duration IS NULL OR duration > 0),
+    CONSTRAINT check_positive_max_participants CHECK (max_participants IS NULL OR max_participants > 0)
+);
+
+-- Table: challenge_participants
+CREATE TABLE challenge_participants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status participant_status_enum NOT NULL DEFAULT 'joined',
+    progress DECIMAL(10,2) NOT NULL DEFAULT 0.0, -- Progress value (e.g., km completed)
+    progress_percentage DECIMAL(5,2) NOT NULL DEFAULT 0.0, -- Progress as percentage (0-100)
+    completion_proof_url TEXT, -- URL to proof of completion (image/video)
+    joined_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE,
+    notes TEXT, -- Optional notes from participant
+    
+    -- Constraints
+    UNIQUE(challenge_id, user_id), -- User can only join a challenge once
+    CONSTRAINT check_progress_percentage CHECK (progress_percentage >= 0 AND progress_percentage <= 100),
+    CONSTRAINT check_positive_progress CHECK (progress >= 0),
+    CONSTRAINT check_completion_date CHECK (completed_at IS NULL OR completed_at >= joined_at)
+);
+
+-- Table: challenge_updates (for progress tracking)
+CREATE TABLE challenge_updates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    participant_id UUID NOT NULL REFERENCES challenge_participants(id) ON DELETE CASCADE,
+    previous_progress DECIMAL(10,2) NOT NULL,
+    new_progress DECIMAL(10,2) NOT NULL,
+    update_description TEXT,
+    proof_url TEXT, -- URL to proof of this specific update
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT check_progress_increase CHECK (new_progress >= previous_progress)
+);
+
+-- Indexes for better performance
+CREATE INDEX idx_challenges_status ON challenges(status);
+CREATE INDEX idx_challenges_activity_type ON challenges(activity_type);
+CREATE INDEX idx_challenges_start_date ON challenges(start_date);
+CREATE INDEX idx_challenges_end_date ON challenges(end_date);
+CREATE INDEX idx_challenges_created_by ON challenges(created_by);
+CREATE INDEX idx_challenges_is_public ON challenges(is_public);
+
+CREATE INDEX idx_challenge_participants_challenge_id ON challenge_participants(challenge_id);
+CREATE INDEX idx_challenge_participants_user_id ON challenge_participants(user_id);
+CREATE INDEX idx_challenge_participants_status ON challenge_participants(status);
+CREATE INDEX idx_challenge_participants_joined_at ON challenge_participants(joined_at);
+
+CREATE INDEX idx_challenge_updates_participant_id ON challenge_updates(participant_id);
+CREATE INDEX idx_challenge_updates_created_at ON challenge_updates(created_at);
+
+-- Triggers for automatic timestamp updates
+CREATE TRIGGER set_challenges_timestamp
+BEFORE UPDATE ON challenges
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+
+-- Functions for challenge statistics
+CREATE OR REPLACE FUNCTION get_challenge_participant_count(challenge_uuid UUID)
+RETURNS INTEGER AS $$
+BEGIN
+    RETURN (
+        SELECT COUNT(*)
+        FROM challenge_participants
+        WHERE challenge_id = challenge_uuid
+        AND status IN ('joined', 'active', 'completed')
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_challenge_completion_rate(challenge_uuid UUID)
+RETURNS DECIMAL(5,2) AS $$
+DECLARE
+    total_participants INTEGER;
+    completed_participants INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO total_participants
+    FROM challenge_participants
+    WHERE challenge_id = challenge_uuid
+    AND status IN ('joined', 'active', 'completed');
+    
+    SELECT COUNT(*) INTO completed_participants
+    FROM challenge_participants
+    WHERE challenge_id = challenge_uuid
+    AND status = 'completed';
+    
+    IF total_participants = 0 THEN
+        RETURN 0.0;
+    END IF;
+    
+    RETURN (completed_participants::DECIMAL / total_participants::DECIMAL * 100);
+END;
+$$ LANGUAGE plpgsql;
+
+-- View: challenge_summary (for easy querying with participant counts)
+CREATE VIEW challenge_summary AS
+SELECT 
+    c.*,
+    u.username as creator_username,
+    u.email as creator_email,
+    get_challenge_participant_count(c.id) as participant_count,
+    get_challenge_completion_rate(c.id) as completion_rate,
+    CASE 
+        WHEN c.end_date < NOW() THEN 'expired'
+        WHEN c.start_date > NOW() THEN 'upcoming'
+        ELSE c.status::text
+    END as computed_status
+FROM challenges c
+JOIN users u ON c.created_by = u.id;
+
+-- View: user_challenge_participation (for user's challenge history)
+CREATE VIEW user_challenge_participation AS
+SELECT 
+    cp.*,
+    c.title as challenge_title,
+    c.description as challenge_description,
+    c.activity_type,
+    c.start_date,
+    c.end_date,
+    c.distance as target_distance,
+    c.duration as target_duration,
+    u.username as creator_username
+FROM challenge_participants cp
+JOIN challenges c ON cp.challenge_id = c.id
+JOIN users u ON c.created_by = u.id;
+
+-- Sample data insertion (uncomment to use)
+/*
+-- Insert sample challenges
+INSERT INTO challenges (title, description, activity_type, start_date, end_date, distance, created_by, brand, brand_color, is_public) VALUES
+('July 5K Challenge', 'Complete a 5km run every day for a week', 'run', '2025-07-01', '2025-07-07', 5.0, (SELECT id FROM users LIMIT 1), 'FitNation', '#FF5733', true),
+('Summer Cycling Challenge', 'Cycle 100km total during summer', 'ride', '2025-06-01', '2025-08-31', 100.0, (SELECT id FROM users LIMIT 1), 'CycleClub', '#33A1FF', true),
+('Daily Steps Challenge', 'Walk 10,000 steps daily for 30 days', 'walk', '2025-08-01', '2025-08-31', NULL, (SELECT id FROM users LIMIT 1), 'StepTracker', '#33FF57', true);
+*/

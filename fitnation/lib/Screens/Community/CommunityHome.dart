@@ -1,7 +1,9 @@
 import 'package:fitnation/Screens/Community/CreatePostScreen.dart';
 import 'package:fitnation/Screens/Community/messages_page.dart';
+import 'package:fitnation/screens/community/PostDetailScreen.dart';
 import 'package:fitnation/widgets/community/PostCard.dart';
 import 'package:fitnation/widgets/community/StoryBubble.dart';
+import 'package:fitnation/widgets/community/UserProfileModal.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
 import 'package:fitnation/providers/data_providers.dart';
 import 'package:flutter/material.dart';
@@ -120,7 +122,25 @@ class _CommunityHomeScreenState
                   itemBuilder: (context, index) {
                     final post = posts[index];
                     // Each PostCard should handle its own padding if it's a Card
-                    return PostCard(post: post);
+                    return PostCard(
+                      post: post,
+                      onAvatarTap: () {
+                        if (post.author?.id != null) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => UserProfileModal(userId: post.author!.id),
+                          );
+                        }
+                      },
+                      onPostTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PostDetailScreen(postId: post.id),
+                          ),
+                        );
+                      },
+                    );
                   },
                 ),
               );

@@ -1,138 +1,136 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ChallengeDetailScreen.dart';
 import 'AddChallengeScreen.dart';
+import 'package:fitnation/models/challenge.dart';
+import '../../services/challenge_service.dart';
 
-class Challenge {
-  final String id;
-  final String title;
-  final String description;
-  final String brand;
-  final String brandLogo;
-  final String backgroundImage;
-  final String distance;
-  final String duration;
-  final int friendsJoined;
-  final bool isJoined;
-  final Color brandColor;
-  final String activityType;
-
-  const Challenge({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.brand,
-    required this.brandLogo,
-    required this.backgroundImage,
-    required this.distance,
-    required this.duration,
-    required this.friendsJoined,
-    required this.isJoined,
-    required this.brandColor,
-    required this.activityType,
-  });
-}
-
-final List<Challenge> _stravaStyleChallenges = [
-  Challenge(
-    id: 'ch1',
-    title: 'July 5K x FitNation Challenge',
-    description: 'Complete a 5 km (3.1 mi) run.',
-    brand: 'FitNation',
-    brandLogo: '🏃',
-    backgroundImage: 'https://images.unsplash.com/photo-1590333748338-d629e4564ad9?q=80&w=1249&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    distance: '5.0 km',
-    duration: '1 Jul 2025 to 31 Jul 2025',
-    friendsJoined: 0,
-    isJoined: false,
-    brandColor: Colors.orange,
-    activityType: 'Run',
-  ),
-  Challenge(
-    id: 'ch2',
-    title: 'August 5K x FitNation Challenge',
-    description: 'Complete a 5 km (3.1 mi) run.',
-    brand: 'FitNation',
-    brandLogo: '🏃',
-    backgroundImage: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    distance: '5.0 km',
-    duration: '1 Aug 2025 to 31 Aug 2025',
-    friendsJoined: 0,
-    isJoined: false,
-    brandColor: Colors.orange,
-    activityType: 'Run',
-  ),
-  Challenge(
-    id: 'ch3',
-    title: 'Cycling Century Challenge',
-    description: 'Complete a 100 km ride in one session.',
-    brand: 'CycleMax',
-    brandLogo: '🚴',
-    backgroundImage: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    distance: '100 km',
-    duration: '1 Jul 2025 to 31 Jul 2025',
-    friendsJoined: 3,
-    isJoined: true,
-    brandColor: Colors.blue,
-    activityType: 'Ride',
-  ),
-  Challenge(
-    id: 'ch4',
-    title: 'Swimming Marathon',
-    description: 'Complete a 5 km swim distance.',
-    brand: 'AquaFit',
-    brandLogo: '🏊',
-    backgroundImage: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
-    distance: '5.0 km',
-    duration: '15 Jul 2025 to 15 Aug 2025',
-    friendsJoined: 1,
-    isJoined: false,
-    brandColor: Colors.cyan,
-    activityType: 'Swim',
-  ),
-  Challenge(
-    id: 'ch5',
-    title: 'Mountain Hiking Challenge',
-    description: 'Complete a 15 km hike with elevation gain.',
-    brand: 'TrailBlazers',
-    brandLogo: '⛰️',
-    backgroundImage: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
-    distance: '15 km',
-    duration: '1 Jul 2025 to 30 Sep 2025',
-    friendsJoined: 2,
-    isJoined: true,
-    brandColor: Colors.green,
-    activityType: 'Hike',
-  ),
-  Challenge(
-    id: 'ch6',
-    title: 'Daily Walk Challenge',
-    description: 'Walk 10,000 steps daily for 30 days.',
-    brand: 'StepFit',
-    brandLogo: '🚶',
-    backgroundImage: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
-    distance: '10k steps',
-    duration: '1 Jul 2025 to 31 Jul 2025',
-    friendsJoined: 5,
-    isJoined: false,
-    brandColor: Colors.purple,
-    activityType: 'Walk',
-  ),
-];
-
-class ChallengesScreen extends StatefulWidget {
+class ChallengesScreen extends ConsumerStatefulWidget {
   const ChallengesScreen({Key? key}) : super(key: key);
 
   @override
-  State<ChallengesScreen> createState() => _ChallengesScreenState();
+  ConsumerState<ChallengesScreen> createState() => _ChallengesScreenState();
 }
 
-class _ChallengesScreenState extends State<ChallengesScreen> {
+class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   String selectedActivity = 'All';
   final List<String> activityTypes = ['All', 'Run', 'Ride', 'Swim', 'Walk', 'Hike', 'Workout'];
+  List<Challenge> challenges = [];
   List<Challenge> userChallenges = [];
+  bool isLoading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChallenges();
+  }
+
+  Future<void> _loadChallenges() async {
+    try {
+      setState(() {
+        isLoading = true;
+        error = null;
+      });
+
+      final challengeService = ref.read(challengeServiceProvider);
+      
+      final challengeResponse = await challengeService.getChallenges(
+        activityType: selectedActivity != 'All' ? selectedActivity : null,
+      );
+      
+      final backendChallenges = challengeResponse.challenges
+          .map((c) => Challenge.fromBackendChallenge(c))
+          .toList();
+
+      setState(() {
+        challenges = backendChallenges;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+        challenges = _getFallbackChallenges();
+      });
+      print('Error loading challenges from backend: $e');
+      print('Using fallback static data');
+    }
+  }
+
+  List<Challenge> _getFallbackChallenges() {
+    return [
+      Challenge(
+        id: 'ch1',
+        title: 'July 5K x FitNation Challenge',
+        description: 'Complete a 5 km (3.1 mi) run.',
+        brand: 'FitNation',
+        brandLogo: '🏃',
+        startDate: DateTime(2025, 7, 1),
+        endDate: DateTime(2025, 7, 31),
+        status: 'upcoming',
+        isPublic: true,
+        createdAt: DateTime(2025, 1, 1),
+        updatedAt: DateTime(2025, 1, 1),
+        createdBy: "Shadman",
+        backgroundImage: 'https://images.unsplash.com/photo-1590333748338-d629e4564ad9?q=80&w=1249&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        distance: 5.0,
+        duration: 280,
+        friendsJoined: 0,
+        isJoined: false,
+        brandColor: Colors.orange,
+        activityType: 'Run',
+      ),
+      // Challenge(
+      //   id: 'ch2',
+      //   title: 'August 5K x FitNation Challenge',
+      //   description: 'Complete a 5 km (3.1 mi) run.',
+      //   brand: 'FitNation',
+      //   brandLogo: '🏃',
+      //   backgroundImage: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      //   distance: '5.0 km',
+      //   duration: '1 Aug 2025 to 31 Aug 2025',
+      //   friendsJoined: 0,
+      //   isJoined: false,
+      //   brandColor: Colors.orange,
+      //   activityType: 'Run',
+      // ),
+      // Challenge(
+      //   id: 'ch3',
+      //   title: 'Cycling Century Challenge',
+      //   description: 'Complete a 100 km ride in one session.',
+      //   brand: 'CycleMax',
+      //   brandLogo: '🚴',
+      //   backgroundImage: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      //   distance: '100 km',
+      //   duration: '1 Jul 2025 to 31 Jul 2025',
+      //   friendsJoined: 3,
+      //   isJoined: true,
+      //   brandColor: Colors.blue,
+      //   activityType: 'Ride',
+      // ),
+    ];
+  }
+
+  Future<void> _joinChallenge(String challengeId) async {
+    try {
+      final challengeService = ref.read(challengeServiceProvider);
+      await challengeService.joinChallenge(challengeId);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Successfully joined challenge!')),
+      );
+      
+      _loadChallenges();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error joining challenge: ${e.toString()}')),
+      );
+    }
+  }
 
   List<Challenge> get allChallenges {
-    return [..._stravaStyleChallenges, ...userChallenges];
+    return [...challenges, ...userChallenges];
   }
 
   List<Challenge> get filteredChallenges {
@@ -157,9 +155,13 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         centerTitle: false,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadChallenges,
+          ),
+          IconButton(
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () async {
-              final Challenge? newChallenge = await Navigator.push(
+              final Challenge newChallenge = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AddChallengeScreen(),
@@ -175,121 +177,169 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : error != null
+              ? _buildErrorState()
+              : _buildContent(),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            height: 60,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: activityTypes.length,
-              itemBuilder: (context, index) {
-                final activity = activityTypes[index];
-                final isSelected = selectedActivity == activity;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedActivity = activity;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Unable to connect to server',
+            style: TextStyle(
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Showing cached challenges',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _loadChallenges,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Column(
+      children: [
+        Container(
+          height: 60,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: activityTypes.length,
+            itemBuilder: (context, index) {
+              final activity = activityTypes[index];
+              final isSelected = selectedActivity == activity;
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedActivity = activity;
+                    });
+                    _loadChallenges(); // Reload with filter
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected 
+                        ? Theme.of(context).primaryColor 
+                        : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
                         color: isSelected 
                           ? Theme.of(context).primaryColor 
-                          : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected 
-                            ? Theme.of(context).primaryColor 
-                            : Colors.grey.withOpacity(0.3),
-                          width: 1,
-                        ),
+                          : Colors.grey.withOpacity(0.3),
+                        width: 1,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getActivityIcon(activity),
-                            size: 16,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getActivityIcon(activity),
+                          size: 16,
+                          color: isSelected 
+                            ? Colors.white 
+                            : Theme.of(context).colorScheme.onSurface,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          activity,
+                          style: TextStyle(
                             color: isSelected 
                               ? Colors.white 
                               : Theme.of(context).colorScheme.onSurface,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 14,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            activity,
-                            style: TextStyle(
-                              color: isSelected 
-                                ? Colors.white 
-                                : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.white,
-                    size: 14,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recommended For You',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      'Based on your activities',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              );
+            },
           ),
+        ),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-          Expanded(
-            child: filteredChallenges.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.centerLeft,
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Available Challenges',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    error != null ? 'Cached challenges' : 'Live from server',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        Expanded(
+          child: filteredChallenges.isEmpty
+            ? _buildEmptyState()
+            : RefreshIndicator(
+                onRefresh: _loadChallenges,
+                child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: filteredChallenges.length,
                   itemBuilder: (context, index) {
@@ -297,9 +347,9 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                     return _buildStravaStyleChallengeCard(challenge);
                   },
                 ),
-          ),
-        ],
-      ),
+              ),
+        ),
+      ],
     );
   }
 
@@ -332,7 +382,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () async {
-              final Challenge? newChallenge = await Navigator.push(
+              final Challenge newChallenge = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AddChallengeScreen(),
@@ -384,11 +434,11 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               height: 280,
               width: double.infinity,
               child: Image.network(
-                challenge.backgroundImage,
+                challenge.backgroundImage??'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: challenge.brandColor.withOpacity(0.3),
+                    color: challenge.brandColor!.withOpacity(0.3),
                     child: Icon(
                       _getActivityIcon(challenge.activityType),
                       size: 60,
@@ -423,7 +473,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  challenge.brandLogo,
+                  challenge.brandLogo??'🏃',
                   style: const TextStyle(fontSize: 20),
                 ),
               ),
@@ -463,7 +513,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      challenge.brand.toUpperCase(),
+                      challenge.brand!.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -521,7 +571,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      challenge.duration,
+                      "${challenge.duration} | ${challenge.distance} km",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 12,
@@ -540,12 +590,16 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChallengeDetailScreen(challenge: challenge),
-                            ),
-                          );
+                          if (challenge.isJoined) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChallengeDetailScreen(challenge: challenge),
+                              ),
+                            );
+                          } else {
+                            _joinChallenge(challenge.id);
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: challenge.isJoined 
@@ -597,5 +651,4 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         return Icons.sports;
     }
   }
-
 }
