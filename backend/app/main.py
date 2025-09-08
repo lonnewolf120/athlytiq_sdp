@@ -10,6 +10,8 @@ from app.api.v1.endpoints import posts # New posts router
 from app.api.v1.endpoints import nutrition # New nutrition router
 from app.api.v1.endpoints import meal_plans # NEW: Import meal_plans router
 from app.api.v1.endpoints import meals # NEW: Import meals router
+from app.api.v1.endpoints import friends # NEW: Import friends router
+from app.api.v1.endpoints import chat # NEW: Import chat router
 from app.api.v1.endpoints import shop # NEW: Import shop router
 from app.api.v1.endpoints import challenges # NEW: Import challenges router
 from app.database.base import Base, engine # Imports Base and engine
@@ -58,6 +60,8 @@ app.include_router(user.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(auth.router,prefix="/api/v1/auth",tags=["auth"])
 app.include_router(posts.router, prefix="/api/v1/posts", tags=["posts"]) # Include new posts router
 app.include_router(nutrition.router, prefix="/api/v1/nutrition", tags=["nutrition"]) # Include new nutrition router
+app.include_router(friends.router, prefix="/api/v1/friends", tags=["Friends"]) # NEW: Include friends router
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"]) # NEW: Include chat router
 # app.include_router(exercise.router,prefix="/api/v1/exercises",tags=["exercises"])
 # app.include_router(workoutHistory.router,prefix="/api/v1/workoutHistory",tags=["workoutHistory"])
 app.add_middleware(LoggerMiddleware)
