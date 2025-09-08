@@ -84,7 +84,6 @@ dev_dependencies:
   firebase_ai: ^2.0.0
   barcode_scan2: ^4.5.1
   health: ^13.1.0
-  share_plus: ^11.1.0
   flutter_launcher_icons: "^0.14.3"
 
 flutter_launcher_icons:
