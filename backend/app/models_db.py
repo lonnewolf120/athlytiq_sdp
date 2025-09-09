@@ -598,6 +598,7 @@ class ProductReview(Base):
     user = relationship("User", back_populates="product_reviews")
 
 
+# Legacy Exercise model - keeping for backward compatibility
 class Exercise(Base):
     __tablename__="exercises"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -614,6 +615,134 @@ class Exercise(Base):
     order_in_workout = Column(Integer)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # New relationship to normalized exercise library
+    exercise_library_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id'), nullable=True)
+    exercise_library = relationship("ExerciseLibrary", foreign_keys=[exercise_library_id])
+
+
+# --- NEW ENHANCED EXERCISE LIBRARY MODELS ---
+
+class ExerciseCategory(Base):
+    __tablename__ = 'exercise_categories'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    color_code = Column(String(7), nullable=True)  # Hex color
+    icon_name = Column(String(50), nullable=True)  # For UI icons
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    exercises = relationship("ExerciseLibrary", back_populates="category")
+
+
+class MuscleGroup(Base):
+    __tablename__ = 'muscle_groups'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    group_type = Column(String(20), nullable=False)  # primary, secondary, stabilizer
+    parent_id = Column(UUID(as_uuid=True), ForeignKey('muscle_groups.id'), nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Self-referential relationship for hierarchical structure
+    parent = relationship("MuscleGroup", remote_side=[id])
+    children = relationship("MuscleGroup", back_populates="parent")
+    
+    # Many-to-many relationship with exercises
+    exercises = relationship("ExerciseMuscleGroup", back_populates="muscle_group")
+
+
+class EquipmentType(Base):
+    __tablename__ = 'equipment_types'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    category = Column(String(50), nullable=True)  # cardio, strength, bodyweight, functional
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Many-to-many relationship with exercises
+    exercises = relationship("ExerciseEquipment", back_populates="equipment")
+
+
+class ExerciseLibrary(Base):
+    __tablename__ = 'exercise_library'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    instructions = Column(Text, nullable=True)
+    form_tips = Column(Text, nullable=True)
+    gif_url = Column(Text, nullable=True)
+    video_url = Column(Text, nullable=True)
+    category_id = Column(UUID(as_uuid=True), ForeignKey('exercise_categories.id'), nullable=True)
+    difficulty_level = Column(Integer, nullable=True)  # 1-5 scale
+    popularity_score = Column(Float, default=0.0)  # 0.0-5.0 rating
+    is_compound = Column(Boolean, default=False)
+    is_unilateral = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    category = relationship("ExerciseCategory", back_populates="exercises")
+    muscle_groups = relationship("ExerciseMuscleGroup", back_populates="exercise")
+    equipment = relationship("ExerciseEquipment", back_populates="exercise")
+    variations_as_base = relationship("ExerciseVariation", foreign_keys="[ExerciseVariation.base_exercise_id]", back_populates="base_exercise")
+    variations_as_variation = relationship("ExerciseVariation", foreign_keys="[ExerciseVariation.variation_exercise_id]", back_populates="variation_exercise")
+
+
+class ExerciseMuscleGroup(Base):
+    __tablename__ = 'exercise_muscle_groups'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    muscle_group_id = Column(UUID(as_uuid=True), ForeignKey('muscle_groups.id', ondelete='CASCADE'), nullable=False)
+    is_primary = Column(Boolean, default=True)
+    activation_level = Column(Integer, nullable=True)  # 1-5 scale
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    exercise = relationship("ExerciseLibrary", back_populates="muscle_groups")
+    muscle_group = relationship("MuscleGroup", back_populates="exercises")
+
+
+class ExerciseEquipment(Base):
+    __tablename__ = 'exercise_equipment'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    equipment_id = Column(UUID(as_uuid=True), ForeignKey('equipment_types.id', ondelete='CASCADE'), nullable=False)
+    is_required = Column(Boolean, default=True)
+    is_alternative = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    exercise = relationship("ExerciseLibrary", back_populates="equipment")
+    equipment = relationship("EquipmentType", back_populates="exercises")
+
+
+class ExerciseVariation(Base):
+    __tablename__ = 'exercise_variations'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    base_exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    variation_exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    variation_type = Column(String(50), nullable=True)  # easier, harder, alternative, progression
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    base_exercise = relationship("ExerciseLibrary", foreign_keys=[base_exercise_id], back_populates="variations_as_base")
+    variation_exercise = relationship("ExerciseLibrary", foreign_keys=[variation_exercise_id], back_populates="variations_as_variation")
+
+# --- END OF ENHANCED EXERCISE LIBRARY MODELS ---
 
 
 
