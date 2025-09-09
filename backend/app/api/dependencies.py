@@ -94,3 +94,34 @@ async def get_current_user_optional(
 #             status_code=403, detail="The user doesn't have enough privileges"
 #         )
 #     return current_user
+
+async def get_current_user_from_token(
+    token: str, 
+    db: Session
+) -> Optional[app.models_db.User]:
+    """
+    WebSocket authentication - validates token and returns user.
+    Used for WebSocket connections where Depends() doesn't work.
+    """
+    if not token:
+        return None
+    
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            user_id = payload.get("user_id")
+        
+        if user_id is None:
+            return None
+            
+        token_data = TokenData(
+            user_id=user_id, 
+            username=payload.get("username"), 
+            email=payload.get("email")
+        )
+    except (JWTError, ValidationError):
+        return None
+    
+    user = user_crud.get_user_by_id(db, user_id=token_data.user_id)
+    return user
