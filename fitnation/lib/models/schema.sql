@@ -1,8 +1,8 @@
 -- Create Database
-CREATE DATABASE athlytiq;
+CREATE DATABASE pulse;
 
 -- Connect to the database
-\c athlytiq;
+\c pulse;
 
 -- Enums
 CREATE TYPE user_role_enum AS ENUM ('user', 'trainer', 'admin');

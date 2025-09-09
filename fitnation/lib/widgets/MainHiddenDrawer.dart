@@ -161,7 +161,7 @@ class _MainHiddenDrawerState extends ConsumerState<MainHiddenDrawer> {
             ),
             const SizedBox(height: 20),
             const Text(
-              'Welcome to Athlytiq',
+              'Welcome to Pulse',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),

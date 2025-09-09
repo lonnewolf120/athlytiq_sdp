@@ -170,7 +170,7 @@ async def forgot_password(
     print(f"Password reset token created, token: {token} user_id: {str(user.id)}")
 
     reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}&user_id={str(user.id)}"
-    email_sent = await send_email(user.email, "Password Reset Request", f"This is a system generated mail to change your password for your Athlytiq account.\nClick this link to reset your password: {reset_link}")
+    email_sent = await send_email(user.email, "Password Reset Request", f"This is a system generated mail to change your password for your Pulse account.\nClick this link to reset your password: {reset_link}")
     if email_sent:
         return {"message": "Password reset email sent successfully."}
     else:

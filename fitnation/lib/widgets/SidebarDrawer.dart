@@ -304,7 +304,7 @@ class SidebarDrawer extends ConsumerWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'Welcome to Athlytiq',
+                  'Welcome to Pulse',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,

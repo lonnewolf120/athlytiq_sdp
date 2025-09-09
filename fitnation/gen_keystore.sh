@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Variables (customize these as needed)
-KEYSTORE_FILE="athlytiq.jks"
-ALIAS="athlytiq"
+KEYSTORE_FILE="pulse.jks"
+ALIAS="pulse"
 KEYPASS="ac123321ca"
 STOREPASS="ac123321ca"
 DAYS_VALID=10000

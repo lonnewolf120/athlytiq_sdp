@@ -1,4 +1,4 @@
--- SQL script to create challenges tables for Athlytiq backend
+-- SQL script to create challenges tables for Pulse backend
 -- Execute this script in your PostgreSQL database after the shop tables
 
 -- Create challenges table

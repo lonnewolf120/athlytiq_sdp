@@ -115,7 +115,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     Image.asset('assets/logos/logo.png', width: 50, height: 50),
                     const SizedBox(width: 12),
                     const Text(
-                      'Athlytiq',
+                      'Pulse',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,

@@ -225,7 +225,7 @@ class SidebarMenuView extends ConsumerWidget {
                 ),
                 SizedBox(height: 15),
                 Text(
-                  'Welcome to Athlytiq',
+                  'Welcome to Pulse',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -465,7 +465,7 @@ class SidebarMenuView extends ConsumerWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Sign Out'),
-          content: const Text('Are you sure you want to sign out of Athlytiq?'),
+          content: const Text('Are you sure you want to sign out of Pulse?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),

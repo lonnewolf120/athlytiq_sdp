@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:867243651880:android:85f3e5dcdf27fbd261161d",
         "android_client_info": {
-          "package_name": "com.semaphore.athlytiq"
+          "package_name": "com.codenamex.pulse"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "867243651880-pjvr5oq088brn807ksfeof8df5dujdbo.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.semaphore.athlytiq",
+            "package_name": "com.codenamex.pulse",
             "certificate_hash": "4bb9befc9a87fa13218ccbac4038a704c599a0f3"
           }
         },
@@ -25,7 +25,7 @@
           "client_id": "867243651880-soebicfjnduoj56hqr7k74nd7r0ckkfd.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.semaphore.athlytiq",
+            "package_name": "com.codenamex.pulse",
             "certificate_hash": "ed03ef830e1e78276216829bcbd9437e85bc54ef"
           }
         },
@@ -50,7 +50,7 @@
               "client_id": "867243651880-uoep04b71d4pm39dpgu2e9k9aid4bus0.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.semaphore.athlytiq"
+                "bundle_id": "com.codenamex.pulse"
               }
             }
           ]

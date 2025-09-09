@@ -26,7 +26,9 @@ class CartPage extends ConsumerWidget {
           ),
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        iconTheme: IconThemeData(color: Theme.of(context).colorScheme.onSurface),
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
         elevation: 0,
         actions: [
           IconButton(
@@ -34,69 +36,80 @@ class CartPage extends ConsumerWidget {
               Icons.delete_outline,
               color: Theme.of(context).colorScheme.onSurface,
             ),
-            onPressed: cartItems.isNotEmpty
-                ? () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        title: Text(
-                          'Clear Cart',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        content: Text(
-                          'Are you sure you want to remove all items?',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            onPressed:
+                cartItems.isNotEmpty
+                    ? () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (context) => AlertDialog(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.surface,
+                              title: Text(
+                                'Clear Cart',
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
                               ),
+                              content: Text(
+                                'Are you sure you want to remove all items?',
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.8),
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    cartNotifier.clearCart();
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(
+                                    'Clear',
+                                    style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              cartNotifier.clearCart();
-                              Navigator.pop(context);
-                            },
-                            child: Text(
-                              'Clear',
-                              style: TextStyle(color: Theme.of(context).primaryColor),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                : null,
+                      );
+                    }
+                    : null,
           ),
         ],
       ),
-      body: isEmpty
-          ? _buildEmptyCart(context)
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: cartItems.length,
-                    itemBuilder: (context, index) {
-                      final item = cartItems[index];
-                      return _buildCartItem(context, item, cartNotifier);
-                    },
+      body:
+          isEmpty
+              ? _buildEmptyCart(context)
+              : Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: cartItems.length,
+                      itemBuilder: (context, index) {
+                        final item = cartItems[index];
+                        return _buildCartItem(context, item, cartNotifier);
+                      },
+                    ),
                   ),
-                ),
-                _buildCheckoutSection(context, totalAmount),
-              ],
-            ),
+                  _buildCheckoutSection(context, totalAmount),
+                ],
+              ),
     );
   }
 
@@ -150,17 +163,18 @@ class CartPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildCartItem(BuildContext context, CartItem item, CartNotifier cartNotifier) {
+  Widget _buildCartItem(
+    BuildContext context,
+    CartItem item,
+    CartNotifier cartNotifier,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +191,9 @@ class CartPage extends ConsumerWidget {
                 _getBrandName(item.product.category),
                 style: TextStyle(
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -193,7 +209,9 @@ class CartPage extends ConsumerWidget {
                   'view brand',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ),
@@ -248,7 +266,9 @@ class CartPage extends ConsumerWidget {
                           : item.product.description,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -268,20 +288,30 @@ class CartPage extends ConsumerWidget {
                             Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () => cartNotifier.updateQuantity(item.id, item.quantity - 1),
+                                  onTap:
+                                      () => cartNotifier.updateQuantity(
+                                        item.id,
+                                        item.quantity - 1,
+                                      ),
                                   child: Container(
                                     width: 32,
                                     height: 32,
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.2),
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
                                       Icons.remove,
                                       size: 16,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),
@@ -294,25 +324,38 @@ class CartPage extends ConsumerWidget {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),
                                 GestureDetector(
-                                  onTap: () => cartNotifier.updateQuantity(item.id, item.quantity + 1),
+                                  onTap:
+                                      () => cartNotifier.updateQuantity(
+                                        item.id,
+                                        item.quantity + 1,
+                                      ),
                                   child: Container(
                                     width: 32,
                                     height: 32,
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.2),
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
                                       Icons.add,
                                       size: 16,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),
@@ -379,7 +422,9 @@ class CartPage extends ConsumerWidget {
                   'Amount Price',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
                 Text(
@@ -401,12 +446,13 @@ class CartPage extends ConsumerWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PaymentMethodsPage(
-                        totalAmount: totalAmount,
-                        subtotal: totalAmount * 0.9,
-                        deliveryFee: 50.0,
-                        discount: totalAmount * 0.1,
-                      ),
+                      builder:
+                          (context) => PaymentMethodsPage(
+                            totalAmount: totalAmount,
+                            subtotal: totalAmount * 0.9,
+                            deliveryFee: 50.0,
+                            discount: totalAmount * 0.1,
+                          ),
                     ),
                   );
                 },
@@ -462,7 +508,7 @@ class CartPage extends ConsumerWidget {
       case 'clothing':
         return 'ActiveWear';
       default:
-        return 'Athlytiq';
+        return 'Pulse';
     }
   }
 

@@ -1,6 +1,6 @@
-# Cal AI Feature Implementation Tasks for Athlytiq
+# Cal AI Feature Implementation Tasks for Pulse
 
-This document tracks the progress of implementing Cal AI-like features within the Athlytiq application.
+This document tracks the progress of implementing Cal AI-like features within the Pulse application.
 
 Each task is broken down by the area of implementation: Frontend (FE), Backend (BE), and Database (DB).
 

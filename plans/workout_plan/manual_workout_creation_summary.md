@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project implements a comprehensive manual workout creation system for the Athlytiq fitness app, allowing users to browse exercises, create custom workout plans, and manage their fitness routines with advanced search and filtering capabilities.
+This project implements a comprehensive manual workout creation system for the Pulse fitness app, allowing users to browse exercises, create custom workout plans, and manage their fitness routines with advanced search and filtering capabilities.
 
 ## Documentation Structure
 

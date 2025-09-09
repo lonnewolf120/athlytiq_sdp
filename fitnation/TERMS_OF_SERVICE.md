@@ -1,8 +1,8 @@
-# Terms of Service for Athlytiq
+# Terms of Service for Pulse
 
 **Last Updated:** June 12, 2025
 
-Welcome to Athlytiq! These Terms of Service ("Terms") govern your access to and use of the Athlytiq mobile application and related services (collectively, the "Service"), owned and operated by Athlytiq ("we," "us," or "our").
+Welcome to Pulse! These Terms of Service ("Terms") govern your access to and use of the Pulse mobile application and related services (collectively, the "Service"), owned and operated by Pulse ("we," "us," or "our").
 
 ## 1. Acceptance of Terms
 
@@ -49,7 +49,7 @@ To the maximum extent permitted by applicable law, in no event shall Athlytiq, n
 
 ## 8. Indemnification
 
-You agree to defend, indemnify, and hold harmless Athlytiq and its licensee and licensors, and their employees, contractors, agents, officers, and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees), resulting from or arising out of a) your use and access of the Service, by you or any person using your account and password; b) a breach of these Terms; or c) User Content posted by you on the Service.
+You agree to defend, indemnify, and hold harmless Pulse and its licensee and licensors, and their employees, contractors, agents, officers, and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees), resulting from or arising out of a) your use and access of the Service, by you or any person using your account and password; b) a breach of these Terms; or c) User Content posted by you on the Service.
 
 ## 9. Termination
 
@@ -69,4 +69,4 @@ We reserve the right, at our sole discretion, to modify or replace these Terms a
 
 If you have any questions about these Terms, please contact us at:
 
-Email: `athlytiq@gmail.com`
+Email: `pulse@gmail.com`

@@ -23,7 +23,7 @@ class ContactsTab extends StatelessWidget {
           padding: EdgeInsets.all(12),
           child: TextField(
             decoration: InputDecoration(
-              hintText: "Search on Athlytiq",
+              hintText: "Search on Pulse",
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),

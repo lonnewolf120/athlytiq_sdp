@@ -66,7 +66,7 @@ class TrainerProfileScreen extends StatelessWidget {
                         style: AppTextStyles.darkBodyMedium,
                       ),
                       Text(
-                        'Email: alex.johnson@athlytiq.com',
+                        'Email: alex.johnson@pulse.com',
                         style: AppTextStyles.darkBodyMedium,
                       ),
                     ],

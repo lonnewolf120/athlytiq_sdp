@@ -1,4 +1,4 @@
-package com.semaphore.athlytiq
+package com.codenamex.pulse
 
 import io.flutter.embedding.android.FlutterActivity
 

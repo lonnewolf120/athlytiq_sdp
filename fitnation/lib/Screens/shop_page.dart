@@ -73,18 +73,14 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: 'Athlytiq Store',
+        title: 'Pulse Store',
         showLogo: false,
         showMenuButton: false,
-        showProfileMenu: true, 
+        showProfileMenu: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          CartIconWidget(
-            iconColor: Colors.white,
-          ),
-        ],
+        actions: [CartIconWidget(iconColor: Colors.white)],
       ),
       body: Column(
         children: [
@@ -172,7 +168,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                   isSelected: _selectedCategory == 'footwear',
                   onTap: () => _selectCategory('footwear'),
                 ),
-              
               ],
             ),
           ),

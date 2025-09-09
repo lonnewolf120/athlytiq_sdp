@@ -44,7 +44,7 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyCSrZ5_HdDgHO7E2rAk52ZUwlk12O0IFek',
     appId: '1:867243651880:web:2ad920efca2624c761161d',
     messagingSenderId: '867243651880',
-    projectId: 'athltiq',
+    projectId: 'pulse',
     authDomain: 'athltiq.firebaseapp.com',
     storageBucket: 'athltiq.firebasestorage.app',
     measurementId: 'G-JD26SJKBY5',
@@ -54,7 +54,7 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyCppOKelOuINsL0NgMdHCt5MmvQQgVVxmk',
     appId: '1:867243651880:android:85f3e5dcdf27fbd261161d',
     messagingSenderId: '867243651880',
-    projectId: 'athltiq',
+    projectId: 'pulse',
     storageBucket: 'athltiq.firebasestorage.app',
   );
 
@@ -62,18 +62,18 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyDh8OgYchi5MomWBX3VRnv-v_QvzC4CDkM',
     appId: '1:867243651880:ios:08bb40d8a839acab61161d',
     messagingSenderId: '867243651880',
-    projectId: 'athltiq',
+    projectId: 'pulse',
     storageBucket: 'athltiq.firebasestorage.app',
-    iosBundleId: 'com.semaphore.athlytiq',
+    iosBundleId: 'com.codenamex.pulse',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDh8OgYchi5MomWBX3VRnv-v_QvzC4CDkM',
     appId: '1:867243651880:ios:08bb40d8a839acab61161d',
     messagingSenderId: '867243651880',
-    projectId: 'athltiq',
+    projectId: 'pulse',
     storageBucket: 'athltiq.firebasestorage.app',
-    iosBundleId: 'com.semaphore.athlytiq',
+    iosBundleId: 'com.codenamex.pulse',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

@@ -2,7 +2,7 @@
 
 This plan outlines the steps required to generate a signed Android App Bundle (AAB) or APK for your Flutter application, using your existing keystore. AABs are the recommended format for publishing to Google Play.
 
-#### Goal: Generate a signed Android App Bundle (AAB) or APK for the Flutter project using the existing `athlytiq.jks` keystore.
+#### Goal: Generate a signed Android App Bundle (AAB) or APK for the Flutter project using the existing `pulse.jks` keystore.
 
 #### Mermaid Diagram:
 
@@ -16,8 +16,8 @@ graph TD
     F --> G[End];
 
     subgraph Keystore Details
-        B --> B1[Keystore: athlytiq.jks];
-        B1 --> B2[Alias: athlytiq];
+    B --> B1[Keystore: pulse.jks];
+    B1 --> B2[Alias: pulse];
         B2 --> B3[Key/Store Pass: ac123321ca];
     end
 
@@ -41,10 +41,10 @@ graph TD
 
 **Step 1: Use Existing Keystore**
 
-You have confirmed that you already have the keystore file `athlytiq.jks` located at `fitnation/athlytiq.jks`.
+You have confirmed that you already have the keystore file `pulse.jks` located at `fitnation/pulse.jks`.
 The details provided are:
-*   **Keystore File:** `athlytiq.jks`
-*   **Alias:** `athlytiq`
+*   **Keystore File:** `pulse.jks`
+*   **Alias:** `pulse`
 *   **Key Password:** `ac123321ca`
 *   **Store Password:** `ac123321ca`
 
@@ -59,8 +59,8 @@ It's a best practice to avoid hardcoding your keystore passwords directly into y
     ```properties
     storePassword=ac123321ca
     keyPassword=ac123321ca
-    keyAlias=athlytiq
-    storeFile=../../athlytiq.jks
+    keyAlias=pulse
+    storeFile=../../pulse.jks
     ```
     *   **Important Note on `storeFile` path**: The `key.properties` file will be in `fitnation/android/`. Your `athlytiq.jks` file is in `fitnation/`. Therefore, the relative path from `fitnation/android/` to `fitnation/athlytiq.jks` is `../../athlytiq.jks`.
 

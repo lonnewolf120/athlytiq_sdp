@@ -1,4 +1,4 @@
-# Athlytiq
+# Pulse
 
 A cross-platform fitness and community app with a modern Flutter frontend and a FastAPI backend, using Supabase for authentication and data storage.
 
@@ -18,7 +18,7 @@ A cross-platform fitness and community app with a modern Flutter frontend and a 
 
 ## Overview
 
-Athlytiq is a fitness and social platform featuring:
+Pulse is a fitness and social platform featuring:
 - Personalized workout plans and tracking
 - Nutrition logging and meal planning
 - Community groups, posts, and challenges
@@ -30,7 +30,7 @@ Athlytiq is a fitness and social platform featuring:
 ## Project Structure
 
 ```
-athlytiq_sdp/
+pulse_sdp/
 │
 ├── fitnation/      # Flutter mobile app
 │
@@ -63,7 +63,7 @@ athlytiq_sdp/
 
 ### App Branding
 
-- **App Name:** Athlytiq
+-- **App Name:** Pulse
 - **Logo:** `assets/logos/logo.png`
 - **Splash Screen:** Displays the app logo on launch
 

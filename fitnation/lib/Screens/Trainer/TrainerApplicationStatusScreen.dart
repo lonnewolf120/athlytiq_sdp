@@ -4,12 +4,15 @@ class TrainerApplicationStatusScreen extends StatefulWidget {
   const TrainerApplicationStatusScreen({super.key});
 
   @override
-  State<TrainerApplicationStatusScreen> createState() => _TrainerApplicationStatusScreenState();
+  State<TrainerApplicationStatusScreen> createState() =>
+      _TrainerApplicationStatusScreenState();
 }
 
-class _TrainerApplicationStatusScreenState extends State<TrainerApplicationStatusScreen> {
-  String applicationStatus = 'Under Review'; // Can be: 'Pending', 'Under Review', 'Approved', 'Rejected'
-  
+class _TrainerApplicationStatusScreenState
+    extends State<TrainerApplicationStatusScreen> {
+  String applicationStatus =
+      'Under Review'; // Can be: 'Pending', 'Under Review', 'Approved', 'Rejected'
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +26,11 @@ class _TrainerApplicationStatusScreenState extends State<TrainerApplicationStatu
         ),
         title: const Text(
           'Application Status',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -107,7 +114,10 @@ class _TrainerApplicationStatusScreenState extends State<TrainerApplicationStatu
             _buildDetailItem('Email', 'rahman.ahmed@email.com'),
             _buildDetailItem('Phone', '+880 1712 345 678'),
             _buildDetailItem('Experience', '5 years'),
-            _buildDetailItem('Specializations', 'Weight Training, Cardio, Yoga'),
+            _buildDetailItem(
+              'Specializations',
+              'Weight Training, Cardio, Yoga',
+            ),
 
             const SizedBox(height: 32),
 
@@ -321,11 +331,7 @@ class _TrainerApplicationStatusScreenState extends State<TrainerApplicationStatu
               ),
             ),
             if (!isLast)
-              Container(
-                width: 2,
-                height: 20,
-                color: Colors.grey[600],
-              ),
+              Container(width: 2, height: 20, color: Colors.grey[600]),
           ],
         ),
         const SizedBox(width: 16),
@@ -346,10 +352,7 @@ class _TrainerApplicationStatusScreenState extends State<TrainerApplicationStatu
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[500], fontSize: 14),
                 ),
               ],
             ),
@@ -362,30 +365,43 @@ class _TrainerApplicationStatusScreenState extends State<TrainerApplicationStatu
   void _showContactSupport() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Contact Support', style: TextStyle(color: Colors.white)),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Need help with your application?',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Contact Support',
+              style: TextStyle(color: Colors.white),
             ),
-            SizedBox(height: 16),
-            Text('Email: support@athlytiq.com', style: TextStyle(color: Colors.white)),
-            Text('Phone: +880 1700 000 000', style: TextStyle(color: Colors.white)),
-            Text('WhatsApp: +880 1700 000 000', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close', style: TextStyle(color: Colors.red)),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Need help with your application?',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Email: support@pulse.com',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Phone: +880 1700 000 000',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'WhatsApp: +880 1700 000 000',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

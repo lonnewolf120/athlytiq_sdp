@@ -1,6 +1,6 @@
-# Cal AI Feature Implementation Plan for Athlytiq
+# Cal AI Feature Implementation Plan for Pulse
 
-This document outlines the plan to implement features similar to Cal AI directly within the Athlytiq mobile application.
+This document outlines the plan to implement features similar to Cal AI directly within the Pulse mobile application.
 
 ## Revised Overall Plan:
 
