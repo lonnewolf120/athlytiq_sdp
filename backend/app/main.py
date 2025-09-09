@@ -12,6 +12,9 @@ from app.api.v1.endpoints import meal_plans # NEW: Import meal_plans router
 from app.api.v1.endpoints import meals # NEW: Import meals router
 from app.api.v1.endpoints import shop # NEW: Import shop router
 from app.api.v1.endpoints import challenges # NEW: Import challenges router
+from app.api.v1.endpoints import chat # NEW: Import chat router
+from app.api.v1.endpoints import friends # NEW: Import friends router
+from app.websocket.chat_websocket import websocket_endpoint # NEW: Import WebSocket endpoint
 from app.database.base import Base, engine # Imports Base and engine
 import app.models_db # This import ensures all models in models_db.py are registered with Base
 from app.middleware.logger import LoggerMiddleware
@@ -54,12 +57,18 @@ app.include_router(meal_plans.router, prefix="/api/v1/meal_plans", tags=["Meal P
 app.include_router(meals.router, prefix="/api/v1/meals", tags=["Meals"]) # NEW: Include meals router
 app.include_router(shop.router, prefix="/api/v1/shop", tags=["Shop"]) # NEW: Include shop router
 app.include_router(challenges.router, prefix="/api/v1", tags=["Challenges"]) # Fixed: challenges router has its own /api/v1 paths
+app.include_router(chat.router, prefix="/api/v1", tags=["Chat"]) # NEW: Include chat router
+app.include_router(friends.router, prefix="/api/v1", tags=["Friends"]) # NEW: Include friends router
 app.include_router(user.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(auth.router,prefix="/api/v1/auth",tags=["auth"])
 app.include_router(posts.router, prefix="/api/v1/posts", tags=["posts"]) # Include new posts router
 app.include_router(nutrition.router, prefix="/api/v1/nutrition", tags=["nutrition"]) # Include new nutrition router
 # app.include_router(exercise.router,prefix="/api/v1/exercises",tags=["exercises"])
 # app.include_router(workoutHistory.router,prefix="/api/v1/workoutHistory",tags=["workoutHistory"])
+
+# WebSocket endpoint for real-time chat
+app.websocket("/ws/chat")(websocket_endpoint)
+
 app.add_middleware(LoggerMiddleware)
 
 

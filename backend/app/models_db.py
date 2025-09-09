@@ -3,7 +3,7 @@ from sqlalchemy import Column,ForeignKey,DateTime
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, String, Integer, Float, Double, Text, Boolean, DateTime, ForeignKey, Enum, UniqueConstraint, Index, JSON, TIMESTAMP
+    Column, String, Integer, Float, Double, Text, Boolean, DateTime, Time, ForeignKey, Enum, UniqueConstraint, Index, JSON, TIMESTAMP
 )
 from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum, JSONB, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
@@ -701,8 +701,8 @@ User.challenge_participations = relationship("ChallengeParticipant", back_popula
 
 class TrainerProfile(Base):
     __tablename__ = 'trainer_profiles'
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
     bio = Column(Text, nullable=True)
     certifications = Column(Text, nullable=True)
     specialties = Column(Text, nullable=True)
@@ -718,8 +718,8 @@ class TrainerProfile(Base):
 
 class TrainerAvailability(Base):
     __tablename__ = 'trainer_availabilities'
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(UUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
     weekday = Column(Integer, nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
@@ -730,9 +730,9 @@ class TrainerAvailability(Base):
 
 class TrainerSession(Base):
     __tablename__ = 'trainer_sessions'
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
-    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(UUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=False)
     status = Column(String(50), nullable=False, default='pending')
@@ -742,3 +742,139 @@ class TrainerSession(Base):
 
     trainer = relationship('TrainerProfile', back_populates='sessions')
     user = relationship('User')
+
+# Chat and Friends Models
+class ChatRoom(Base):
+    __tablename__ = 'chat_rooms'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type = Column(String(20), nullable=False, default='direct')  # 'direct' or 'group'
+    name = Column(String(255), nullable=True)  # For group chats
+    description = Column(Text, nullable=True)
+    image_url = Column(String(500), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_message_at = Column(DateTime(timezone=True), nullable=True)
+    last_message_content = Column(Text, nullable=True)
+    last_message_sender_id = Column(UUID(as_uuid=True), nullable=True)
+    is_archived = Column(Boolean, default=False)
+
+    # Relationships
+    creator = relationship('User', foreign_keys=[created_by])
+    participants = relationship('ChatParticipant', back_populates='room', cascade='all, delete-orphan')
+    messages = relationship('ChatMessage', back_populates='room', cascade='all, delete-orphan')
+
+class ChatParticipant(Base):
+    __tablename__ = 'chat_participants'
+    
+    room_id = Column(UUID(as_uuid=True), ForeignKey('chat_rooms.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    role = Column(String(20), nullable=False, default='member')  # 'admin', 'member'
+    joined_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    left_at = Column(DateTime(timezone=True), nullable=True)
+    last_read_at = Column(DateTime(timezone=True), nullable=True)
+    unread_count = Column(Integer, default=0)
+    is_muted = Column(Boolean, default=False)
+    is_pinned = Column(Boolean, default=False)
+
+    # Relationships
+    room = relationship('ChatRoom', back_populates='participants')
+    user = relationship('User')
+
+class ChatMessage(Base):
+    __tablename__ = 'chat_messages'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    room_id = Column(UUID(as_uuid=True), ForeignKey('chat_rooms.id', ondelete='CASCADE'), nullable=False)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message_type = Column(String(20), nullable=False, default='text')  # 'text', 'image', 'video', 'audio', 'file', 'location', 'workout', 'system'
+    content = Column(Text, nullable=True)
+    media_urls = Column(JSONB, nullable=True)  # Array of media URLs
+    metadata = Column(JSONB, nullable=True)  # Additional data like location, workout details, etc.
+    reply_to_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id'), nullable=True)
+    forwarded_from_id = Column(UUID(as_uuid=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    edited_at = Column(DateTime(timezone=True), nullable=True)
+    is_deleted = Column(Boolean, default=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    room = relationship('ChatRoom', back_populates='messages')
+    sender = relationship('User', foreign_keys=[sender_id])
+    reply_to = relationship('ChatMessage', remote_side=[id])
+    reactions = relationship('MessageReaction', back_populates='message', cascade='all, delete-orphan')
+    read_receipts = relationship('MessageReadReceipt', back_populates='message', cascade='all, delete-orphan')
+
+class MessageReaction(Base):
+    __tablename__ = 'message_reactions'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    message_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    emoji = Column(String(10), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # Relationships
+    message = relationship('ChatMessage', back_populates='reactions')
+    user = relationship('User')
+    
+    # Unique constraint
+    __table_args__ = (UniqueConstraint('message_id', 'user_id', 'emoji', name='_message_user_emoji_uc'),)
+
+class MessageReadReceipt(Base):
+    __tablename__ = 'message_read_receipts'
+    
+    message_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    read_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # Relationships
+    message = relationship('ChatMessage', back_populates='read_receipts')
+    user = relationship('User')
+
+class FriendRequest(Base):
+    __tablename__ = 'friend_requests'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default='pending')  # 'pending', 'accepted', 'rejected', 'blocked'
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    responded_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    sender = relationship('User', foreign_keys=[sender_id])
+    receiver = relationship('User', foreign_keys=[receiver_id])
+    
+    # Unique constraint
+    __table_args__ = (UniqueConstraint('sender_id', 'receiver_id', name='_sender_receiver_uc'),)
+
+class UserOnlineStatus(Base):
+    __tablename__ = 'user_online_status'
+    
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    is_online = Column(Boolean, default=False)
+    last_seen = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User')
+
+# Add Buddies model if it doesn't exist (extending existing social system)
+class Buddy(Base):
+    __tablename__ = 'buddies'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    buddy_user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    status = Column(String(20), nullable=False, default='accepted')  # 'accepted', 'blocked'
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User', foreign_keys=[user_id])
+    buddy = relationship('User', foreign_keys=[buddy_user_id])
+    
+    # Unique constraint
+    __table_args__ = (UniqueConstraint('user_id', 'buddy_user_id', name='_user_buddy_uc'),)
