@@ -27,10 +27,9 @@ CompletedWorkoutExercise _$CompletedWorkoutExerciseFromJson(
           .toList(),
   exerciseGifUrl: json['exercise_gif_url'] as String?,
   sets:
-      (json['sets'] as List<dynamic>?)
-          ?.map((e) => CompletedWorkoutSet.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      [],
+      (json['sets'] as List<dynamic>)
+          .map((e) => CompletedWorkoutSet.fromJson(e as Map<String, dynamic>))
+          .toList(),
 );
 
 Map<String, dynamic> _$CompletedWorkoutExerciseToJson(
