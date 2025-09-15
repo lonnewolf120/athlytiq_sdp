@@ -9,3 +9,5 @@
 
 
 backend/venv/Scripts/uvicorn.exe
+# Ignore Android local properties for the Flutter app
+fitnation/android/local.properties

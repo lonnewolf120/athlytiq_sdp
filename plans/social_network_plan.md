@@ -200,10 +200,6 @@ Based on your new requirements, the social network plan should also include the 
 If this looks good I will update the implementation todo items and then start by scaffolding the DB DDL and Pydantic schemas for `stories`, `buddies`, `communities`, and `community_messages`.
 
 
-by Claude sonnet 4 :
-```
-I'll analyze the current social network plan and algorithms for scalability, performance, and design improvements — examining database design, API patterns, privacy models, and real-time features to ensure it can handle growth effectively. Based on my analysis of the current social network plan, here's a comprehensive scalability and design review with specific recommendations:
-
 ## 🏗️ **Database Design & Scalability Analysis**
 
 ### Current Issues:
