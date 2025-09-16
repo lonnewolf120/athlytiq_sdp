@@ -5,7 +5,7 @@ from uuid import UUID
 
 from app.database.connection import get_db
 from app.models_db import WorkoutTemplate, WorkoutTemplateExercise, User, Workout, PlannedExercise
-from app.crud.auth import get_current_user
+from app.api.dependencies import get_current_user
 from app.schemas.workout_templates import (
     WorkoutTemplateResponse, 
     WorkoutTemplateListResponse, 
