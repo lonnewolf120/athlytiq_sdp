@@ -9,7 +9,7 @@
 *   **Responsiveness:** Utilize `lib/core/components/ResponsiveCenter.dart` and Flutter's layout widgets (`Expanded`, `Flexible`, `GridView`, `ListView`) along with theme values for spacing and padding to ensure the UI adapts across different screen sizes.
 *   **Image Handling:** Use `cached_network_image` for displaying network images efficiently. Use `image_picker` for selecting images from the device. Handle image uploads via `API_Services.uploadImage` (a method you'll need to add) to Supabase Storage.
 *   **Date/Time:** Use the `intl` package for formatting dates and times.
-*   **Charts:** `fl_chart` is used for rendering charts. Data needs to be transformed into the specific formats required by `fl_chart`'s data models (`BarChartData`, `PieChartData`, `LineChartData`).
+*   **Charts:** `syncfunction_flutter_charts` is used for rendering charts. Data needs to be transformed into the specific formats required by `syncfunction_flutter_charts`'s data models (`BarChartData`, `PieChartData`, `LineChartData`).
 *   **Testing:** Implement unit tests for providers and API service methods. Implement widget tests for reusable widgets and screens.
 
 

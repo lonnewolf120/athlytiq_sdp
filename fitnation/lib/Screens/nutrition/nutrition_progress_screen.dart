@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart'; // Import fl_chart
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:fitnation/core/themes/colors.dart';
 import 'package:fitnation/core/themes/text_styles.dart';
 
@@ -137,123 +137,67 @@ class _NutritionProgressScreenState
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(
-                              show: true,
-                              drawVerticalLine: false,
-                              drawHorizontalLine: true,
-                              horizontalInterval: 500,
-                              getDrawingHorizontalLine: (value) {
-                                return FlLine(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  strokeWidth: 1,
-                                );
-                              },
-                            ),
-                            titlesData: FlTitlesData(
-                              show: true,
-                              rightTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              topTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (value, meta) {
-                                    if (value.toInt() < _weeklyData.length) {
-                                      return Text(
-                                        _weeklyData[value.toInt()]['day'],
-                                        style: TextStyle(fontSize: 12),
-                                      );
-                                    }
-                                    return Text('');
-                                  },
-                                  reservedSize: 30,
-                                ),
-                              ),
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  interval: 500,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toInt()}',
-                                      style: TextStyle(fontSize: 10),
-                                    );
-                                  },
-                                  reservedSize: 40,
-                                ),
-                              ),
-                            ),
-                            borderData: FlBorderData(
-                              show: true,
-                              border: Border.all(
-                                color: Colors.grey.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: (_weeklyData.length - 1).toDouble(),
-                            minY: 0,
-                            maxY: 2600,
-                            lineBarsData: [
-                              // Actual calories line
-                              LineChartBarData(
-                                spots:
-                                    _weeklyData.asMap().entries.map((entry) {
-                                      return FlSpot(
-                                        entry.key.toDouble(),
-                                        entry.value['calories'].toDouble(),
-                                      );
-                                    }).toList(),
-                                isCurved: true,
-                                color: AppColors.darkGradientStart,
-                                barWidth: 3,
-                                isStrokeCapRound: true,
-                                dotData: FlDotData(
-                                  show: true,
-                                  getDotPainter: (
-                                    spot,
-                                    percent,
-                                    barData,
-                                    index,
-                                  ) {
-                                    return FlDotCirclePainter(
-                                      radius: 4,
-                                      color: AppColors.darkGradientStart,
-                                      strokeWidth: 2,
-                                      strokeColor: Colors.white,
-                                    );
-                                  },
-                                ),
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: AppColors.darkGradientStart
-                                      .withOpacity(0.1),
-                                ),
-                              ),
-                              // Target calories line
-                              LineChartBarData(
-                                spots:
-                                    _weeklyData.asMap().entries.map((entry) {
-                                      return FlSpot(
-                                        entry.key.toDouble(),
-                                        entry.value['target_calories']
-                                            .toDouble(),
-                                      );
-                                    }).toList(),
-                                isCurved: false,
-                                color: Colors.orange,
-                                barWidth: 2,
-                                dashArray: [5, 5],
-                                dotData: FlDotData(show: false),
-                                belowBarData: BarAreaData(show: false),
-                              ),
-                            ],
+                        child: SfCartesianChart(
+                          primaryXAxis: CategoryAxis(
+                            labelStyle: const TextStyle(fontSize: 12),
                           ),
+                          primaryYAxis: NumericAxis(
+                            minimum: 0,
+                            maximum: 2600,
+                            interval: 500,
+                            labelStyle: const TextStyle(fontSize: 10),
+                            majorGridLines: const MajorGridLines(width: 1),
+                          ),
+                          plotAreaBorderWidth: 1,
+                          plotAreaBorderColor: Colors.grey.withOpacity(0.3),
+                          series: <CartesianSeries<_XY, String>>[
+                            SplineAreaSeries<_XY, String>(
+                              dataSource:
+                                  _weeklyData
+                                      .asMap()
+                                      .entries
+                                      .map(
+                                        (e) => _XY(
+                                          e.value['day'],
+                                          e.value['calories'].toDouble(),
+                                        ),
+                                      )
+                                      .toList(),
+                              xValueMapper: (p, _) => p.x,
+                              yValueMapper: (p, _) => p.y,
+                              color: AppColors.darkGradientStart.withOpacity(
+                                0.1,
+                              ),
+                              borderColor: AppColors.darkGradientStart,
+                              borderWidth: 3,
+                              markerSettings: const MarkerSettings(
+                                isVisible: true,
+                                width: 6,
+                                height: 6,
+                              ),
+                            ),
+                            LineSeries<_XY, String>(
+                              dataSource:
+                                  _weeklyData
+                                      .asMap()
+                                      .entries
+                                      .map(
+                                        (e) => _XY(
+                                          e.value['day'],
+                                          e.value['target_calories'].toDouble(),
+                                        ),
+                                      )
+                                      .toList(),
+                              xValueMapper: (p, _) => p.x,
+                              yValueMapper: (p, _) => p.y,
+                              color: Colors.orange,
+                              width: 2,
+                              dashArray: const <double>[5, 5],
+                              markerSettings: const MarkerSettings(
+                                isVisible: false,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -306,49 +250,41 @@ class _NutritionProgressScreenState
                           Expanded(
                             child: SizedBox(
                               height: 150,
-                              child: PieChart(
-                                PieChartData(
-                                  sectionsSpace: 2,
-                                  centerSpaceRadius: 40,
-                                  sections: [
-                                    PieChartSectionData(
-                                      color: Colors.red,
-                                      value: _weeklyData.last['protein'],
-                                      title:
-                                          '${_weeklyData.last['protein'].toStringAsFixed(0)}g',
-                                      radius: 50,
-                                      titleStyle: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                              child: SfCircularChart(
+                                margin: EdgeInsets.zero,
+                                legend: const Legend(isVisible: false),
+                                series: <DoughnutSeries<_Macro, String>>[
+                                  DoughnutSeries<_Macro, String>(
+                                    dataSource: <_Macro>[
+                                      _Macro(
+                                        'Protein',
+                                        _weeklyData.last['protein'].toDouble(),
+                                        Colors.red,
                                       ),
-                                    ),
-                                    PieChartSectionData(
-                                      color: Colors.green,
-                                      value: _weeklyData.last['carbs'],
-                                      title:
-                                          '${_weeklyData.last['carbs'].toStringAsFixed(0)}g',
-                                      radius: 50,
-                                      titleStyle: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                      _Macro(
+                                        'Carbs',
+                                        _weeklyData.last['carbs'].toDouble(),
+                                        Colors.green,
                                       ),
-                                    ),
-                                    PieChartSectionData(
-                                      color: Colors.blue,
-                                      value: _weeklyData.last['fat'],
-                                      title:
-                                          '${_weeklyData.last['fat'].toStringAsFixed(0)}g',
-                                      radius: 50,
-                                      titleStyle: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                      _Macro(
+                                        'Fat',
+                                        _weeklyData.last['fat'].toDouble(),
+                                        Colors.blue,
                                       ),
+                                    ],
+                                    xValueMapper: (m, _) => m.name,
+                                    yValueMapper: (m, _) => m.value,
+                                    pointColorMapper: (m, _) => m.color,
+                                    dataLabelMapper:
+                                        (m, _) =>
+                                            '${m.value.toStringAsFixed(0)}g',
+                                    dataLabelSettings: const DataLabelSettings(
+                                      isVisible: true,
                                     ),
-                                  ],
-                                ),
+                                    innerRadius: '40%',
+                                    radius: '100%',
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -608,4 +544,17 @@ class _NutritionProgressScreenState
     }
     return sum / _weeklyData.length;
   }
+}
+
+class _XY {
+  final String x;
+  final double y;
+  _XY(this.x, this.y);
+}
+
+class _Macro {
+  final String name;
+  final double value;
+  final Color color;
+  _Macro(this.name, this.value, this.color);
 }

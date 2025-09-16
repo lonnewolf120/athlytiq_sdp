@@ -112,30 +112,16 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
     ];
   }
 
-  Future<void> _joinChallenge(String challengeId) async {
-    try {
-      final challengeService = ref.read(challengeServiceProvider);
-      await challengeService.joinChallenge(challengeId);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Successfully joined challenge!')),
-      );
-      
-      _loadChallenges();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error joining challenge: ${e.toString()}')),
-      );
-    }
-  }
-
   List<Challenge> get allChallenges {
     return [...challenges, ...userChallenges];
   }
 
   List<Challenge> get filteredChallenges {
     if (selectedActivity == 'All') return allChallenges;
-    return allChallenges.where((c) => c.activityType == selectedActivity).toList();
+    final sel = selectedActivity.trim().toLowerCase();
+    return allChallenges
+        .where((c) => (c.activityType).trim().toLowerCase() == sel)
+        .toList();
   }
 
   @override
@@ -167,12 +153,9 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                   builder: (context) => const AddChallengeScreen(),
                 ),
               );
-              
-              if (newChallenge != null) {
-                setState(() {
-                  userChallenges.add(newChallenge);
-                });
-              }
+              setState(() {
+                userChallenges.add(newChallenge);
+              });
             },
           ),
         ],
@@ -388,12 +371,9 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                   builder: (context) => const AddChallengeScreen(),
                 ),
               );
-              
-              if (newChallenge != null) {
-                setState(() {
-                  userChallenges.add(newChallenge);
-                });
-              }
+              setState(() {
+                userChallenges.add(newChallenge);
+              });
             },
             icon: const Icon(Icons.add),
             label: const Text('Create Challenge'),
@@ -590,16 +570,12 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (challenge.isJoined) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChallengeDetailScreen(challenge: challenge),
-                              ),
-                            );
-                          } else {
-                            _joinChallenge(challenge.id);
-                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChallengeDetailScreen(challenge: challenge),
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: challenge.isJoined 

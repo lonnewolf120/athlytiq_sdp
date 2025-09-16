@@ -127,48 +127,48 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
                 unselectedLabelColor: const Color.fromARGB(226, 70, 59, 59),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surface.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(
-                      color: Colors.grey.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      hintStyle: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    onChanged: (value) {},
-                  ),
-                ),
-              ),
-            ),
+            // SliverToBoxAdapter(
+            //   child: Padding(
+            //     padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+            //     child: Container(
+            //       decoration: BoxDecoration(
+            //         color: Theme.of(
+            //           context,
+            //         ).colorScheme.surface.withOpacity(0.3),
+            //         borderRadius: BorderRadius.circular(25),
+            //         border: Border.all(
+            //           color: Colors.grey.withOpacity(0.3),
+            //           width: 1,
+            //         ),
+            //       ),
+            //       child: TextField(
+            //         decoration: InputDecoration(
+            //           hintText: 'Search',
+            //           prefixIcon: Icon(
+            //             Icons.search,
+            //             color: Theme.of(
+            //               context,
+            //             ).colorScheme.onSurface.withOpacity(0.6),
+            //           ),
+            //           border: InputBorder.none,
+            //           contentPadding: const EdgeInsets.symmetric(
+            //             horizontal: 16,
+            //             vertical: 12,
+            //           ),
+            //           hintStyle: TextStyle(
+            //             color: Theme.of(
+            //               context,
+            //             ).colorScheme.onSurface.withOpacity(0.6),
+            //           ),
+            //         ),
+            //         style: TextStyle(
+            //           color: Theme.of(context).colorScheme.onSurface,
+            //         ),
+            //         onChanged: (value) {},
+            //       ),
+            //     ),
+            //   ),
+            // ),
             // SliverPersistentHeader(
             //   delegate: _SliverAppBarDelegate(
             //     TabBar(
