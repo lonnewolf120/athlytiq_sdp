@@ -717,7 +717,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // Generate Plan Button
+          // Add manual plan button
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -725,12 +725,20 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const WorkoutPlanGeneratorScreen(),
+                    builder: (context) => const AddManualPlanScreen(),
                   ),
                 );
               },
-              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-              label: const Text('Generate New Workout Plan'),
+              icon: Image.asset(
+                'assets/logos/gym_report.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+              label: const Text(
+                'Add Workout Plan',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
@@ -747,6 +755,35 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           ),
           const SizedBox(height: 12),
 
+          // Generate Plan Button
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WorkoutPlanGeneratorScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+              label: const Text('Generate Plan With AI'),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           // Import from backend button
           SizedBox(
             width: double.infinity,
@@ -883,7 +920,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                 );
               },
               icon: const Icon(Icons.cloud_download_rounded, size: 20),
-              label: const Text('Import from Backend'),
+              label: const Text('Import From Previous Sessions'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -893,30 +930,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
             ),
           ),
           const SizedBox(height: 12),
-
-          // Add manual plan button
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddManualPlanScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text('Add Manual Plan'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
 
           // Show generation progress card if generating
           if (generationStatus.isGenerating) ...[
@@ -1332,7 +1345,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                   () {
                     // Navigate to form analysis screen
                   },
-                ),
+                );
                 const SizedBox(height: 12),
                 */
                 _buildTrainerFeatureCard(

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -11,6 +13,7 @@ class ExerciseDatabaseHelper {
   ExerciseDatabaseHelper._internal();
 
   static Database? _database;
+  static Future<void>? _loadingExercisesFuture;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -19,13 +22,35 @@ class ExerciseDatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'exercises.db');
+    final databasesPath = await getDatabasesPath();
+    final path = join(databasesPath, 'exercises.db');
+
+    // If a prebuilt DB is bundled in assets, copy it to the databases path
+    try {
+      final file = File(path);
+      if (!await file.exists()) {
+        // Try to load prebuilt DB from assets
+        try {
+          final data = await rootBundle.load('assets/data/exercises.db');
+          final bytes = data.buffer.asUint8List();
+          await file.create(recursive: true);
+          await file.writeAsBytes(bytes, flush: true);
+          print('Copied prebuilt exercises.db from assets to $path');
+        } catch (e) {
+          // Asset doesn't exist; we'll create DB normally in openDatabase
+          print('No prebuilt DB in assets (or failed to copy): $e');
+        }
+      }
+    } catch (e) {
+      print('Error ensuring DB file exists: $e');
+    }
+
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE exercises(
+      CREATE TABLE IF NOT EXISTS exercises(
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         gif_url TEXT,
@@ -40,58 +65,85 @@ class ExerciseDatabaseHelper {
     ''');
 
     // Create indexes for faster searching
-    await db.execute('CREATE INDEX idx_name_lower ON exercises(name_lower)');
-    await db.execute('CREATE INDEX idx_body_parts ON exercises(body_parts)');
-    await db.execute('CREATE INDEX idx_equipments ON exercises(equipments)');
     await db.execute(
-      'CREATE INDEX idx_target_muscles ON exercises(target_muscles)',
+      'CREATE INDEX IF NOT EXISTS idx_name_lower ON exercises(name_lower)',
     );
-    await db.execute('CREATE INDEX idx_search_text ON exercises(search_text)');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_body_parts ON exercises(body_parts)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_equipments ON exercises(equipments)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_target_muscles ON exercises(target_muscles)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_search_text ON exercises(search_text)',
+    );
   }
 
   Future<void> loadExercisesFromJson() async {
-    final db = await database;
+    // Ensure only one load operation runs at a time
+    if (_loadingExercisesFuture != null) return _loadingExercisesFuture!;
 
-    // Check if exercises are already loaded
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM exercises'),
-    );
-    if (count != null && count > 0) {
-      print('Exercises already loaded in database: $count exercises');
-      return;
-    }
+    _loadingExercisesFuture = () async {
+      final db = await database;
 
-    try {
-      print('Loading exercises from JSON...');
-      final jsonString = await rootBundle.loadString('lib/data/exercises.json');
-      final List<dynamic> jsonList = json.decode(jsonString);
-
-      final batch = db.batch();
-
-      for (final exerciseJson in jsonList) {
-        final exercise = Exercise.fromJson(exerciseJson);
-        final searchText = _buildSearchText(exercise);
-
-        batch.insert('exercises', {
-          'id': exercise.exerciseId ?? '',
-          'name': exercise.name,
-          'gif_url': exercise.gifUrl,
-          'body_parts': exercise.bodyParts.join(','),
-          'equipments': exercise.equipments.join(','),
-          'target_muscles': exercise.targetMuscles.join(','),
-          'secondary_muscles': exercise.secondaryMuscles.join(','),
-          'instructions': exercise.instructions.join('|'),
-          'name_lower': exercise.name.toLowerCase(),
-          'search_text': searchText,
-        });
+      // Check if exercises are already loaded
+      final count = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM exercises'),
+      );
+      if (count != null && count > 0) {
+        print('Exercises already loaded in database: $count exercises');
+        return;
       }
 
-      await batch.commit();
-      print('Successfully loaded ${jsonList.length} exercises into database');
-    } catch (e) {
-      print('Error loading exercises from JSON: $e');
-      rethrow;
-    }
+      try {
+        print('Loading exercises from JSON (background parse)...');
+        final jsonString = await rootBundle.loadString(
+          'assets/data/exercises.json',
+        );
+
+        // Parse JSON on a background isolate to avoid blocking UI
+        final List<dynamic> jsonList = await compute(
+          _parseJsonList,
+          jsonString,
+        );
+
+        final batch = db.batch();
+
+        for (final exerciseJson in jsonList) {
+          final exercise = Exercise.fromJson(exerciseJson);
+          final searchText = _buildSearchText(exercise);
+
+          batch.insert('exercises', {
+            'id': exercise.exerciseId ?? '',
+            'name': exercise.name,
+            'gif_url': exercise.gifUrl,
+            'body_parts': exercise.bodyParts.join(','),
+            'equipments': exercise.equipments.join(','),
+            'target_muscles': exercise.targetMuscles.join(','),
+            'secondary_muscles': exercise.secondaryMuscles.join(','),
+            'instructions': exercise.instructions.join('|'),
+            'name_lower': exercise.name.toLowerCase(),
+            'search_text': searchText,
+          });
+        }
+
+        await batch.commit(noResult: true);
+        print('Successfully loaded ${jsonList.length} exercises into database');
+      } catch (e, st) {
+        print('Error loading exercises from JSON: $e\n$st');
+        rethrow;
+      }
+    }();
+
+    return _loadingExercisesFuture!;
+  }
+
+  // parse helper for compute
+  List<dynamic> _parseJsonList(String jsonString) {
+    return json.decode(jsonString) as List<dynamic>;
   }
 
   String _buildSearchText(Exercise exercise) {

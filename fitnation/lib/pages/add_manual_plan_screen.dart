@@ -275,109 +275,111 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            // Plan details section
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: colorScheme.surfaceVariant.withOpacity(0.3),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Plan name input
-                  TextFormField(
-                    controller: _planNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Workout Plan Name',
-                      hintText: 'e.g., Upper Body Strength',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: colorScheme.surface,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a plan name';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Selected exercises count
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.fitness_center,
-                        color: colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Exercises: ${_selectedExercises.length}',
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Plan details section
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Plan name input
+                    TextFormField(
+                      controller: _planNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Workout Plan Name',
+                        hintText: 'e.g., Upper Body Strength',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        filled: true,
+                        fillColor: colorScheme.surface,
                       ),
-                    ],
-                  ),
-                ],
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a plan name';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Selected exercises count
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.fitness_center,
+                          color: colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Exercises: ${_selectedExercises.length}',
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Exercise search section
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Search Exercises',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Search bar
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search for exercises...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon:
-                          _searchController.text.isNotEmpty
-                              ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _showSearchResults = false;
-                                  });
-                                },
-                              )
-                              : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+              // Exercise search section
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Search Exercises',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      filled: true,
-                      fillColor: colorScheme.surface,
                     ),
-                  ),
+                    const SizedBox(height: 12),
 
-                  const SizedBox(height: 12),
+                    // Search bar
+                    TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search for exercises...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon:
+                            _searchController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _showSearchResults = false;
+                                    });
+                                  },
+                                )
+                                : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surface,
+                      ),
+                    ),
 
-                  // Filters row
-                  Row(
-                    children: [
-                      // Body part filter
-                      Expanded(
-                        child: bodyPartsAsync.when(
+                    const SizedBox(height: 12),
+
+                    // Filters column
+                    Column(
+                      children: [
+                        // Body part filter
+                        bodyPartsAsync.when(
                           data:
                               (bodyParts) => DropdownButtonFormField<String>(
                                 value: _selectedBodyPart,
@@ -430,13 +432,11 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
                           loading: () => const SizedBox(height: 56),
                           error: (_, __) => const SizedBox(height: 56),
                         ),
-                      ),
 
-                      const SizedBox(width: 12),
+                        const SizedBox(height: 12),
 
-                      // Equipment filter
-                      Expanded(
-                        child: equipmentsAsync.when(
+                        // Equipment filter
+                        equipmentsAsync.when(
                           data:
                               (equipments) => DropdownButtonFormField<String>(
                                 value: _selectedEquipment,
@@ -489,21 +489,21 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
                           loading: () => const SizedBox(height: 56),
                           error: (_, __) => const SizedBox(height: 56),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Results section
-            Expanded(
-              child:
-                  _showSearchResults
-                      ? _buildSearchResults(searchState, colorScheme)
-                      : _buildSelectedExercises(colorScheme),
-            ),
-          ],
+              // Results section
+              Expanded(
+                child:
+                    _showSearchResults
+                        ? _buildSearchResults(searchState, colorScheme)
+                        : _buildSelectedExercises(colorScheme),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -530,21 +530,36 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
             child: searchState.when(
               data: (data) {
                 if (data.exercises.isEmpty && !data.isLoading) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text(
-                          'No exercises found',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        Text(
-                          'Try adjusting your search or filters',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No exercises found',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Flexible(
+                            child: Text(
+                              'Try adjusting your search or filters',
+                              style: const TextStyle(color: Colors.grey),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -567,25 +582,34 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error:
                   (error, stack) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error, size: 64, color: Colors.red),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading exercises',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.red.shade700,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error, size: 64, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading exercises',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.red.shade700,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          error.toString(),
-                          style: const TextStyle(color: Colors.grey),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Flexible(
+                            child: Text(
+                              error.toString(),
+                              style: const TextStyle(color: Colors.grey),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 3,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
             ),
@@ -627,31 +651,40 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
             child:
                 _selectedExercises.isEmpty
                     ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.fitness_center_outlined,
-                            size: 64,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No exercises selected yet',
-                            style: TextStyle(
-                              fontSize: 18,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.fitness_center_outlined,
+                              size: 64,
                               color: colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Search and add exercises to build your workout plan',
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
+                            const SizedBox(height: 16),
+                            Text(
+                              'No exercises selected yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Flexible(
+                              child: Text(
+                                'Search and add exercises to build your workout plan',
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     )
                     : ListView.builder(
