@@ -1,6 +1,7 @@
 import 'package:fitnation/models/challenge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fitnation/providers/auth_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/challenge_service.dart';
 import '../../widgets/compact_product_card.dart';
@@ -77,15 +78,42 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       final challengeService = ref.read(challengeServiceProvider);
       final participants = await challengeService.getChallengeParticipants(widget.challenge.id);
       if (mounted) {
+        // Update participants and sync current user's progress if available
+        final currentUserId = _getCurrentUserId();
+        double? currentUserProgress;
+        if (currentUserId != null) {
+          final matches = participants.where((p) => p.userId == currentUserId).toList();
+          if (matches.isNotEmpty) {
+            currentUserProgress = matches.first.progress;
+          }
+        }
+
         setState(() {
           _participants = participants;
+          if (currentUserProgress != null) {
+            _userProgress = currentUserProgress;
+          }
         });
       }
     } catch (e) {
       print('Error loading participants: $e');
       if (_currentChallenge?.participants != null) {
+        final fallback = _currentChallenge!.participants!;
+        // Try to sync user progress from fallback data too
+        final currentUserId = _getCurrentUserId();
+        double? currentUserProgress;
+        if (currentUserId != null) {
+          final matches = fallback.where((p) => p.userId == currentUserId).toList();
+          if (matches.isNotEmpty) {
+            currentUserProgress = matches.first.progress;
+          }
+        }
+
         setState(() {
-          _participants = _currentChallenge!.participants!;
+          _participants = fallback;
+          if (currentUserProgress != null) {
+            _userProgress = currentUserProgress;
+          }
         });
       }
     } finally {
@@ -360,7 +388,11 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                                 ),
                               ),
                               Text(
-                                '${_userProgress.toStringAsFixed(1)} km / ${challenge.distance ?? 0} km',
+                                (() {
+                                  final unit = _getActivityInfo(challenge.activityType)['unit'];
+                                  final distance = challenge.distance ?? 0;
+                                  return '${_userProgress.toStringAsFixed(1)} $unit / $distance $unit';
+                                })(),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -389,12 +421,16 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                               ),
                               if (_userProgress < (challenge.distance ?? 0))
                                 Text(
-                                  '${((challenge.distance ?? 0) - _userProgress).toStringAsFixed(1)} km to go',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                  ),
-                                ),
+                                  (() {
+                                    final unit = _getActivityInfo(challenge.activityType)['unit'];
+                                    final remaining = ((challenge.distance ?? 0) - _userProgress).clamp(0, double.infinity);
+                                    return '${remaining.toStringAsFixed(1)} $unit to go';
+                                  })(),
+                                   style: TextStyle(
+                                     fontSize: 14,
+                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                   ),
+                                 ),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -531,7 +567,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
   }
 
   String? _getCurrentUserId() {
-    return null; 
+    // Resolve currently authenticated user via Riverpod auth provider
+    return ref.read(currentUserProvider)?.id;
   }
 
   double _getProgressPercentage(Challenge challenge) {
@@ -838,13 +875,16 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                 ),
               ),
               Text(
-                '${participant.progress.toStringAsFixed(1)} km',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: challenge.brandColor ?? Colors.grey,
-                ),
-              ),
+                (() {
+                  final unit = _getActivityInfo(challenge.activityType)['unit'];
+                  return '${participant.progress.toStringAsFixed(1)} $unit';
+                })(),
+                 style: TextStyle(
+                   fontSize: 14,
+                   fontWeight: FontWeight.bold,
+                   color: challenge.brandColor ?? Colors.grey,
+                 ),
+               ),
             ],
           ),
         );

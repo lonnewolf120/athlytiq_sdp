@@ -1162,7 +1162,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // Personal Trainer Card
+          /*
+          // Personal Trainer Card (commented out)
           Card(
             elevation: 0,
             color: colorScheme.primaryContainer,
@@ -1222,11 +1223,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
             ),
           ),
           const SizedBox(height: 24),
+          */
 
           // Trainer Features
           Expanded(
             child: ListView(
               children: [
+                /*
+                // Exercise Form Analysis (commented out)
                 _buildTrainerFeatureCard(
                   context,
                   colorScheme,
@@ -1238,6 +1242,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                   },
                 ),
                 const SizedBox(height: 12),
+                */
                 _buildTrainerFeatureCard(
                   context,
                   colorScheme,

@@ -652,7 +652,7 @@ class _SessionBookingScreenState extends State<SessionBookingScreen> {
                 CircleAvatar(
                   radius: 30,
                   backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400',
+                    'https://static.vecteezy.com/system/resources/thumbnails/046/837/177/small_2x/confident-indonesian-female-fitness-trainer-in-gym-emphasizing-strength-and-wellness-perfect-for-health-and-fitness-promotions-photo.jpg',
                   ),
                 ),
                 const SizedBox(width: 16),

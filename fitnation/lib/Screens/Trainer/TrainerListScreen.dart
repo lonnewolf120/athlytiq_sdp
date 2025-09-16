@@ -35,7 +35,7 @@ class _TrainerListScreenState extends State<TrainerListScreen> {
       'reviews': 156,
       'experience': '8 years',
       'price': 2500,
-      'profileImage': 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400',
+      'profileImage': 'https://static.vecteezy.com/system/resources/thumbnails/046/837/177/small_2x/confident-indonesian-female-fitness-trainer-in-gym-emphasizing-strength-and-wellness-perfect-for-health-and-fitness-promotions-photo.jpg',
       'specializations': ['Weight Training', 'Cardio', 'Yoga'],
       'location': 'Dhaka, Bangladesh',
       'isOnline': true,
