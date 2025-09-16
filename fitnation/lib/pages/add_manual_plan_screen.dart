@@ -177,8 +177,6 @@ class _AddManualPlanScreenState extends ConsumerState<AddManualPlanScreen> {
                   final sets = int.tryParse(setsController.text) ?? 3;
                   final reps = int.tryParse(repsController.text) ?? 10;
                   final weight = weightController.text.trim();
-                  final restTime = int.tryParse(restController.text) ?? 60;
-
                   final plannedExercise = PlannedExercise(
                     exerciseId: exercise.exerciseId ?? '',
                     exerciseName: exercise.name,
