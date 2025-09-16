@@ -920,7 +920,9 @@ class ChatMessage(Base):
     message_type = Column(String(20), nullable=False, default='text')  # 'text', 'image', 'video', 'audio', 'file', 'location', 'workout', 'system'
     content = Column(Text, nullable=True)
     media_urls = Column(JSONB, nullable=True)  # Array of media URLs
-    metadata = Column(JSONB, nullable=True)  # Additional data like location, workout details, etc.
+    # 'metadata' is reserved by SQLAlchemy's Declarative API. Use a different Python attribute
+    # while keeping the actual DB column name as 'metadata'.
+    message_metadata = Column('metadata', JSONB, nullable=True)  # Additional data like location, workout details, etc.
     reply_to_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id'), nullable=True)
     forwarded_from_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
@@ -1007,3 +1009,57 @@ class Buddy(Base):
     
     # Unique constraint
     __table_args__ = (UniqueConstraint('user_id', 'buddy_user_id', name='_user_buddy_uc'),)
+
+
+# ===================================================================
+# WORKOUT TEMPLATES MODELS
+# ===================================================================
+# Models for storing default workout routines from famous personalities
+# that users can import into their personal workout plans
+
+class WorkoutTemplate(Base):
+    __tablename__ = "workout_templates"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    author = Column(String(255), nullable=False)  # e.g., "Ronnie Coleman", "Arnold Schwarzenegger"
+    difficulty_level = Column(String(50), nullable=False)  # "Beginner", "Intermediate", "Advanced"
+    primary_muscle_groups = Column(JSONB, default=list)  # ["back", "biceps", "chest"]
+    estimated_duration_minutes = Column(Integer)
+    equipment_required = Column(JSONB, default=list)  # ["barbell", "dumbbells", "cables"]
+    tags = Column(JSONB, default=list)  # ["mass_building", "strength", "classic"]
+    icon_url = Column(String(1024))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    exercises = relationship("WorkoutTemplateExercise", back_populates="template", cascade="all, delete-orphan", lazy="selectin")
+
+    def __repr__(self):
+        return f"<WorkoutTemplate {self.name} by {self.author}>"
+
+
+class WorkoutTemplateExercise(Base):
+    __tablename__ = "workout_template_exercises"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    template_id = Column(UUID(as_uuid=True), ForeignKey('workout_templates.id', ondelete='CASCADE'), nullable=False)
+    exercise_id = Column(String(255), nullable=False)  # Reference to exercise library
+    exercise_name = Column(String(255), nullable=False)
+    exercise_equipments = Column(JSONB, default=list)
+    exercise_gif_url = Column(String(1024))
+    exercise_order = Column(Integer, nullable=False)  # Order in the workout
+    default_sets = Column(Integer, nullable=False)
+    default_reps = Column(String(50), nullable=False)  # "8-10", "12-15", "AMRAP"
+    default_weight = Column(String(100))  # "bodyweight", "60-70% 1RM", "Heavy"
+    rest_time_seconds = Column(Integer, default=60)
+    notes = Column(Text)  # Special instructions or form cues
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    template = relationship("WorkoutTemplate", back_populates="exercises")
+
+    def __repr__(self):
+        return f"<WorkoutTemplateExercise {self.exercise_name} in {self.template.name if self.template else 'Unknown Template'}>"

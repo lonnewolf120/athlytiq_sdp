@@ -145,7 +145,8 @@ class ChatMessage(Base):
     message_type = Column(message_type_enum, nullable=False, default='text')
     content = Column(Text, nullable=True)
     media_urls = Column(ARRAY(Text), nullable=True)
-    metadata = Column(JSONB, nullable=True)
+    # Avoid reserved attribute name 'metadata' on SQLAlchemy declarative base
+    message_metadata = Column('metadata', JSONB, nullable=True)
     reply_to_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='SET NULL'), nullable=True)
     forwarded_from_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='SET NULL'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)

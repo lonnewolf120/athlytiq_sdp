@@ -133,7 +133,7 @@ class TrainerPostPublic(TrainerPostCreate):
 
 class PlanVerificationRequest(BaseModel):
     plan_id: UUID
-    plan_type: str = Field(..., regex='^(workout|meal)$')
+    plan_type: str = Field(..., pattern='^(workout|meal)$')
     notes: Optional[str] = None
 
 

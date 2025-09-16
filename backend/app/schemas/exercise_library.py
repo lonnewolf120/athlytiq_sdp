@@ -9,7 +9,7 @@ from typing import Optional, List
 class ExerciseCategoryBase(BaseModel):
     name: str = Field(..., max_length=100)
     description: Optional[str] = None
-    color_code: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
+    color_code: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     icon_name: Optional[str] = Field(None, max_length=50)
 
 
@@ -28,7 +28,7 @@ class ExerciseCategoryResponse(ExerciseCategoryBase):
 
 class MuscleGroupBase(BaseModel):
     name: str = Field(..., max_length=100)
-    group_type: str = Field(..., regex=r'^(primary|secondary|stabilizer)$')
+    group_type: str = Field(..., pattern=r'^(primary|secondary|stabilizer)$')
     parent_id: Optional[UUID] = None
     description: Optional[str] = None
 
@@ -180,7 +180,7 @@ class ExerciseSearchParams(BaseModel):
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(20, ge=1, le=100, description="Items per page")
     sort_by: str = Field("popularity", description="Sort field: name, difficulty, popularity, created_at")
-    sort_order: str = Field("desc", regex=r'^(asc|desc)$', description="Sort order")
+    sort_order: str = Field("desc", pattern=r'^(asc|desc)$', description="Sort order")
 
 
 # Quick exercise selection for workout creation

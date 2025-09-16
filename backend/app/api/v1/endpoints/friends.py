@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 
-from app.database.database import get_db
+from app.database.base import get_db
 from app.dependencies import get_current_user
 from app.models_db import User
 from app.schemas.chat import (
@@ -36,8 +36,8 @@ async def get_friends_list(
 
 @router.get("/requests", response_model=List[Dict[str, Any]])
 async def get_friend_requests(
-    request_type: str = Query("received", regex="^(received|sent|all)$"),
-    status_filter: Optional[str] = Query(None, regex="^(pending|accepted|rejected|blocked)$"),
+    request_type: str = Query("received", pattern="^(received|sent|all)$"),
+    status_filter: Optional[str] = Query(None, pattern="^(pending|accepted|rejected|blocked)$"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),

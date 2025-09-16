@@ -172,8 +172,8 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
           // skip and limit can be added here if pagination is controlled from the screen
           // For now, using default skip/limit from the provider's API call.
         );
-        print(
-          "WorkoutHistoryScreen: Watching completedWorkoutsProvider with filters - type: ${filters.workoutType}, time: ${filters.timeRange}",
+        debugPrint(
+          "WorkoutHistoryScreen: Watching completedWorkoutsProvider with userId=${user.id}, type: ${filters.workoutType}, time: ${filters.timeRange}",
         );
         return ref.watch(
           completedWorkoutsProvider(filters),
