@@ -36,6 +36,7 @@ migrate_working_dir/
 **/macos/flutter
 **/windows/flutter
 **/local.properties
+android/local.properties
 
 /linux/flutter
 /macos/Flutter

@@ -3,7 +3,7 @@ from sqlalchemy import Column,ForeignKey,DateTime
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, String, Integer, Float, Double, Text, Boolean, DateTime, ForeignKey, Enum, UniqueConstraint, Index, JSON, TIMESTAMP
+    Column, String, Integer, Float, Double, Text, Boolean, DateTime, Time, ForeignKey, Enum, UniqueConstraint, Index, JSON, TIMESTAMP
 )
 from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum, JSONB, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
@@ -598,6 +598,7 @@ class ProductReview(Base):
     user = relationship("User", back_populates="product_reviews")
 
 
+# Legacy Exercise model - keeping for backward compatibility
 class Exercise(Base):
     __tablename__="exercises"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -614,6 +615,134 @@ class Exercise(Base):
     order_in_workout = Column(Integer)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # New relationship to normalized exercise library
+    exercise_library_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id'), nullable=True)
+    exercise_library = relationship("ExerciseLibrary", foreign_keys=[exercise_library_id])
+
+
+# --- NEW ENHANCED EXERCISE LIBRARY MODELS ---
+
+class ExerciseCategory(Base):
+    __tablename__ = 'exercise_categories'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    color_code = Column(String(7), nullable=True)  # Hex color
+    icon_name = Column(String(50), nullable=True)  # For UI icons
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    exercises = relationship("ExerciseLibrary", back_populates="category")
+
+
+class MuscleGroup(Base):
+    __tablename__ = 'muscle_groups'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    group_type = Column(String(20), nullable=False)  # primary, secondary, stabilizer
+    parent_id = Column(UUID(as_uuid=True), ForeignKey('muscle_groups.id'), nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Self-referential relationship for hierarchical structure
+    parent = relationship("MuscleGroup", remote_side=[id])
+    children = relationship("MuscleGroup", back_populates="parent")
+    
+    # Many-to-many relationship with exercises
+    exercises = relationship("ExerciseMuscleGroup", back_populates="muscle_group")
+
+
+class EquipmentType(Base):
+    __tablename__ = 'equipment_types'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    category = Column(String(50), nullable=True)  # cardio, strength, bodyweight, functional
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Many-to-many relationship with exercises
+    exercises = relationship("ExerciseEquipment", back_populates="equipment")
+
+
+class ExerciseLibrary(Base):
+    __tablename__ = 'exercise_library'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    instructions = Column(Text, nullable=True)
+    form_tips = Column(Text, nullable=True)
+    gif_url = Column(Text, nullable=True)
+    video_url = Column(Text, nullable=True)
+    category_id = Column(UUID(as_uuid=True), ForeignKey('exercise_categories.id'), nullable=True)
+    difficulty_level = Column(Integer, nullable=True)  # 1-5 scale
+    popularity_score = Column(Float, default=0.0)  # 0.0-5.0 rating
+    is_compound = Column(Boolean, default=False)
+    is_unilateral = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    category = relationship("ExerciseCategory", back_populates="exercises")
+    muscle_groups = relationship("ExerciseMuscleGroup", back_populates="exercise")
+    equipment = relationship("ExerciseEquipment", back_populates="exercise")
+    variations_as_base = relationship("ExerciseVariation", foreign_keys="[ExerciseVariation.base_exercise_id]", back_populates="base_exercise")
+    variations_as_variation = relationship("ExerciseVariation", foreign_keys="[ExerciseVariation.variation_exercise_id]", back_populates="variation_exercise")
+
+
+class ExerciseMuscleGroup(Base):
+    __tablename__ = 'exercise_muscle_groups'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    muscle_group_id = Column(UUID(as_uuid=True), ForeignKey('muscle_groups.id', ondelete='CASCADE'), nullable=False)
+    is_primary = Column(Boolean, default=True)
+    activation_level = Column(Integer, nullable=True)  # 1-5 scale
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    exercise = relationship("ExerciseLibrary", back_populates="muscle_groups")
+    muscle_group = relationship("MuscleGroup", back_populates="exercises")
+
+
+class ExerciseEquipment(Base):
+    __tablename__ = 'exercise_equipment'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    equipment_id = Column(UUID(as_uuid=True), ForeignKey('equipment_types.id', ondelete='CASCADE'), nullable=False)
+    is_required = Column(Boolean, default=True)
+    is_alternative = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    exercise = relationship("ExerciseLibrary", back_populates="equipment")
+    equipment = relationship("EquipmentType", back_populates="exercises")
+
+
+class ExerciseVariation(Base):
+    __tablename__ = 'exercise_variations'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    base_exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    variation_exercise_id = Column(UUID(as_uuid=True), ForeignKey('exercise_library.id', ondelete='CASCADE'), nullable=False)
+    variation_type = Column(String(50), nullable=True)  # easier, harder, alternative, progression
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    base_exercise = relationship("ExerciseLibrary", foreign_keys=[base_exercise_id], back_populates="variations_as_base")
+    variation_exercise = relationship("ExerciseLibrary", foreign_keys=[variation_exercise_id], back_populates="variations_as_variation")
+
+# --- END OF ENHANCED EXERCISE LIBRARY MODELS ---
 
 
 
@@ -701,8 +830,8 @@ User.challenge_participations = relationship("ChallengeParticipant", back_popula
 
 class TrainerProfile(Base):
     __tablename__ = 'trainer_profiles'
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
     bio = Column(Text, nullable=True)
     certifications = Column(Text, nullable=True)
     specialties = Column(Text, nullable=True)
@@ -718,8 +847,8 @@ class TrainerProfile(Base):
 
 class TrainerAvailability(Base):
     __tablename__ = 'trainer_availabilities'
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(UUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
     weekday = Column(Integer, nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
@@ -730,9 +859,9 @@ class TrainerAvailability(Base):
 
 class TrainerSession(Base):
     __tablename__ = 'trainer_sessions'
-    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    trainer_id = Column(PGUUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
-    user_id = Column(PGUUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trainer_id = Column(UUID(as_uuid=True), ForeignKey('trainer_profiles.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=False)
     status = Column(String(50), nullable=False, default='pending')
@@ -742,3 +871,195 @@ class TrainerSession(Base):
 
     trainer = relationship('TrainerProfile', back_populates='sessions')
     user = relationship('User')
+
+# Chat and Friends Models
+class ChatRoom(Base):
+    __tablename__ = 'chat_rooms'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type = Column(String(20), nullable=False, default='direct')  # 'direct' or 'group'
+    name = Column(String(255), nullable=True)  # For group chats
+    description = Column(Text, nullable=True)
+    image_url = Column(String(500), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_message_at = Column(DateTime(timezone=True), nullable=True)
+    last_message_content = Column(Text, nullable=True)
+    last_message_sender_id = Column(UUID(as_uuid=True), nullable=True)
+    is_archived = Column(Boolean, default=False)
+
+    # Relationships
+    creator = relationship('User', foreign_keys=[created_by])
+    participants = relationship('ChatParticipant', back_populates='room', cascade='all, delete-orphan')
+    messages = relationship('ChatMessage', back_populates='room', cascade='all, delete-orphan')
+
+class ChatParticipant(Base):
+    __tablename__ = 'chat_participants'
+    
+    room_id = Column(UUID(as_uuid=True), ForeignKey('chat_rooms.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    role = Column(String(20), nullable=False, default='member')  # 'admin', 'member'
+    joined_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    left_at = Column(DateTime(timezone=True), nullable=True)
+    last_read_at = Column(DateTime(timezone=True), nullable=True)
+    unread_count = Column(Integer, default=0)
+    is_muted = Column(Boolean, default=False)
+    is_pinned = Column(Boolean, default=False)
+
+    # Relationships
+    room = relationship('ChatRoom', back_populates='participants')
+    user = relationship('User')
+
+class ChatMessage(Base):
+    __tablename__ = 'chat_messages'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    room_id = Column(UUID(as_uuid=True), ForeignKey('chat_rooms.id', ondelete='CASCADE'), nullable=False)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message_type = Column(String(20), nullable=False, default='text')  # 'text', 'image', 'video', 'audio', 'file', 'location', 'workout', 'system'
+    content = Column(Text, nullable=True)
+    media_urls = Column(JSONB, nullable=True)  # Array of media URLs
+    # 'metadata' is reserved by SQLAlchemy's Declarative API. Use a different Python attribute
+    # while keeping the actual DB column name as 'metadata'.
+    message_metadata = Column('metadata', JSONB, nullable=True)  # Additional data like location, workout details, etc.
+    reply_to_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id'), nullable=True)
+    forwarded_from_id = Column(UUID(as_uuid=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    edited_at = Column(DateTime(timezone=True), nullable=True)
+    is_deleted = Column(Boolean, default=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    room = relationship('ChatRoom', back_populates='messages')
+    sender = relationship('User', foreign_keys=[sender_id])
+    reply_to = relationship('ChatMessage', remote_side=[id])
+    reactions = relationship('MessageReaction', back_populates='message', cascade='all, delete-orphan')
+    read_receipts = relationship('MessageReadReceipt', back_populates='message', cascade='all, delete-orphan')
+
+class MessageReaction(Base):
+    __tablename__ = 'message_reactions'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    message_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    emoji = Column(String(10), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # Relationships
+    message = relationship('ChatMessage', back_populates='reactions')
+    user = relationship('User')
+    
+    # Unique constraint
+    __table_args__ = (UniqueConstraint('message_id', 'user_id', 'emoji', name='_message_user_emoji_uc'),)
+
+class MessageReadReceipt(Base):
+    __tablename__ = 'message_read_receipts'
+    
+    message_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    read_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # Relationships
+    message = relationship('ChatMessage', back_populates='read_receipts')
+    user = relationship('User')
+
+class FriendRequest(Base):
+    __tablename__ = 'friend_requests'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default='pending')  # 'pending', 'accepted', 'rejected', 'blocked'
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    responded_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    sender = relationship('User', foreign_keys=[sender_id])
+    receiver = relationship('User', foreign_keys=[receiver_id])
+    
+    # Unique constraint
+    __table_args__ = (UniqueConstraint('sender_id', 'receiver_id', name='_sender_receiver_uc'),)
+
+class UserOnlineStatus(Base):
+    __tablename__ = 'user_online_status'
+    
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    is_online = Column(Boolean, default=False)
+    last_seen = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User')
+
+# Add Buddies model if it doesn't exist (extending existing social system)
+class Buddy(Base):
+    __tablename__ = 'buddies'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    buddy_user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    status = Column(String(20), nullable=False, default='accepted')  # 'accepted', 'blocked'
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User', foreign_keys=[user_id])
+    buddy = relationship('User', foreign_keys=[buddy_user_id])
+    
+    # Unique constraint
+    __table_args__ = (UniqueConstraint('user_id', 'buddy_user_id', name='_user_buddy_uc'),)
+
+
+# ===================================================================
+# WORKOUT TEMPLATES MODELS
+# ===================================================================
+# Models for storing default workout routines from famous personalities
+# that users can import into their personal workout plans
+
+class WorkoutTemplate(Base):
+    __tablename__ = "workout_templates"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    author = Column(String(255), nullable=False)  # e.g., "Ronnie Coleman", "Arnold Schwarzenegger"
+    difficulty_level = Column(String(50), nullable=False)  # "Beginner", "Intermediate", "Advanced"
+    primary_muscle_groups = Column(JSONB, default=list)  # ["back", "biceps", "chest"]
+    estimated_duration_minutes = Column(Integer)
+    equipment_required = Column(JSONB, default=list)  # ["barbell", "dumbbells", "cables"]
+    tags = Column(JSONB, default=list)  # ["mass_building", "strength", "classic"]
+    icon_url = Column(String(1024))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    exercises = relationship("WorkoutTemplateExercise", back_populates="template", cascade="all, delete-orphan", lazy="selectin")
+
+    def __repr__(self):
+        return f"<WorkoutTemplate {self.name} by {self.author}>"
+
+
+class WorkoutTemplateExercise(Base):
+    __tablename__ = "workout_template_exercises"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    template_id = Column(UUID(as_uuid=True), ForeignKey('workout_templates.id', ondelete='CASCADE'), nullable=False)
+    exercise_id = Column(String(255), nullable=False)  # Reference to exercise library
+    exercise_name = Column(String(255), nullable=False)
+    exercise_equipments = Column(JSONB, default=list)
+    exercise_gif_url = Column(String(1024))
+    exercise_order = Column(Integer, nullable=False)  # Order in the workout
+    default_sets = Column(Integer, nullable=False)
+    default_reps = Column(String(50), nullable=False)  # "8-10", "12-15", "AMRAP"
+    default_weight = Column(String(100))  # "bodyweight", "60-70% 1RM", "Heavy"
+    rest_time_seconds = Column(Integer, default=60)
+    notes = Column(Text)  # Special instructions or form cues
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    # Relationships
+    template = relationship("WorkoutTemplate", back_populates="exercises")
+
+    def __repr__(self):
+        return f"<WorkoutTemplateExercise {self.exercise_name} in {self.template.name if self.template else 'Unknown Template'}>"
