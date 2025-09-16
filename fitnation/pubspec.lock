@@ -98,7 +98,7 @@ packages:
     source: hosted
     version: "2.12.0"
   barcode_scan2:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: barcode_scan2
       sha256: "0f3eb7c0a0c80a0f65d3fa88737544fdb6d27127a4fad566e980e626f3fb76e1"
@@ -410,7 +410,7 @@ packages:
     source: hosted
     version: "4.0.1"
   equatable:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: equatable
       sha256: "567c64b3cb4cf82397aac55f4f0cbd3ca20d77c6c03bedbc4ceaddc08904aef7"
@@ -593,14 +593,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  fl_chart:
-    dependency: "direct dev"
-    description:
-      name: fl_chart
-      sha256: "577aeac8ca414c25333334d7c4bb246775234c0e44b38b10a82b559dd4d764e7"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -631,13 +623,13 @@ packages:
     source: hosted
     version: "1.6.15"
   flutter_dotenv:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: flutter_dotenv
-      sha256: b7c7be5cd9f6ef7a78429cabd2774d3c4af50e79cb2b7593e3d5d763ef95c61b
+      sha256: d4130c4a43e0b13fefc593bc3961f2cb46e30cb79e253d4a526b1b5d24ae1ce4
       url: "https://pub.dev"
     source: hosted
-    version: "5.2.1"
+    version: "6.0.0"
   flutter_hooks:
     dependency: transitive
     description:
@@ -735,7 +727,7 @@ packages:
     source: hosted
     version: "0.6.23"
   flutter_native_splash:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: flutter_native_splash
       sha256: "8321a6d11a8d13977fa780c89de8d257cce3d841eecfb7a4cadffcc4f12d82dc"
@@ -1693,6 +1685,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.4"
+  syncfusion_flutter_charts:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_charts
+      sha256: "75e54c1dea16e0132a942294a82b489986f43f4c72f7ac7c916a02a78b2d6050"
+      url: "https://pub.dev"
+    source: hosted
+    version: "31.1.19"
+  syncfusion_flutter_core:
+    dependency: transitive
+    description:
+      name: syncfusion_flutter_core
+      sha256: "2d878bce96c4fd1092205a4f72b328f7f05d86b27c3bd55db7fd440e6017352a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "31.1.19"
   synchronized:
     dependency: transitive
     description:
@@ -1870,7 +1878,7 @@ packages:
     source: hosted
     version: "1.1.16"
   vector_math:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: vector_math
       sha256: "80b3257d1492ce4d091729e3a67a60407d227c27241d6927be0130c98e741803"
