@@ -10,6 +10,7 @@ import 'package:fitnation/Screens/Activities/WorkoutScreen.dart';
 import 'package:fitnation/Screens/nutrition/NutritionScreen.dart';
 import 'package:fitnation/Screens/shop_page.dart';
 import 'package:fitnation/Screens/Community/CommunityGroups.dart';
+import 'package:fitnation/pages/exercise_search_page.dart';
 import 'package:fitnation/widgets/SidebarMenuView.dart';
 
 class MainHiddenDrawer extends ConsumerStatefulWidget {
@@ -62,6 +63,15 @@ class _MainHiddenDrawerState extends ConsumerState<MainHiddenDrawer> {
           colorLineSelected: app_colors.AppColors.primary,
         ),
         const WorkoutScreen(),
+      ),
+      ScreenHiddenDrawer(
+        ItemHiddenMenu(
+          name: 'Exercise Search',
+          baseStyle: baseStyle,
+          selectedStyle: selectedStyle,
+          colorLineSelected: app_colors.AppColors.primary,
+        ),
+        const ExerciseSearchPage(),
       ),
       ScreenHiddenDrawer(
         ItemHiddenMenu(
