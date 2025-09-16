@@ -19,6 +19,7 @@ import 'package:fitnation/Screens/Trainer/TrainerRegistrationScreen.dart';
 import 'package:fitnation/Screens/Trainer/TrainerApplicationStatusScreen.dart';
 import 'package:fitnation/Screens/Trainer/TrainerListScreen.dart';
 import 'package:fitnation/Screens/Trainer/MySessionsScreen.dart';
+import 'package:fitnation/Screens/Trainer/TrainerSessionsScreen.dart';
 import 'package:fitnation/models/User.dart' show UserRole;
 import 'package:fitnation/Screens/Trainer/TrainerConsultationTab.dart';
 import 'package:fitnation/Screens/Trainer/MyClientsScreen.dart';
@@ -1201,7 +1202,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MySessionsScreen(),
+                          builder: (context) => const TrainerSessionsScreen(),
                         ),
                       );
                     },
