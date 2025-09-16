@@ -241,6 +241,64 @@ class _CommunityGroupsScreenState extends ConsumerState<CommunityGroupsScreen>
               ),
             );
           },
+          onJoinToggle: () async {
+            final api = ref.read(apiServiceProvider);
+            try {
+              if (group.joined) {
+                final ok = await api.leaveCommunity(group.id);
+                if (ok) {
+                  setState(() {
+                    groups[index] = Group(
+                      id: group.id,
+                      name: group.name,
+                      description: group.description,
+                      memberCount: (group.memberCount > 0) ? group.memberCount - 1 : 0,
+                      postCount: group.postCount,
+                      image: group.image,
+                      trending: group.trending,
+                      categories: group.categories,
+                      joined: false,
+                      coverImage: group.coverImage,
+                      createdAt: group.createdAt,
+                      rules: group.rules,
+                    );
+                  });
+                }
+              } else {
+                final ok = await api.joinCommunity(group.id);
+                if (ok) {
+                  setState(() {
+                    groups[index] = Group(
+                      id: group.id,
+                      name: group.name,
+                      description: group.description,
+                      memberCount: group.memberCount + 1,
+                      postCount: group.postCount,
+                      image: group.image,
+                      trending: group.trending,
+                      categories: group.categories,
+                      joined: true,
+                      coverImage: group.coverImage,
+                      createdAt: group.createdAt,
+                      rules: group.rules,
+                    );
+                  });
+                }
+              }
+              // Refresh the futures to keep tabs in sync
+              final api2 = ref.read(apiServiceProvider);
+              setState(() {
+                _allGroupsFuture = api2.getCommunities(skip: 0, limit: 50);
+                _myGroupsFuture = api2.getCommunities(skip: 0, limit: 50, my: true);
+              });
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update membership: $e')),
+                );
+              }
+            }
+          },
         );
       },
     );
