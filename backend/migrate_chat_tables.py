@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "app"))
 
 from sqlalchemy import text
-from app.database.database import get_db_engine, AsyncSessionLocal
+from app.database.base import get_db_engine, AsyncSessionLocal
 from app.core.config import Settings
 
 async def run_migration():

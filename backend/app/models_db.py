@@ -920,9 +920,7 @@ class ChatMessage(Base):
     message_type = Column(String(20), nullable=False, default='text')  # 'text', 'image', 'video', 'audio', 'file', 'location', 'workout', 'system'
     content = Column(Text, nullable=True)
     media_urls = Column(JSONB, nullable=True)  # Array of media URLs
-    # 'metadata' is reserved by SQLAlchemy's Declarative API. Use a different Python attribute
-    # while keeping the actual DB column name as 'metadata'.
-    message_metadata = Column('metadata', JSONB, nullable=True)  # Additional data like location, workout details, etc.
+    message_metadata = Column(JSONB, nullable=True)  # Additional data like location, workout details, etc.
     reply_to_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id'), nullable=True)
     forwarded_from_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
