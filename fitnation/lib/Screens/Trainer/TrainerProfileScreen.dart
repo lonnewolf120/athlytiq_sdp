@@ -47,7 +47,7 @@ class _TrainerProfileScreenState extends State<TrainerProfileScreen> with Single
         'sessions': 850,
         'specializations': ['CrossFit', 'Weight Training', 'Cardio'],
         'bio': 'CrossFit Level 2 trainer specializing in functional fitness and high-intensity workouts. Helping clients build strength, endurance, and mental toughness.',
-        'profileImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+        'profileImage': 'https://static.vecteezy.com/system/resources/thumbnails/046/837/133/small/confident-middle-aged-bangladeshi-male-fitness-trainer-in-black-shirt-standing-in-modern-gym-with-treadmills-photo.jpg',
         'certifications': [
           'CrossFit Level 2 Trainer',
           'NSCA Certified Strength Coach',

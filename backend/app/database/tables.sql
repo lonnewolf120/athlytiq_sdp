@@ -299,6 +299,17 @@ CREATE TABLE posts (
 ALTER TABLE posts
 ADD COLUMN privacy privacy_type_enum NOT NULL DEFAULT 'public';
 
+-- Table: community_posts (Link posts to communities)
+CREATE TABLE IF NOT EXISTS community_posts (
+    community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (community_id, post_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_community_id ON community_posts(community_id);
+CREATE INDEX IF NOT EXISTS idx_community_posts_post_id ON community_posts(post_id);
+
 -- Table: post_comments
 CREATE TABLE post_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

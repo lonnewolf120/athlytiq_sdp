@@ -17,6 +17,7 @@ from app.api.v1.endpoints import exercise # Legacy exercise router
 from app.api.v1.endpoints import exercise_library # Enhanced exercise library router
 from app.api.v1.endpoints import chat # NEW: Import chat router
 from app.api.v1.endpoints import friends # NEW: Import friends router
+from app.api.v1.endpoints import social # NEW: Import social router
 from app.websocket.chat_websocket import websocket_endpoint # NEW: Import WebSocket endpoint
 from app.database.base import Base, engine # Imports Base and engine
 import app.models_db # This import ensures all models in models_db.py are registered with Base
@@ -63,6 +64,7 @@ app.include_router(shop.router, prefix="/api/v1/shop", tags=["Shop"]) # NEW: Inc
 app.include_router(challenges.router, prefix="/api/v1", tags=["Challenges"]) # Fixed: challenges router has its own /api/v1 paths
 app.include_router(chat.router, prefix="/api/v1", tags=["Chat"]) # NEW: Include chat router
 app.include_router(friends.router, prefix="/api/v1", tags=["Friends"]) # NEW: Include friends router
+app.include_router(social.router, prefix="/api/v1", tags=["social"]) # NEW: Include social router
 app.include_router(user.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(auth.router,prefix="/api/v1/auth",tags=["auth"])
 app.include_router(posts.router, prefix="/api/v1/posts", tags=["posts"]) # Include new posts router

@@ -1,10 +1,4 @@
-import 'package:fitnation/models/ChallengePostModel.dart';
-import 'package:fitnation/models/PlannedExercise.dart';
-import 'package:fitnation/models/Exercise.dart';
-import 'package:fitnation/models/PostComment.dart';
 import 'package:fitnation/models/PostModel.dart';
-import 'package:fitnation/models/PostReact.dart';
-import 'package:fitnation/models/WorkoutPostModel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/models/Community.dart';
@@ -15,9 +9,7 @@ import 'package:fitnation/models/CompletedWorkout.dart'; // Import CompletedWork
 
 import 'package:dio/dio.dart'; // Import Dio
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Import FlutterSecureStorage
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/api/API_Services.dart'; // Import your ApiService
-import 'package:fitnation/models/WorkoutPostModel.dart'; // Import Exercise model
 // Import other models as needed (User, CompletedWorkout, Community, etc.)
 import 'package:equatable/equatable.dart'; // Added Equatable
 
@@ -26,7 +18,6 @@ import 'package:fitnation/api/meal_api_service.dart'; // Import MealApiService
 import 'package:fitnation/services/nutrition_ai_service.dart'; // Import NutritionAIService
 import 'package:fitnation/services/food_database_service.dart'; // Import FoodDatabaseService
 
-import 'package:fitnation/api/API_Services.dart';
 import 'package:fitnation/services/database_helper.dart'; // Import DatabaseHelper
 import 'package:fitnation/services/connectivity_service.dart'; // Import ConnectivityService
 // Removed: import 'package:fitnation/providers/gemini_workout_provider.dart'; // Import geminiServiceProvider
@@ -826,15 +817,16 @@ final postsFeedProvider = FutureProvider<List<Post>>((ref) async {
   }
 });
 
-final createPostProvider = FutureProvider.family<void, Post>((ref, post) async {
+final createPostProvider = FutureProvider.family<Post, Post>((ref, post) async {
   debugPrint("=== createPostProvider called ===");
   debugPrint("Post data: ${post.toCreateJson()}");
 
   final apiService = ref.watch(apiServiceProvider);
   try {
     debugPrint("Calling apiService.createPost...");
-    await apiService.createPost(post);
-    debugPrint("Post created successfully!");
+    final created = await apiService.createPost(post);
+    debugPrint("Post created successfully with id: ${created.id}");
+    return created;
   } on NoInternetException catch (e) {
     debugPrint("No internet exception: ${e.message}");
     throw Exception(e.message);

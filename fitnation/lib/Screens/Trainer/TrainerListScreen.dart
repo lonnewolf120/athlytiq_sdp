@@ -50,7 +50,7 @@ class _TrainerListScreenState extends State<TrainerListScreen> {
       'reviews': 98,
       'experience': '6 years',
       'price': 2200,
-      'profileImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+      'profileImage': 'https://static.vecteezy.com/system/resources/thumbnails/046/837/133/small/confident-middle-aged-bangladeshi-male-fitness-trainer-in-black-shirt-standing-in-modern-gym-with-treadmills-photo.jpg',
       'specializations': ['CrossFit', 'Weight Training', 'Cardio'],
       'location': 'Chittagong, Bangladesh',
       'isOnline': false,

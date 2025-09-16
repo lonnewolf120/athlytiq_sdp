@@ -126,12 +126,23 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
 
       // Create the post using the provider
       debugPrint("About to call createPostProvider...");
-      await ref.read(createPostProvider(finalPost).future);
-      debugPrint("createPostProvider completed successfully!");
+  final createdPost = await ref.read(createPostProvider(finalPost).future);
+  debugPrint("createPostProvider completed successfully! New post id: ${createdPost.id}");
+
+      // If this screen was opened for a specific community, link the created post to that community
+      if (widget.communityId != null && widget.communityId!.isNotEmpty) {
+        try {
+          final api = ref.read(apiServiceProvider);
+          final ok = await api.addPostToCommunity(widget.communityId!, createdPost.id);
+          debugPrint('Associated post to community ${widget.communityId}: $ok');
+        } catch (e) {
+          debugPrint('Warning: failed to associate post to community: $e');
+        }
+      }
 
       print("Post submitted successfully!");
       if (mounted) {
-        Navigator.pop(context, true);
+        Navigator.pop(context, true); // signal caller to refresh
       }
     } catch (e) {
       print("Error creating post: $e");
