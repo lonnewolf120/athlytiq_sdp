@@ -36,8 +36,8 @@ async def get_friends_list(
 
 @router.get("/requests", response_model=List[Dict[str, Any]])
 async def get_friend_requests(
-    request_type: str = Query("received", regex="^(received|sent|all)$"),
-    status_filter: Optional[str] = Query(None, regex="^(pending|accepted|rejected|blocked)$"),
+    request_type: str = Query("received", pattern="^(received|sent|all)$"),
+    status_filter: Optional[str] = Query(None, pattern="^(pending|accepted|rejected|blocked)$"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),

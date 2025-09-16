@@ -9,7 +9,7 @@ import asyncio
 from app.database.base import get_db
 from app.dependencies import get_current_user_from_token
 from app.crud.chat_crud import chat_crud
-from app.schemas.chat import MessageType
+from app.schemas.chat import MessageType, WebSocketEventType
 
 logger = logging.getLogger(__name__)
 

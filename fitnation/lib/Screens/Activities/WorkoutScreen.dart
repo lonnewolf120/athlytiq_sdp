@@ -69,6 +69,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
         .read(activeWorkoutProvider.notifier)
         .generateCompletedWorkoutData(currentUserId);
 
+    debugPrint(
+      'WorkoutScreen: _handleSaveWorkout called for userId=$currentUserId, completedWorkoutData id=${completedWorkoutData?.id}',
+    );
+
     if (completedWorkoutData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -86,6 +90,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
         completedWorkoutData,
         synced: true,
       );
+      debugPrint(
+        'WorkoutScreen: Workout saved and synced for userId=$currentUserId, workoutId=${completedWorkoutData.id}',
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Workout saved and synced successfully!')),
       );
@@ -95,12 +102,18 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           completedWorkoutData,
           synced: false,
         );
+        debugPrint(
+          'WorkoutScreen: Workout saved locally for userId=$currentUserId, workoutId=${completedWorkoutData.id}, error=$e',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Workout saved locally. Will sync later. Error: $e'),
           ),
         );
       } catch (dbError) {
+        debugPrint(
+          'WorkoutScreen: Failed to save workout to API and local DB. userId=$currentUserId, error=$dbError',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

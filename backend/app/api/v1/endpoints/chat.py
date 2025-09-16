@@ -227,7 +227,7 @@ async def get_message_details(
 @router.put("/rooms/{room_id}/participants")
 async def update_room_participants(
     room_id: UUID = Path(...),
-    action: str = Query(..., regex="^(add|remove|promote|demote)$"),
+    action: str = Query(..., pattern="^(add|remove|promote|demote)$"),
     user_ids: List[UUID] = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

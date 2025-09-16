@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 from app.api.v1.endpoints import plans # Existing planned workout router
 from app.api.v1.endpoints import workouts # New completed workout router
+from app.api.v1.endpoints import workout_templates # New workout templates router
 from app.api.v1.endpoints import user
 from app.api.v1.endpoints import auth
 from app.api.v1.endpoints import posts # New posts router
@@ -55,6 +56,7 @@ app.add_middleware(
 
 app.include_router(plans.router, prefix="/api/v1/workouts/plans", tags=["Workout Plans"]) # Updated prefix and tag
 app.include_router(workouts.router, prefix="/api/v1/workouts", tags=["Workout Sessions"]) # Updated prefix and tag
+app.include_router(workout_templates.router, prefix="/api/v1/workout-templates", tags=["Workout Templates"]) # NEW: Workout templates router
 app.include_router(meal_plans.router, prefix="/api/v1/meal_plans", tags=["Meal Plans"]) # NEW: Include meal_plans router
 app.include_router(meals.router, prefix="/api/v1/meals", tags=["Meals"]) # NEW: Include meals router
 app.include_router(shop.router, prefix="/api/v1/shop", tags=["Shop"]) # NEW: Include shop router

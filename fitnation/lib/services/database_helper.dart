@@ -193,11 +193,17 @@ class DatabaseHelper {
       // Insert workout
       if (workout.userId.isEmpty) {
         // Ensure userId is available
+        debugPrint(
+          'DatabaseHelper: insertCompletedWorkout failed, userId is empty!',
+        );
         throw Exception("User ID is required to save workout locally.");
       }
 
+      debugPrint(
+        'DatabaseHelper: Inserting completed workout for userId=${workout.userId}, workoutId=${workout.id}',
+      );
+
       // Prepare map specifically for the completed_workouts table
-      // This ensures only columns defined in tableCompletedWorkouts are included.
       Map<String, dynamic> workoutDataForDb = {
         'id': workout.id,
         'user_id': workout.userId,
@@ -208,8 +214,6 @@ class DatabaseHelper {
         'end_time': workout.endTime.toIso8601String(),
         'duration_seconds': workout.durationSeconds,
         'intensity_score': workout.intensityScore,
-        // Assuming workout.createdAt is a DateTime object.
-        // The table schema defines created_at TEXT NOT NULL.
         'created_at': workout.createdAt.toIso8601String(),
         'synced': synced ? 1 : 0,
       };
@@ -223,8 +227,7 @@ class DatabaseHelper {
       // Insert exercises and their sets
       for (var exercise in workout.exercises) {
         Map<String, dynamic> exerciseMap = exercise.toMap();
-        exerciseMap['completed_workout_id'] =
-            workout.id; // Link to parent workout
+        exerciseMap['completed_workout_id'] = workout.id;
         await txn.insert(
           tableCompletedWorkoutExercises,
           exerciseMap,
@@ -233,8 +236,7 @@ class DatabaseHelper {
 
         for (var setEntry in exercise.sets) {
           Map<String, dynamic> setMap = setEntry.toMap();
-          setMap['completed_workout_exercise_id'] =
-              exercise.id; // Link to parent exercise
+          setMap['completed_workout_exercise_id'] = exercise.id;
           await txn.insert(
             tableCompletedWorkoutSets,
             setMap,
@@ -243,7 +245,10 @@ class DatabaseHelper {
         }
       }
     });
-    return workoutRowId; // Returns the row ID of the inserted workout, or -1 if transaction failed before insert.
+    debugPrint(
+      'DatabaseHelper: Finished inserting workoutId=${workout.id} for userId=${workout.userId}',
+    );
+    return workoutRowId;
   }
 
   Future<List<CompletedWorkout>> getCompletedWorkouts(String userId) async {
@@ -253,6 +258,10 @@ class DatabaseHelper {
       where: 'user_id = ?',
       whereArgs: [userId],
       orderBy: 'start_time DESC',
+    );
+
+    debugPrint(
+      'DatabaseHelper: getCompletedWorkouts for userId=$userId returned ${workoutMaps.length} workouts',
     );
 
     List<CompletedWorkout> workouts = [];
