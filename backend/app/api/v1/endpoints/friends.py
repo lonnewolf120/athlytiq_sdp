@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 
-from app.database.database import get_db
+from app.database.base import get_db
 from app.dependencies import get_current_user
 from app.models_db import User
 from app.schemas.chat import (

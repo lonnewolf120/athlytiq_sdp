@@ -6,10 +6,10 @@ import logging
 from uuid import UUID
 import asyncio
 
-from app.database.database import get_db
+from app.database.base import get_db
 from app.dependencies import get_current_user_from_token
 from app.crud.chat_crud import chat_crud
-from app.schemas.chat import MessageType, WebSocketMessageType
+from app.schemas.chat import MessageType
 
 logger = logging.getLogger(__name__)
 
