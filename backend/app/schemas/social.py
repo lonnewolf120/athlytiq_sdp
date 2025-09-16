@@ -38,17 +38,28 @@ class BuddyResponse(BaseModel):
 # Communities
 class CommunityCreate(BaseModel):
     name: str
-    type: Optional[str] = 'general'
     description: Optional[str] = None
-    challenge_id: Optional[UUID] = None
+    image_url: Optional[str] = None
+    is_private: Optional[bool] = False
 
 class CommunityPublic(CommunityCreate):
     id: UUID
-    creator_id: UUID
+    creator_user_id: UUID
     created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
+
+class CommunityListItem(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    creator_user_id: UUID
+    created_at: datetime
+    updated_at: datetime
+    member_count: int = 0
+    joined: bool = False
 
 # Community Messages
 class CommunityMessageCreate(BaseModel):

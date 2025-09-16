@@ -220,6 +220,30 @@ CREATE TABLE public.exercise_equipment (
   CONSTRAINT exercise_equipment_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercise_library(id),
   CONSTRAINT exercise_equipment_equipment_id_fkey FOREIGN KEY (equipment_id) REFERENCES public.equipment_types(id)
 );
+-- Alter Table: posts
+ALTER TABLE posts
+ADD COLUMN privacy privacy_type_enum NOT NULL DEFAULT 'public';
+
+-- Table: community_posts (Link posts to communities)
+CREATE TABLE IF NOT EXISTS community_posts (
+    community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (community_id, post_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_community_id ON community_posts(community_id);
+CREATE INDEX IF NOT EXISTS idx_community_posts_post_id ON community_posts(post_id);
+
+-- Table: post_comments
+CREATE TABLE post_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+
 CREATE TABLE public.exercise_library (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name character varying NOT NULL,

@@ -652,7 +652,7 @@ class _SessionBookingScreenState extends State<SessionBookingScreen> {
                 CircleAvatar(
                   radius: 30,
                   backgroundImage: NetworkImage(
-                    'https://static.vecteezy.com/system/resources/thumbnails/046/837/177/small_2x/confident-indonesian-female-fitness-trainer-in-gym-emphasizing-strength-and-wellness-perfect-for-health-and-fitness-promotions-photo.jpg',
+                    'https://static.vecteezy.com/system/resources/thumbnails/046/837/133/small/confident-middle-aged-bangladeshi-male-fitness-trainer-in-black-shirt-standing-in-modern-gym-with-treadmills-photo.jpg',
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -661,7 +661,7 @@ class _SessionBookingScreenState extends State<SessionBookingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Sarah Johnson',
+                        'Rahman Ahmed',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -880,10 +880,7 @@ class _SessionBookingScreenState extends State<SessionBookingScreen> {
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'You will receive a confirmation email shortly.',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
+         
           ],
         ),
         actions: [

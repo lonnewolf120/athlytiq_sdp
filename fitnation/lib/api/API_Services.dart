@@ -6,9 +6,11 @@ import 'package:fitnation/models/Workout.dart'; // Import Workout model
 import 'package:fitnation/models/CompletedWorkout.dart'; // Import CompletedWorkout model
 import 'package:fitnation/models/MealPlan.dart'; // Import MealPlan model
 import 'package:fitnation/models/PostModel.dart'; // Import Post model
+import 'package:fitnation/models/ProfileModel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'package:flutter/foundation.dart'; // Import for debugPrint
 import 'dart:io'; // Import for File class
+import 'package:fitnation/models/CommunityContentModel.dart' show Group;
 
 final String baseUrl = (dotenv.env['BASE_URL'] ??
         "http://152.42.158.91:8001/api/v1")
@@ -176,6 +178,194 @@ class ApiService {
     } on DioException catch (e) {
       throw _handleDioError(e, "Failed to fetch current user");
     }
+  }
+
+  // --- Community Endpoints ---
+  Future<List<Group>> getCommunities({int skip = 0, int limit = 50, bool my = false}) async {
+    try {
+      final response = await _dio.get(
+        '/social/communities',
+        queryParameters: {
+          'skip': skip,
+          'limit': limit,
+          if (my) 'my': true,
+        },
+      );
+
+      final List data = response.data as List;
+      // Map backend CommunityListItem -> UI Group model with sensible defaults
+      return data.map((e) {
+        final Map<String, dynamic> m = e as Map<String, dynamic>;
+        final String id = (m['id'] ?? '').toString();
+        final String name = (m['name'] ?? 'Community').toString();
+        final String desc = (m['description'] ?? '').toString();
+        final int memberCount = (m['member_count'] is int)
+            ? (m['member_count'] as int)
+            : int.tryParse(m['member_count']?.toString() ?? '0') ?? 0;
+        final bool joined = (m['joined'] == true);
+
+        // Provide placeholders for fields not in backend yet
+        final int postCount = 0;
+        final String image = 'https://avatar.iran.liara.run/username?username=' + Uri.encodeComponent(name);
+        final bool trending = false;
+        final List<String> categories = const [];
+
+        return Group(
+          id: id,
+          name: name,
+          description: desc,
+          memberCount: memberCount,
+          postCount: postCount,
+          image: image,
+          trending: trending,
+          categories: categories,
+          joined: joined,
+        );
+      }).toList();
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to load communities");
+    }
+  }
+
+  Future<Group> getCommunityById(String communityId, {Group? fallback}) async {
+    try {
+      final response = await _dio.get('/social/communities/$communityId');
+      final m = response.data as Map<String, dynamic>;
+
+      final String id = (m['id'] ?? '').toString();
+      final String name = (m['name'] ?? fallback?.name ?? 'Community').toString();
+      final String desc = (m['description'] ?? fallback?.description ?? '').toString();
+      // Prefer backend image_url, fallback to existing image if provided
+      final String image = (m['image_url']?.toString().isNotEmpty == true)
+          ? m['image_url'].toString()
+          : (fallback?.image ?? 'https://avatar.iran.liara.run/username?username=' + Uri.encodeComponent(name));
+
+      // Use fallback values for list-only fields not returned by details endpoint
+      final int memberCount = fallback?.memberCount ?? 0;
+      final bool joined = fallback?.joined ?? false;
+      final int postCount = fallback?.postCount ?? 0;
+      final bool trending = fallback?.trending ?? false;
+      final List<String> categories = fallback?.categories ?? const [];
+      final String? coverImage = fallback?.coverImage;
+      final DateTime? createdAt = m['created_at'] != null
+          ? DateTime.tryParse(m['created_at'].toString())
+          : (fallback?.createdAt);
+      final List<String>? rules = fallback?.rules;
+
+      return Group(
+        id: id,
+        name: name,
+        description: desc,
+        memberCount: memberCount,
+        postCount: postCount,
+        image: image,
+        trending: trending,
+        categories: categories,
+        joined: joined,
+        coverImage: coverImage,
+        createdAt: createdAt,
+        rules: rules,
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to load community details");
+    }
+  }
+
+  Future<bool> joinCommunity(String communityId) async {
+    try {
+      final response = await _dio.post('/social/communities/$communityId/join');
+      final data = response.data as Map<String, dynamic>;
+      return data['joined'] == true;
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to join community");
+    }
+  }
+
+  Future<bool> leaveCommunity(String communityId) async {
+    try {
+      final response = await _dio.delete('/social/communities/$communityId/join');
+      final data = response.data as Map<String, dynamic>;
+      return data['joined'] == false;
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to leave community");
+    }
+  }
+
+  Future<List<Post>> getCommunityPosts(String communityId, {int skip = 0, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/social/communities/$communityId/posts', queryParameters: {
+        'skip': skip,
+        'limit': limit,
+      });
+      final data = response.data as List;
+      return data.map((e) => _mapBackendPostToPost(e as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to load community posts");
+    }
+  }
+
+  Future<bool> addPostToCommunity(String communityId, String postId) async {
+    try {
+      final response = await _dio.post('/social/communities/$communityId/posts/$postId');
+      final m = response.data as Map<String, dynamic>;
+      return m['ok'] == true;
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to associate post to community");
+    }
+  }
+
+  // Helper: map minimal backend post row to Post model used by UI
+  Post _mapBackendPostToPost(Map<String, dynamic> m) {
+    // post_type likely comes as list of strings already
+    List<PostType> types = [];
+    final pt = m['post_type'];
+    if (pt is List) {
+      types = pt.map((x) => PostType.values.firstWhere(
+            (t) => t.name == (x?.toString() ?? ''),
+            orElse: () => PostType.text,
+          )).toList();
+    }
+
+    final author = User(
+      id: (m['user_id'] ?? '').toString(),
+      username: (m['username'] ?? '').toString(),
+      email: '',
+      role: UserRole.user,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      profile: Profile(
+        id: '',
+        userId: (m['user_id'] ?? '').toString(),
+        displayName: (m['username'] ?? '').toString(),
+        profilePictureUrl: m['profile_picture_url']?.toString(),
+        bio: null,
+        fitnessGoals: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    return Post(
+      id: (m['id'] ?? '').toString(),
+      userId: (m['user_id'] ?? '').toString(),
+      author: author,
+      content: (m['content'] ?? '').toString(),
+      mediaUrl: (m['media_url'] ?? '').toString(),
+      createdAt: m['created_at'] != null ? DateTime.tryParse(m['created_at'].toString()) ?? DateTime.now() : DateTime.now(),
+      updatedAt: m['updated_at'] != null ? DateTime.tryParse(m['updated_at'].toString()) ?? DateTime.now() : DateTime.now(),
+      comments: const [],
+      reacts: const [],
+      commentCount: _asInt(m['comment_count']),
+      reactCount: _asInt(m['react_count']),
+      workoutData: null,
+      challengeData: null,
+      postType: types.isNotEmpty ? types : const [PostType.text],
+    );
+  }
+
+  int _asInt(dynamic v) {
+    if (v is int) return v;
+    return int.tryParse(v?.toString() ?? '0') ?? 0;
   }
 
   Future<User> updateUserProfile(
