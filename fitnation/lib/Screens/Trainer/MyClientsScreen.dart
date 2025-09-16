@@ -7,17 +7,14 @@ class MyClientsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Map<String, String>> clients = [
       {
-        'name': 'Alice Johnson',
-        'goal': 'Weight Loss',
-      },
-      {
-        'name': 'Michael Chen',
+        'name': 'Akram Emtiaz',
         'goal': 'Muscle Gain',
       },
       {
-        'name': 'Sara Ahmed',
-        'goal': 'General Fitness',
+        'name': 'Sadia Islam',
+        'goal': 'Weight Loss',
       },
+      
     ];
 
     return Scaffold(
