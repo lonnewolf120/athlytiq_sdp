@@ -123,6 +123,8 @@ flutter:
   assets:
     - assets/logos/
     - .env # Added for flutter_dotenv
+    - assets/data/
+    - assets/logos/gym_report.png
   
   fonts:
     - family: Quicksand

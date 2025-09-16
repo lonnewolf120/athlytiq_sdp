@@ -94,7 +94,7 @@ CREATE TABLE story_content_items (
 );
 
 -- Table: exercises (Master list of exercises, potentially from external API)
-CREATE TABLE exercises (
+CREATE TABLE exercises IF NOT EXISTS (
     exercise_id VARCHAR(255) PRIMARY KEY, -- Use external ID as PK
     name VARCHAR(255) NOT NULL,
     gif_url TEXT NOT NULL,
