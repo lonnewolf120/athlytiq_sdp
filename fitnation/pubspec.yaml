@@ -82,6 +82,7 @@ dev_dependencies:
   sqflite_common_ffi: ^2.3.5 # Added for FFI initialization
   # Replaced syncfunction_flutter_charts with Syncfusion charts
   connectivity_plus: ^6.1.4
+  flutter_local_notifications: ^17.2.2 # Added for meal notifications
   
   cloudinary_flutter: ^1.3.0
   cloudinary_url_gen: ^1.7.0

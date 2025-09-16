@@ -7,17 +7,23 @@ import 'package:fitnation/providers/auth_provider.dart'; // Import authProvider
 import 'package:fitnation/providers/data_providers.dart'; // Import apiServiceProvider
 import 'package:flutter/foundation.dart'; // Import for debugPrint
 import 'package:fitnation/services/connectivity_service.dart'; // Import ConnectivityService
+import 'package:fitnation/services/database_helper.dart'; // Import DatabaseHelper
 
 // StateNotifier for managing generated meal plans
 class GeminiMealPlanNotifier extends StateNotifier<List<MealPlan>> {
   final GeminiService _geminiService;
   final ApiService _apiService; // Add ApiService
+  final DatabaseHelper _databaseHelper; // Add DatabaseHelper
   final Uuid _uuid;
   final Ref _ref; // Add Ref to access other providers
 
-  GeminiMealPlanNotifier(this._geminiService, this._apiService, this._ref)
-      : _uuid = const Uuid(),
-        super([]);
+  GeminiMealPlanNotifier(
+    this._geminiService,
+    this._apiService,
+    this._databaseHelper,
+    this._ref,
+  ) : _uuid = const Uuid(),
+      super([]);
 
   Future<void> _loadMealPlans() async {
     debugPrint('GeminiMealPlanNotifier: Loading meal plans.');
@@ -26,20 +32,57 @@ class GeminiMealPlanNotifier extends StateNotifier<List<MealPlan>> {
       String? currentUserId;
       if (authState is Authenticated) {
         currentUserId = authState.user.id;
-        debugPrint('GeminiMealPlanNotifier: User authenticated with ID: $currentUserId');
-        final loadedPlans = await _apiService.getMealPlans(
-          skip: 0, // Adjust as needed for pagination
-          limit: 100, // Adjust as needed
+        debugPrint(
+          'GeminiMealPlanNotifier: User authenticated with ID: $currentUserId',
         );
-        state = loadedPlans;
-        debugPrint('GeminiMealPlanNotifier: Successfully loaded ${loadedPlans.length} meal plans.');
+
+        // Try to load from local database first
+        final localPlans = await _databaseHelper.getMealPlans(currentUserId);
+        final List<MealPlan> mealPlans =
+            localPlans.map((planData) => MealPlan.fromJson(planData)).toList();
+        state = mealPlans;
+        debugPrint(
+          'GeminiMealPlanNotifier: Successfully loaded ${mealPlans.length} meal plans from local database.',
+        );
+
+        // Optionally try to sync with backend
+        try {
+          final loadedPlans = await _apiService.getMealPlans(
+            skip: 0, // Adjust as needed for pagination
+            limit: 100, // Adjust as needed
+          );
+          // You could merge or update local database here
+          debugPrint(
+            'GeminiMealPlanNotifier: Successfully synced ${loadedPlans.length} meal plans from backend.',
+          );
+        } catch (e) {
+          debugPrint(
+            'GeminiMealPlanNotifier: Failed to sync with backend, using local data: $e',
+          );
+        }
       } else {
-        debugPrint('GeminiMealPlanNotifier: User not authenticated. Cannot load meal plans.');
+        debugPrint(
+          'GeminiMealPlanNotifier: User not authenticated. Cannot load meal plans.',
+        );
         state = []; // Clear plans if not authenticated
       }
     } on NoInternetException catch (e) {
-      debugPrint('GeminiMealPlanNotifier: No internet connection while loading meal plans: ${e.message}');
-      state = []; // Clear plans on no internet
+      debugPrint(
+        'GeminiMealPlanNotifier: No internet connection while loading meal plans: ${e.message}',
+      );
+      // Try to load from local database as fallback
+      final authState = _ref.read(authProvider);
+      if (authState is Authenticated) {
+        final localPlans = await _databaseHelper.getMealPlans(
+          authState.user.id,
+        );
+        final List<MealPlan> mealPlans =
+            localPlans.map((planData) => MealPlan.fromJson(planData)).toList();
+        state = mealPlans;
+        debugPrint(
+          'GeminiMealPlanNotifier: Loaded ${mealPlans.length} meal plans from local database (offline).',
+        );
+      }
       rethrow; // Re-throw to be caught by UI if needed
     } catch (e) {
       debugPrint('GeminiMealPlanNotifier: Error loading meal plans: $e');
@@ -49,32 +92,61 @@ class GeminiMealPlanNotifier extends StateNotifier<List<MealPlan>> {
   }
 
   Future<void> generateMealPlan(Map<String, dynamic> userInfo) async {
-    debugPrint('GeminiMealPlanNotifier: generateMealPlan called with userInfo: $userInfo');
+    debugPrint(
+      'GeminiMealPlanNotifier: generateMealPlan called with userInfo: $userInfo',
+    );
     try {
       final authState = _ref.read(authProvider);
       String? currentUserId;
       if (authState is Authenticated) {
         currentUserId = authState.user.id;
-        debugPrint('GeminiMealPlanNotifier: User authenticated with ID: $currentUserId');
+        debugPrint(
+          'GeminiMealPlanNotifier: User authenticated with ID: $currentUserId',
+        );
       } else {
-        debugPrint('GeminiMealPlanNotifier: User not authenticated. Throwing exception.');
+        debugPrint(
+          'GeminiMealPlanNotifier: User not authenticated. Throwing exception.',
+        );
         throw Exception('User not authenticated. Cannot generate meal plan.');
       }
 
       // Add a unique ID to the user info for the meal plan
       userInfo['meal_plan_id'] = _uuid.v4();
-      debugPrint('GeminiMealPlanNotifier: Calling GeminiService to generate meal plan...');
-      final MealPlan newMealPlan = await _geminiService.generateMealPlan(userInfo);
-      debugPrint('GeminiMealPlanNotifier: Meal plan generated by GeminiService: ${newMealPlan.name}');
+      debugPrint(
+        'GeminiMealPlanNotifier: Calling GeminiService to generate meal plan...',
+      );
+      final MealPlan newMealPlan = await _geminiService.generateMealPlan(
+        userInfo,
+      );
+      debugPrint(
+        'GeminiMealPlanNotifier: Meal plan generated by GeminiService: ${newMealPlan.name}',
+      );
 
-      // Save to backend
-      debugPrint('GeminiMealPlanNotifier: Saving meal plan to backend...');
-      final savedMealPlan = await _apiService.saveMealPlan(newMealPlan);
-      debugPrint('GeminiMealPlanNotifier: Meal plan saved to backend.');
-      state = [...state, savedMealPlan]; // Add the new meal plan to the list
+      // Save to local database first
+      debugPrint(
+        'GeminiMealPlanNotifier: Saving meal plan to local database...',
+      );
+      await _databaseHelper.insertMealPlan(currentUserId, newMealPlan.toJson());
+      debugPrint('GeminiMealPlanNotifier: Meal plan saved to local database.');
+
+      // Try to save to backend as well
+      try {
+        debugPrint('GeminiMealPlanNotifier: Saving meal plan to backend...');
+        final savedMealPlan = await _apiService.saveMealPlan(newMealPlan);
+        debugPrint('GeminiMealPlanNotifier: Meal plan saved to backend.');
+        state = [...state, savedMealPlan]; // Add the new meal plan to the list
+      } catch (e) {
+        debugPrint(
+          'GeminiMealPlanNotifier: Failed to save to backend, using local only: $e',
+        );
+        state = [...state, newMealPlan]; // Add the local meal plan to the list
+      }
+
       debugPrint('GeminiMealPlanNotifier: State updated with new meal plan.');
     } on NoInternetException catch (e) {
-      debugPrint('GeminiMealPlanNotifier: No internet connection while generating meal plan: ${e.message}');
+      debugPrint(
+        'GeminiMealPlanNotifier: No internet connection while generating meal plan: ${e.message}',
+      );
       rethrow; // Re-throw to be caught by UI if needed
     } catch (e) {
       // Handle error, e.g., log it or show a user-friendly message
@@ -89,21 +161,23 @@ class GeminiMealPlanNotifier extends StateNotifier<List<MealPlan>> {
   }
 }
 
-final geminiMealPlanProvider = StateNotifierProvider<GeminiMealPlanNotifier, List<MealPlan>>((ref) {
-  final notifier = GeminiMealPlanNotifier(
-    GeminiService(),
-    ref.watch(apiServiceProvider), // Pass ApiService
-    ref, // Pass Ref
-  );
+final geminiMealPlanProvider =
+    StateNotifierProvider<GeminiMealPlanNotifier, List<MealPlan>>((ref) {
+      final notifier = GeminiMealPlanNotifier(
+        GeminiService(),
+        ref.watch(apiServiceProvider), // Pass ApiService
+        DatabaseHelper(), // Pass DatabaseHelper
+        ref, // Pass Ref
+      );
 
-  // Listen to authProvider to load meal plans once authenticated
-  ref.listen<AuthState>(authProvider, (_, authState) {
-    if (authState is Authenticated) {
-      notifier._loadMealPlans();
-    } else {
-      notifier.clearPlans(); // Clear plans if user logs out
-    }
-  });
+      // Listen to authProvider to load meal plans once authenticated
+      ref.listen<AuthState>(authProvider, (_, authState) {
+        if (authState is Authenticated) {
+          notifier._loadMealPlans();
+        } else {
+          notifier.clearPlans(); // Clear plans if user logs out
+        }
+      });
 
-  return notifier;
-});
+      return notifier;
+    });

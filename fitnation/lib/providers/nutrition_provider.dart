@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fitnation/api/API_Services.dart'; // Import ApiService
 import 'package:fitnation/api/meal_api_service.dart'; // Import MealApiService
 import 'package:fitnation/providers/data_providers.dart'; // For apiServiceProvider and mealApiServiceProvider
@@ -21,12 +20,16 @@ class NutritionLoaded extends NutritionState {
   healthLogs; // Can be List<HealthLog> once model is defined
   final List<dynamic>?
   dietRecommendations; // Can be List<DietRecommendation> once model is defined
+  final Map<String, double>? nutritionTargets; // Add nutrition targets
+  final Map<String, dynamic>? todayProgress; // Today's nutrition progress
 
   NutritionLoaded({
     this.meals = const [],
     this.foodLogs = const [], // Initialize as empty list
     this.healthLogs,
     this.dietRecommendations,
+    this.nutritionTargets,
+    this.todayProgress,
   });
 }
 
@@ -43,9 +46,8 @@ class MealSavedSuccess extends NutritionState {}
 class NutritionNotifier extends StateNotifier<NutritionState> {
   final ApiService _apiService; // Added ApiService back
   final MealApiService _mealApiService;
-  final FlutterSecureStorage _secureStorage; // Might be needed for auth tokens
 
-  NutritionNotifier(this._apiService, this._mealApiService, this._secureStorage)
+  NutritionNotifier(this._apiService, this._mealApiService)
     : super(NutritionInitial());
 
   Future<void> fetchAllNutritionData() async {
@@ -66,6 +68,13 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
         foodLogs: fetchedFoodLogs,
         healthLogs: [], // Placeholder
         dietRecommendations: [], // Placeholder
+        nutritionTargets: {
+          'target_calories': 2200.0,
+          'target_protein': 130.0,
+          'target_carbs': 275.0,
+          'target_fat': 80.0,
+        },
+        todayProgress: _calculateTodayProgress(fetchedFoodLogs),
       );
     } on NoInternetException catch (e) {
       debugPrint("Nutrition data fetch failed due to no internet: $e");
@@ -112,6 +121,70 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
 
   // You can add more methods for updating, deleting, and specific queries
   // e.g., getFoodLogsForDate(DateTime date), getDailyMacrosSummary()
+
+  Map<String, dynamic> _calculateTodayProgress(List<dynamic> foodLogs) {
+    final today = DateTime.now();
+    final todayLogs =
+        foodLogs.where((log) {
+          // Assuming log has a 'date' field - adjust based on actual structure
+          if (log is Map<String, dynamic> && log.containsKey('date')) {
+            final logDate = DateTime.tryParse(log['date'].toString());
+            return logDate != null &&
+                logDate.year == today.year &&
+                logDate.month == today.month &&
+                logDate.day == today.day;
+          }
+          return false;
+        }).toList();
+
+    double totalCalories = 0;
+    double totalProtein = 0;
+    double totalCarbs = 0;
+    double totalFat = 0;
+
+    for (final log in todayLogs) {
+      if (log is Map<String, dynamic>) {
+        totalCalories += (log['calories'] as num?)?.toDouble() ?? 0;
+        totalProtein += (log['protein'] as num?)?.toDouble() ?? 0;
+        totalCarbs += (log['carbs'] as num?)?.toDouble() ?? 0;
+        totalFat += (log['fat'] as num?)?.toDouble() ?? 0;
+      }
+    }
+
+    return {
+      'total_calories': totalCalories,
+      'total_protein': totalProtein,
+      'total_carbs': totalCarbs,
+      'total_fat': totalFat,
+      'entries_count': todayLogs.length,
+    };
+  }
+
+  Future<void> saveNutritionTargets(Map<String, double> targets) async {
+    try {
+      // TODO: Save to database when DatabaseHelper is updated
+      // await DatabaseHelper().saveNutritionTargets(userId, targets);
+
+      // For now, update state directly
+      if (state is NutritionLoaded) {
+        final currentState = state as NutritionLoaded;
+        state = NutritionLoaded(
+          meals: currentState.meals,
+          foodLogs: currentState.foodLogs,
+          healthLogs: currentState.healthLogs,
+          dietRecommendations: currentState.dietRecommendations,
+          nutritionTargets: targets,
+          todayProgress: currentState.todayProgress,
+        );
+      }
+      debugPrint('Nutrition targets saved: $targets');
+    } catch (e) {
+      debugPrint('Error saving nutrition targets: $e');
+      state = NutritionError(
+        "Failed to save nutrition targets: ${e.toString()}",
+      );
+    }
+  }
 }
 
 // --- Nutrition Provider ---
@@ -121,18 +194,14 @@ final nutritionProvider =
       final mealApiService = ref.watch(
         mealApiServiceProvider,
       ); // Get MealApiService
-      return NutritionNotifier(
-        apiService,
-        mealApiService,
-        const FlutterSecureStorage(),
-      );
+      return NutritionNotifier(apiService, mealApiService);
     });
 
 // Optional: Providers for specific data types if needed for direct consumption
 final foodLogsListProvider = Provider<List<dynamic>>((ref) {
   // Changed back to List<dynamic>
   final nutritionState = ref.watch(nutritionProvider);
-  if (nutritionState is NutritionLoaded && nutritionState.foodLogs != null) {
+  if (nutritionState is NutritionLoaded) {
     return nutritionState.foodLogs; // Return foodLogs
   }
   return [];
@@ -153,4 +222,22 @@ final dietRecommendationsListProvider = Provider<List<dynamic>>((ref) {
     return nutritionState.dietRecommendations!;
   }
   return [];
+});
+
+// Nutrition targets provider
+final nutritionTargetsProvider = Provider<Map<String, double>?>((ref) {
+  final nutritionState = ref.watch(nutritionProvider);
+  if (nutritionState is NutritionLoaded) {
+    return nutritionState.nutritionTargets;
+  }
+  return null;
+});
+
+// Today's progress provider
+final todayProgressProvider = Provider<Map<String, dynamic>?>((ref) {
+  final nutritionState = ref.watch(nutritionProvider);
+  if (nutritionState is NutritionLoaded) {
+    return nutritionState.todayProgress;
+  }
+  return null;
 });
