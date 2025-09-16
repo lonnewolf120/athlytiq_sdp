@@ -4,7 +4,7 @@ This document outlines the plan to implement features similar to Cal AI directly
 
 ## Revised Overall Plan:
 
-1.  **Project Setup and Dependencies:** Add necessary Flutter packages for image handling (`image_picker`), barcode scanning (`barcode_scan2`), data visualization (`fl_chart`), and potentially packages for interacting with AI/ML models or external food database APIs.
+1.  **Project Setup and Dependencies:** Add necessary Flutter packages for image handling (`image_picker`), barcode scanning (`barcode_scan2`), data visualization (`syncfunction_flutter_charts`), and potentially packages for interacting with AI/ML models or external food database APIs.
 2.  **Navigation Update:** Modify the existing bottom navigation bar to include a new "Nutrition" tab.
 3.  **Develop Nutrition Module UI:** Create new screens and widgets within a dedicated `nutrition/` directory under `lib/Screens/` to handle the various nutrition features (photo upload, manual entry, barcode scanning, progress tracking, personalized plans).
 4.  **Define Data Models:** Create new data models in `lib/models/` for representing meals, individual food items with detailed nutritional information, nutrition plans, and user progress data related to nutrition.
@@ -15,7 +15,7 @@ This document outlines the plan to implement features similar to Cal AI directly
     *   Develop the functionality for manual meal entry and editing of AI-generated or barcode-scanned data.
     *   Implement the logic for tracking daily calorie and macro intake against personalized goals.
     *   Integrate with fitness tracking platforms (Apple Health, Google Fit, etc.) using relevant packages (`health`) to sync workout data and calculate net calories.
-    *   Develop the nutrition progress tracking dashboard using `fl_chart` for visualizations of calorie and macro trends.
+    *   Develop the nutrition progress tracking dashboard using `syncfunction_flutter_charts` for visualizations of calorie and macro trends.
 7.  **Backend Development:** Develop or extend the backend services in the `server/` directory to handle storing, retrieving, and processing all nutrition-related data. This includes user meal logs, personalized plans, food item data (potentially cached from external APIs), and progress metrics.
 8.  **Extend Community and Trainer Features:** Modify existing features to allow sharing of meal data in the community feed and enable trainers to view and manage client nutrition plans, interacting with the new backend nutrition services.
 9.  **Address Privacy and Security:** Ensure all handling of sensitive nutrition data adheres to privacy policies and security best practices, including secure storage, transmission, and user consent for accessing health data.
@@ -56,7 +56,7 @@ This document outlines the plan to implement features similar to Cal AI directly
 
 *   Create a dedicated section or screen for nutrition progress tracking.
 *   Fetch historical meal data.
-*   Use a charting library (`fl_chart`) to visualize calorie and macro trends over time.
+*   Use a charting library (`syncfunction_flutter_charts`) to visualize calorie and macro trends over time.
 *   Display weekly/monthly summaries.
 
 ### Fitness Tracker Integration:

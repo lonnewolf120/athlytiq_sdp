@@ -6,7 +6,7 @@ Each task is broken down by the area of implementation: Frontend (FE), Backend (
 
 ## Overall Plan Tasks:
 
-- [x] **Project Setup and Dependencies:** Add necessary Flutter packages for image handling (`image_picker`), barcode scanning (`barcode_scan2`), data visualization (`fl_chart`), and potentially packages for interacting with AI/ML models or external food database APIs.
+- [x] **Project Setup and Dependencies:** Add necessary Flutter packages for image handling (`image_picker`), barcode scanning (`barcode_scan2`), data visualization (`syncfunction_flutter_charts`), and potentially packages for interacting with AI/ML models or external food database APIs.
     - [x] FE
     - [ ] BE
     - [ ] DB
@@ -149,7 +149,7 @@ Each task is broken down by the area of implementation: Frontend (FE), Backend (
     - [x] FE
     - [ ] BE
     - [ ] DB
-- [x] Use a charting library (`fl_chart`) to visualize calorie and macro trends over time.
+- [x] Use a charting library (`syncfunction_flutter_charts`) to visualize calorie and macro trends over time.
     - [x] FE
     - [ ] BE
     - [ ] DB
