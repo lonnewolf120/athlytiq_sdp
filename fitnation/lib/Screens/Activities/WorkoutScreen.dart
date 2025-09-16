@@ -19,6 +19,9 @@ import 'package:fitnation/Screens/Trainer/TrainerRegistrationScreen.dart';
 import 'package:fitnation/Screens/Trainer/TrainerApplicationStatusScreen.dart';
 import 'package:fitnation/Screens/Trainer/TrainerListScreen.dart';
 import 'package:fitnation/Screens/Trainer/MySessionsScreen.dart';
+import 'package:fitnation/models/User.dart' show UserRole;
+import 'package:fitnation/Screens/Trainer/TrainerConsultationTab.dart';
+import 'package:fitnation/Screens/Trainer/MyClientsScreen.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({super.key});
@@ -1158,11 +1161,97 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
     BuildContext context,
     ColorScheme colorScheme,
   ) {
+    // Role-based Trainer tab content
+    final authState = ref.watch(authProvider);
+    final bool isTrainer =
+        authState is Authenticated && authState.user.role == UserRole.trainer;
+
+    if (isTrainer) {
+      // Trainer-specific dashboard cards
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildTrainerFeatureCard(
+                    context,
+                    colorScheme,
+                    Icons.group_rounded,
+                    "My Clients",
+                    "View and manage your clients",
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyClientsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTrainerFeatureCard(
+                    context,
+                    colorScheme,
+                    Icons.schedule_rounded,
+                    "My Sessions",
+                    "View and manage your booked training sessions",
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MySessionsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTrainerFeatureCard(
+                    context,
+                    colorScheme,
+                    Icons.chat_bubble_rounded,
+                    "Client Messages",
+                    "Chat with your clients",
+                    () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Client messaging coming soon'),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTrainerFeatureCard(
+                    context,
+                    colorScheme,
+                    Icons.support_agent_rounded,
+                    "Consultation",
+                    "Respond to consultation requests",
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TrainerConsultationTab(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // For regular users (and other roles), show trainer discovery features
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // Personal Trainer Card
+          /*
+          // Personal Trainer Card (commented out)
           Card(
             elevation: 0,
             color: colorScheme.primaryContainer,
@@ -1222,11 +1311,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
             ),
           ),
           const SizedBox(height: 24),
+          */
 
           // Trainer Features
           Expanded(
             child: ListView(
               children: [
+                /*
+                // Exercise Form Analysis (commented out)
                 _buildTrainerFeatureCard(
                   context,
                   colorScheme,
@@ -1238,6 +1330,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                   },
                 ),
                 const SizedBox(height: 12),
+                */
                 _buildTrainerFeatureCard(
                   context,
                   colorScheme,

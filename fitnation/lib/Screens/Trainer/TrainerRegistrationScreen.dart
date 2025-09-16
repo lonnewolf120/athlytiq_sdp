@@ -161,12 +161,31 @@ class _TrainerRegistrationScreenState extends State<TrainerRegistrationScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStepLabel('Personal Info', 0),
-                _buildStepLabel('Experience', 1),
-                _buildStepLabel('Certification', 2),
-                _buildStepLabel('Review', 3),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildStepLabel('Personal Info', 0),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildStepLabel('Experience', 1),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildStepLabel('Certification', 2),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildStepLabel('Review', 3),
+                  ),
+                ),
               ],
             ),
           ),

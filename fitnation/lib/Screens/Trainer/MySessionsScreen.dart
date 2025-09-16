@@ -17,7 +17,7 @@ class _MySessionsScreenState extends State<MySessionsScreen> with SingleTickerPr
       'id': 'session_001',
       'trainerId': 'trainer_001',
       'trainerName': 'Sarah Johnson',
-      'trainerImage': 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400',
+      'trainerImage': 'https://static.vecteezy.com/system/resources/thumbnails/046/837/177/small_2x/confident-indonesian-female-fitness-trainer-in-gym-emphasizing-strength-and-wellness-perfect-for-health-and-fitness-promotions-photo.jpg',
       'sessionType': 'Personal Training',
       'date': 'Aug 15, 2025',
       'time': '10:00 AM',

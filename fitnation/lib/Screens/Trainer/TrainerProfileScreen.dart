@@ -29,7 +29,7 @@ class _TrainerProfileScreenState extends State<TrainerProfileScreen> with Single
         'sessions': 1200,
         'specializations': ['Weight Training', 'Cardio', 'Yoga', 'Nutrition'],
         'bio': 'Passionate fitness trainer with 8+ years of experience helping clients achieve their fitness goals. Specialized in strength training, cardio workouts, and yoga practices.',
-        'profileImage': 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400',
+        'profileImage': 'https://static.vecteezy.com/system/resources/thumbnails/046/837/177/small_2x/confident-indonesian-female-fitness-trainer-in-gym-emphasizing-strength-and-wellness-perfect-for-health-and-fitness-promotions-photo.jpg',
         'certifications': [
           'NASM Certified Personal Trainer',
           'Yoga Alliance RYT-200',
