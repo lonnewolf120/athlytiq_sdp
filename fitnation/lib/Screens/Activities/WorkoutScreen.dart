@@ -22,6 +22,7 @@ import 'package:fitnation/Screens/Trainer/MySessionsScreen.dart';
 import 'package:fitnation/models/User.dart' show UserRole;
 import 'package:fitnation/Screens/Trainer/TrainerConsultationTab.dart';
 import 'package:fitnation/Screens/Trainer/MyClientsScreen.dart';
+import 'package:fitnation/services/workout_notification_service.dart'; // Import notification service
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({super.key});

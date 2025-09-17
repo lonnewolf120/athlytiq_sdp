@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/theme_provider.dart';
 // import 'package:introduction_screen/introduction_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
+import 'package:awesome_notifications/awesome_notifications.dart'; // Import awesome_notifications
 
 import 'package:fitnation/Screens/Auth/Login.dart';
 import 'package:fitnation/Screens/Auth/OTP_Screen.dart';
@@ -23,6 +24,7 @@ import 'package:fitnation/providers/auth_provider.dart'; // Added import for aut
 // import 'package:cloudinary_flutter/image/cld_image.dart';
 import 'package:cloudinary_flutter/cloudinary_object.dart';
 import 'package:fitnation/widgets/SidebarDrawer.dart'; // Import the sidebar drawer
+import 'package:fitnation/services/workout_notification_service.dart'; // Import notification service
 // Controllers for the AnimatedNotchBottomBar
 // final NotchBottomBarController _notchController = NotchBottomBarController();
 // final PageController _pageController = PageController();
@@ -32,6 +34,38 @@ late CloudinaryObject cloudinary;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env"); // Load the .env file
+
+  // Initialize Awesome Notifications
+  await AwesomeNotifications().initialize(
+    null, // Use default app icon
+    [
+      NotificationChannel(
+        channelKey: 'workout_reminders',
+        channelName: 'Workout Reminders',
+        channelDescription:
+            'Notifications for upcoming workouts and training sessions',
+        defaultColor: const Color(0xFF9D50DD),
+        ledColor: Colors.white,
+        importance: NotificationImportance.High,
+        channelShowBadge: true,
+        enableVibration: true,
+        enableLights: true,
+      ),
+      NotificationChannel(
+        channelKey: 'workout_motivation',
+        channelName: 'Workout Motivation',
+        channelDescription:
+            'Motivational messages to encourage workout consistency',
+        defaultColor: const Color(0xFF9D50DD),
+        ledColor: Colors.white,
+        importance: NotificationImportance.Default,
+        channelShowBadge: false,
+        enableVibration: false,
+        enableLights: false,
+      ),
+    ],
+  );
+
   // Initialize FFI
   // sqfliteFfiInit();
   // // Change the default factory for Android/iOS/Linux/Windows.
@@ -61,6 +95,18 @@ class MyApp extends ConsumerStatefulWidget {
 class _MyAppState extends ConsumerState<MyApp> {
   final PageController _pageController = PageController();
   final NotchBottomBarController _notchController = NotchBottomBarController();
+  final WorkoutNotificationService _notificationService =
+      WorkoutNotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initializeNotifications();
+  }
 
   @override
   void dispose() {

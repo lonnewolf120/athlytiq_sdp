@@ -8,31 +8,158 @@ import 'package:fitnation/providers/active_workout_provider.dart'; // Correct im
 import 'package:fitnation/core/themes/text_styles.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // For icon URL
 import 'package:fitnation/widgets/Activities/WorkoutDetailExerciseItem.dart';
+import 'package:fitnation/services/workout_notification_service.dart'; // Import notification service
 import 'package:flutter/material.dart';
 import 'package:fitnation/Screens/Activities/MealPlanGeneratorScreen.dart'; // Import MealPlanGeneratorScreen
 
-class WorkoutDetailScreen extends StatelessWidget {
+class WorkoutDetailScreen extends StatefulWidget {
   final Workout workoutPlan; // Now accepts the full Workout model
 
   const WorkoutDetailScreen({
     super.key,
     required this.workoutPlan,
-    required Workout workoutDetail,
+    required Workout workoutDetail, // Added for backward compatibility
   });
 
-  // Helper function to parse planned sets from string like "4 Sets x 8 reps"
-  // This helper is no longer strictly needed if PlannedExercise stores sets/reps as ints,
-  // but keep it if you need to parse from a string representation elsewhere.
-  int _parsePlannedSets(String setsReps) {
-    try {
-      final parts = setsReps.split(' Sets x ');
-      if (parts.isNotEmpty) {
-        return int.tryParse(parts[0]) ?? 0;
-      }
-    } catch (e) {
-      print('Error parsing sets from string: $setsReps - $e');
+  @override
+  State<WorkoutDetailScreen> createState() => _WorkoutDetailScreenState();
+}
+
+class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
+  final WorkoutNotificationService _notificationService =
+      WorkoutNotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initializeNotifications();
+  }
+
+  /// Show dialog to schedule workout with date/time picker
+  Future<void> _showScheduleWorkoutDialog(BuildContext context) async {
+    DateTime? selectedDate;
+    TimeOfDay? selectedTime;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Schedule Workout'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Schedule "${widget.workoutPlan.name}" for:'),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: Text(
+                      selectedDate != null
+                          ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                          : 'Select Date',
+                    ),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(
+                          const Duration(days: 1),
+                        ),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (date != null) {
+                        setState(() {
+                          selectedDate = date;
+                        });
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.access_time),
+                    title: Text(
+                      selectedTime != null
+                          ? '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}'
+                          : 'Select Time',
+                    ),
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (time != null) {
+                        setState(() {
+                          selectedTime = time;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed:
+                      selectedDate != null && selectedTime != null
+                          ? () => Navigator.of(dialogContext).pop(true)
+                          : null,
+                  child: const Text('Schedule'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true && selectedDate != null && selectedTime != null) {
+      await _scheduleWorkout(selectedDate!, selectedTime!);
     }
-    return 0; // Default to 0 sets if parsing fails
+  }
+
+  /// Schedule the workout notification
+  Future<void> _scheduleWorkout(DateTime date, TimeOfDay time) async {
+    final scheduledDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+
+    final success = await _notificationService.scheduleMultipleReminders(
+      workoutId: widget.workoutPlan.id,
+      workoutName: widget.workoutPlan.name,
+      scheduledTime: scheduledDateTime,
+      workoutType: widget.workoutPlan.type,
+    );
+
+    if (!mounted) return;
+
+    if (success.any((s) => s)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Workout "${widget.workoutPlan.name}" scheduled for ${scheduledDateTime.day}/${scheduledDateTime.month} at ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to schedule workout notifications'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -55,7 +182,7 @@ class WorkoutDetailScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
-              workoutPlan.name.toUpperCase(),
+              widget.workoutPlan.name.toUpperCase(),
               style: textTheme.titleLarge,
             ),
             centerTitle: true,
@@ -67,11 +194,13 @@ class WorkoutDetailScreen extends StatelessWidget {
                   radius: 18, // Smaller radius for AppBar
                   backgroundColor: AppColors.mutedBackground,
                   backgroundImage:
-                      workoutPlan.iconUrl != null
-                          ? CachedNetworkImageProvider(workoutPlan.iconUrl!)
+                      widget.workoutPlan.iconUrl != null
+                          ? CachedNetworkImageProvider(
+                            widget.workoutPlan.iconUrl!,
+                          )
                           : null,
                   child:
-                      workoutPlan.iconUrl == null
+                      widget.workoutPlan.iconUrl == null
                           ? Icon(
                             Icons.fitness_center,
                             size: 18,
@@ -110,14 +239,14 @@ class WorkoutDetailScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          if (workoutPlan.equipmentSelected != null &&
-                              workoutPlan.equipmentSelected!.isNotEmpty)
+                          if (widget.workoutPlan.equipmentSelected != null &&
+                              widget.workoutPlan.equipmentSelected!.isNotEmpty)
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  workoutPlan.equipmentSelected!,
-                                  style: AppTextStyles.bodyLarge?.copyWith(
+                                  widget.workoutPlan.equipmentSelected!,
+                                  style: AppTextStyles.bodyLarge.copyWith(
                                     color: AppColors.foreground,
                                   ),
                                 ),
@@ -141,14 +270,14 @@ class WorkoutDetailScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          if (workoutPlan.oneRmGoal != null &&
-                              workoutPlan.oneRmGoal!.isNotEmpty)
+                          if (widget.workoutPlan.oneRmGoal != null &&
+                              widget.workoutPlan.oneRmGoal!.isNotEmpty)
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  workoutPlan.oneRmGoal ?? 'N/A',
-                                  style: AppTextStyles.bodyLarge?.copyWith(
+                                  widget.workoutPlan.oneRmGoal ?? 'N/A',
+                                  style: AppTextStyles.bodyLarge.copyWith(
                                     color: AppColors.foreground,
                                   ),
                                 ),
@@ -167,8 +296,8 @@ class WorkoutDetailScreen extends StatelessWidget {
                   const SizedBox(height: 24), // Margin between sections
                   // Exercises List Section
                   Text(
-                    '${workoutPlan.exercises.length} exercises',
-                    style: AppTextStyles.bodyLarge?.copyWith(
+                    '${widget.workoutPlan.exercises.length} exercises',
+                    style: AppTextStyles.bodyLarge.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.foreground,
                     ),
@@ -182,7 +311,7 @@ class WorkoutDetailScreen extends StatelessWidget {
           // List of Exercises (using SliverList for efficiency)
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              final exercise = workoutPlan.exercises[index];
+              final exercise = widget.workoutPlan.exercises[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
@@ -241,7 +370,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                   ),
                 ),
               );
-            }, childCount: workoutPlan.exercises.length),
+            }, childCount: widget.workoutPlan.exercises.length),
           ),
 
           // Add padding at the bottom of the list before buttons
@@ -262,12 +391,13 @@ class WorkoutDetailScreen extends StatelessWidget {
                         // Create the initial state for the ActiveWorkoutState
                         final initialActiveState = ActiveWorkoutState(
                           id:
-                              workoutPlan
+                              widget
+                                  .workoutPlan
                                   .id, // Use 'id' from ActiveWorkoutState
-                          workoutName: workoutPlan.name,
+                          workoutName: widget.workoutPlan.name,
                           startTime: DateTime.now(),
                           exercises:
-                              workoutPlan.exercises.map((pe) {
+                              widget.workoutPlan.exercises.map((pe) {
                                 // Create a base exercise_db.Exercise from PlannedExercise
                                 // This is a bit of a workaround as PlannedExercise is not directly exercise_db.Exercise
                                 // Ideally, PlannedExercise would hold a full exercise_db.Exercise object or enough info
@@ -313,6 +443,21 @@ class WorkoutDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12), // Margin between buttons
                   SizedBox(
                     width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showScheduleWorkoutDialog(context),
+                      icon: const Icon(Icons.schedule),
+                      label: const Text('Schedule Workout'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12), // Margin between buttons
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(
@@ -321,7 +466,8 @@ class WorkoutDetailScreen extends StatelessWidget {
                             builder:
                                 (context) => MealPlanGeneratorScreen(
                                   linkedWorkoutPlan:
-                                      workoutPlan, // Pass the workout plan
+                                      widget
+                                          .workoutPlan, // Pass the workout plan
                                 ),
                           ),
                         );
