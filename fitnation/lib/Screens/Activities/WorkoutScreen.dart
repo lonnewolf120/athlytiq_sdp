@@ -10,15 +10,15 @@ import 'package:fitnation/services/database_helper.dart';
 import 'package:fitnation/models/Exercise.dart' as exercise_db;
 import 'package:fitnation/providers/gemini_workout_provider.dart';
 import 'package:fitnation/providers/workout_generation_provider.dart';
-import 'package:fitnation/models/PlannedExercise.dart';
-import 'package:uuid/uuid.dart';
 // PlannedExercise and Uuid will be referenced via models when needed
 import 'package:fitnation/Screens/Activities/WorkoutPlanGeneratorScreen.dart';
 import 'package:fitnation/widgets/common/CustomAppBar.dart';
 import 'package:fitnation/Screens/Trainer/TrainerRegistrationScreen.dart';
 import 'package:fitnation/Screens/Trainer/TrainerApplicationStatusScreen.dart';
 import 'package:fitnation/Screens/Trainer/TrainerListScreen.dart';
+import 'package:fitnation/pages/add_manual_plan_screen.dart';
 import 'package:fitnation/Screens/Trainer/MySessionsScreen.dart';
+import 'package:fitnation/Screens/Trainer/TrainerSessionsScreen.dart';
 import 'package:fitnation/models/User.dart' show UserRole;
 import 'package:fitnation/Screens/Trainer/TrainerConsultationTab.dart';
 import 'package:fitnation/Screens/Trainer/MyClientsScreen.dart';
@@ -719,7 +719,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // Generate Plan Button
+          // Add manual plan button
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -727,12 +727,20 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const WorkoutPlanGeneratorScreen(),
+                    builder: (context) => const AddManualPlanScreen(),
                   ),
                 );
               },
-              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-              label: const Text('Generate New Workout Plan'),
+              icon: Image.asset(
+                'assets/logos/gym_report.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+              label: const Text(
+                'Add Workout Plan',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
@@ -749,6 +757,35 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           ),
           const SizedBox(height: 12),
 
+          // Generate Plan Button
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WorkoutPlanGeneratorScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+              label: const Text('Generate Plan With AI'),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           // Import from backend button
           SizedBox(
             width: double.infinity,
@@ -885,7 +922,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                 );
               },
               icon: const Icon(Icons.cloud_download_rounded, size: 20),
-              label: const Text('Import from Backend'),
+              label: const Text('Import From Previous Sessions'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -895,25 +932,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
             ),
           ),
           const SizedBox(height: 12),
-
-          // Add manual plan button
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () {
-                _showAddPlanModal(context);
-              },
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text('Add Manual Plan'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
 
           // Show generation progress card if generating
           if (generationStatus.isGenerating) ...[
@@ -1202,7 +1220,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MySessionsScreen(),
+                          builder: (context) => const TrainerSessionsScreen(),
                         ),
                       );
                     },
@@ -1329,7 +1347,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
                   () {
                     // Navigate to form analysis screen
                   },
-                ),
+                );
                 const SizedBox(height: 12),
                 */
                 _buildTrainerFeatureCard(
@@ -1837,256 +1855,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen>
           ],
         ),
       ),
-    );
-  }
-
-  // Modal to add a manual plan with exercises
-  void _showAddPlanModal(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final TextEditingController _planNameController = TextEditingController();
-    final List<PlannedExercise> exercises = [];
-    final TextEditingController _exerciseNameController =
-        TextEditingController();
-    final TextEditingController _exerciseEquipController =
-        TextEditingController();
-    final TextEditingController _exerciseSetsController =
-        TextEditingController();
-    final TextEditingController _exerciseRepsController =
-        TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Create Manual Workout Plan',
-                        style: Theme.of(ctx).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _planNameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Plan Name',
-                              ),
-                              validator:
-                                  (v) =>
-                                      (v == null || v.isEmpty)
-                                          ? 'Enter plan name'
-                                          : null,
-                            ),
-                            const SizedBox(height: 12),
-                            // Exercise input row
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _exerciseNameController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Exercise Name',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _exerciseEquipController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Equipment (comma separated)',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _exerciseSetsController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Sets',
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _exerciseRepsController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Reps',
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // Add exercise to list
-                                    final name =
-                                        _exerciseNameController.text.trim();
-                                    if (name.isEmpty) return;
-                                    final equips =
-                                        _exerciseEquipController.text
-                                            .split(',')
-                                            .map((s) => s.trim())
-                                            .where((s) => s.isNotEmpty)
-                                            .toList();
-                                    final sets =
-                                        int.tryParse(
-                                          _exerciseSetsController.text,
-                                        ) ??
-                                        3;
-                                    final reps =
-                                        int.tryParse(
-                                          _exerciseRepsController.text,
-                                        ) ??
-                                        8;
-                                    final pe = PlannedExercise(
-                                      exerciseId: const Uuid().v4(),
-                                      exerciseName: name,
-                                      exerciseEquipments: equips,
-                                      exerciseGifUrl: null,
-                                      type: null,
-                                      plannedSets: sets,
-                                      plannedReps: reps,
-                                      plannedWeight: null,
-                                    );
-                                    setState(() {
-                                      exercises.add(pe);
-                                      _exerciseNameController.clear();
-                                      _exerciseEquipController.clear();
-                                      _exerciseSetsController.clear();
-                                      _exerciseRepsController.clear();
-                                    });
-                                  },
-                                  child: const Text('Add Exercise'),
-                                ),
-                                const SizedBox(width: 8),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      exercises.clear();
-                                    });
-                                  },
-                                  child: const Text('Clear'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            // Exercises preview
-                            if (exercises.isNotEmpty)
-                              Column(
-                                children:
-                                    exercises
-                                        .map(
-                                          (e) => ListTile(
-                                            title: Text(e.exerciseName),
-                                            subtitle: Text(
-                                              '${e.exerciseEquipments?.join(', ') ?? ''} • ${e.plannedSets}x${e.plannedReps}',
-                                            ),
-                                            trailing: IconButton(
-                                              icon: const Icon(
-                                                Icons.delete_outline,
-                                              ),
-                                              onPressed: () {
-                                                setState(() {
-                                                  exercises.remove(e);
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        )
-                                        .toList(),
-                              ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: () async {
-                                  if (!_formKey.currentState!.validate())
-                                    return;
-                                  final planId = const Uuid().v4();
-                                  final workout = Workout(
-                                    id: planId,
-                                    name: _planNameController.text.trim(),
-                                    iconUrl: null,
-                                    equipmentSelected: null,
-                                    oneRmGoal: null,
-                                    type: null,
-                                    prompt: null,
-                                    exercises: exercises,
-                                  );
-                                  // Save locally
-                                  try {
-                                    await _dbHelper.insertLocalWorkoutPlan(
-                                      workout,
-                                    );
-                                  } catch (e) {
-                                    debugPrint(
-                                      'Failed to save plan locally: $e',
-                                    );
-                                  }
-                                  // Add to provider and attempt backend save
-                                  try {
-                                    await ref
-                                        .read(
-                                          geminiWorkoutPlanProvider.notifier,
-                                        )
-                                        .savePlanLocally(
-                                          workout,
-                                          saveToBackend: true,
-                                        );
-                                  } catch (e) {
-                                    debugPrint(
-                                      'Failed to save plan to backend: $e',
-                                    );
-                                  }
-                                  Navigator.pop(ctx);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Plan added')),
-                                  );
-                                },
-                                icon: const Icon(Icons.save_rounded),
-                                label: const Text('Save Plan'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

@@ -3,61 +3,25 @@ import 'package:fitnation/Screens/Community/GroupDetailsScreen.dart';
 import 'package:fitnation/Screens/Community/ChallengesScreen.dart';
 import 'package:fitnation/widgets/community/GroupCard.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fitnation/providers/data_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:fitnation/widgets/common/CustomSliverAppBar.dart';
 
-final List<Group> _dummyGroups = [
-  Group(
-    id: 'g1',
-    name: 'Strength Squad',
-    description:
-        'For all things strength training, powerlifting, and bodybuilding. Share your PBs!',
-    memberCount: 1203,
-    postCount: 450,
-    image:
-        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGd5bXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
-    trending: true,
-    categories: ['Weightlifting', 'Powerlifting'],
-    joined: false,
-  ),
-  Group(
-    id: 'g2',
-    name: 'Cardio Kings & Queens',
-    description:
-        'Running, cycling, HIIT - if it gets your heart pumping, this is the place.',
-    memberCount: 875,
-    postCount: 302,
-    image:
-        'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cnVubmluZ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
-    trending: false,
-    categories: ['Running', 'HIIT'],
-    joined: true,
-  ),
-  Group(
-    id: 'g3',
-    name: 'Yoga & Mindfulness',
-    description:
-        'Find your zen. Share poses, meditation tips, and peaceful vibes.',
-    memberCount: 1500,
-    postCount: 600,
-    image:
-        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8eW9nYXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=400&q=60',
-    trending: true,
-    categories: ['Yoga', 'Meditation'],
-    joined: false,
-  ),
-];
+// Removed local dummy groups; now loaded from backend
 
-class CommunityGroupsScreen extends StatefulWidget {
+class CommunityGroupsScreen extends ConsumerStatefulWidget {
   const CommunityGroupsScreen({super.key});
 
   @override
-  State<CommunityGroupsScreen> createState() => _CommunityGroupsScreenState();
+  ConsumerState<CommunityGroupsScreen> createState() => _CommunityGroupsScreenState();
 }
 
-class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
+class _CommunityGroupsScreenState extends ConsumerState<CommunityGroupsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _groupTabController;
+  late Future<List<Group>> _allGroupsFuture;
+  late Future<List<Group>> _myGroupsFuture;
 
   @override
   void initState() {
@@ -66,6 +30,9 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
     _groupTabController.addListener(() {
       setState(() {});
     });
+    final api = ref.read(apiServiceProvider);
+    _allGroupsFuture = api.getCommunities(skip: 0, limit: 50);
+    _myGroupsFuture = api.getCommunities(skip: 0, limit: 50, my: true);
   }
 
   @override
@@ -188,8 +155,8 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
         body: TabBarView(
           controller: _groupTabController,
           children: [
-            _buildGroupList(_dummyGroups.where((g) => true).toList()),
-            _buildGroupList(_dummyGroups.where((g) => g.joined).toList()),
+            _buildGroupsFromBackend(_allGroupsFuture),
+            _buildGroupsFromBackend(_myGroupsFuture),
             ChallengesScreen(),
           ],
         ),
@@ -209,6 +176,30 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
                 child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  Widget _buildGroupsFromBackend(Future<List<Group>> future) {
+    return FutureBuilder<List<Group>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Failed to load communities: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        final groups = snapshot.data ?? const <Group>[];
+        return _buildGroupList(groups);
+      },
     );
   }
 
@@ -246,9 +237,67 @@ class _CommunityGroupsScreenState extends State<CommunityGroupsScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => GroupDetailScreen(groupId: group.id),
+                builder: (_) => GroupDetailScreen(groupId: group.id, initialGroup: group),
               ),
             );
+          },
+          onJoinToggle: () async {
+            final api = ref.read(apiServiceProvider);
+            try {
+              if (group.joined) {
+                final ok = await api.leaveCommunity(group.id);
+                if (ok) {
+                  setState(() {
+                    groups[index] = Group(
+                      id: group.id,
+                      name: group.name,
+                      description: group.description,
+                      memberCount: (group.memberCount > 0) ? group.memberCount - 1 : 0,
+                      postCount: group.postCount,
+                      image: group.image,
+                      trending: group.trending,
+                      categories: group.categories,
+                      joined: false,
+                      coverImage: group.coverImage,
+                      createdAt: group.createdAt,
+                      rules: group.rules,
+                    );
+                  });
+                }
+              } else {
+                final ok = await api.joinCommunity(group.id);
+                if (ok) {
+                  setState(() {
+                    groups[index] = Group(
+                      id: group.id,
+                      name: group.name,
+                      description: group.description,
+                      memberCount: group.memberCount + 1,
+                      postCount: group.postCount,
+                      image: group.image,
+                      trending: group.trending,
+                      categories: group.categories,
+                      joined: true,
+                      coverImage: group.coverImage,
+                      createdAt: group.createdAt,
+                      rules: group.rules,
+                    );
+                  });
+                }
+              }
+              // Refresh the futures to keep tabs in sync
+              final api2 = ref.read(apiServiceProvider);
+              setState(() {
+                _allGroupsFuture = api2.getCommunities(skip: 0, limit: 50);
+                _myGroupsFuture = api2.getCommunities(skip: 0, limit: 50, my: true);
+              });
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update membership: $e')),
+                );
+              }
+            }
           },
         );
       },

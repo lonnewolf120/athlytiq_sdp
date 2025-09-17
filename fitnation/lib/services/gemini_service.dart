@@ -24,7 +24,7 @@ class GeminiService {
     final String promptText = _buildWorkoutPrompt(
       userInfo,
     ); // Use specific prompt builder
-    debugPrint('GeminiService: Workout Prompt: $promptText');
+    debugPrint('GeminiService: Workout Prompt: $promptText, if you can search ');
 
     try {
       final response = await _model.generateContent([Content.text(promptText)]);

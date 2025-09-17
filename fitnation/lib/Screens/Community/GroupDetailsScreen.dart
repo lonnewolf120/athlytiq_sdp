@@ -1,8 +1,6 @@
 import 'package:fitnation/Screens/Community/CreatePostScreen.dart';
-import 'package:fitnation/models/ChallengePostModel.dart';
-import 'package:fitnation/models/Exercise.dart';
+// Removed unused imports after switching to backend-loaded posts
 import 'package:fitnation/models/User.dart';
-import 'package:fitnation/models/WorkoutPostModel.dart';
 import 'package:fitnation/widgets/community/PostCard.dart';
 import 'package:fitnation/models/CommunityContentModel.dart';
 // import 'package:fitnation/models/member_model.dart';
@@ -12,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:fitnation/providers/data_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Dummy data for group detail
 Group _dummyGroupDetail = Group(
@@ -77,109 +76,33 @@ List<Member> _dummyMembers = [
   ),
 ];
 
-List<Post> _dummyGroupPosts = [
-  Post(
-    id: 'p_workout_1',
-    userId: _dummyMembers[0].id,
-    author: _dummyMembers[0], // Include author
-    postType: [PostType.workout],
-    createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
-    reactCount: 42,
-    commentCount: 8,
-workoutData: WorkoutPostData(
-      workoutType: 'Strength Training',
-      durationMinutes: 45,
-      caloriesBurned: 320,
-      exercises: <Exercise>[
-        Exercise(
-          exerciseId: 'bench-press',
-          name: 'Bench Press',
-          bodyParts: const ['chest'],
-          equipments: const ['barbell'],
-          targetMuscles: const ['pectorals'],
-          secondaryMuscles: const [],
-          instructions: const [],
-          gifUrl: '',
-        ),
-        Exercise(
-          exerciseId: 'squats',
-          name: 'Squats',
-          bodyParts: const ['legs'],
-          equipments: const ['barbell'],
-          targetMuscles: const ['quadriceps'],
-          secondaryMuscles: const [],
-          instructions: const [],
-          gifUrl: '',
-        ),
-        Exercise(
-          exerciseId: 'deadlifts',
-          name: 'Deadlifts',
-          bodyParts: const ['back'],
-          equipments: const ['barbell'],
-          targetMuscles: const ['glutes'],
-          secondaryMuscles: const [],
-          instructions: const [],
-          gifUrl: '',
-        ),
-        Exercise(
-          exerciseId: 'pull-ups',
-          name: 'Pull-ups',
-          bodyParts: const ['back'],
-          equipments: const ['body weight'],
-          targetMuscles: const ['lats'],
-          secondaryMuscles: const [],
-          instructions: const [],
-          gifUrl: '',
-        ),
-      ],
-      notes: null,
-    ),
-  ),
-  // Challenge Post
-  Post(
-    id: 'p_challenge_1',
-    userId: _dummyMembers[1].id,
-    author: _dummyMembers[1], // Include author
-    postType: [PostType.challenge], // Specify type
-    createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-    updatedAt: DateTime.now().subtract(const Duration(hours: 3)),
-    reactCount: 152,
-    commentCount: 12,
-    challengeData: ChallengePostData(
-      title: '10K Steps Challenge',
-      description:
-          'Complete 10,000 steps every day for a week! Join us and boost your cardiovascular health.',
-      startDate: DateTime(2024, 5, 25), // Example date
-      durationDays: 7,
-      coverImageUrl:
-          'https://images.unsplash.com/photo-1543946207-39bd91e70c48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c3RlcHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60', // Example cover image
-      participantCount: 24,
-    ),
-  ),
- ];
+// Removed dummy posts; posts are now loaded from backend per community
 
 
-class GroupDetailScreen extends StatefulWidget {
+class GroupDetailScreen extends ConsumerStatefulWidget {
   final String groupId;
-  const GroupDetailScreen({super.key, required this.groupId});
+  final Group? initialGroup; // optional for instant UI
+  const GroupDetailScreen({super.key, required this.groupId, this.initialGroup});
 
   @override
-  State<GroupDetailScreen> createState() => _GroupDetailScreenState();
+  ConsumerState<GroupDetailScreen> createState() => _GroupDetailScreenState();
 }
 
-class _GroupDetailScreenState extends State<GroupDetailScreen>
+class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isNotificationsEnabled = false;
-  // In a real app, fetch groupData based on widget.groupId
-  final Group groupData = _dummyGroupDetail;
+  Group? groupData; // loaded from backend
+  bool _loading = true;
+  // String? _error; // Unused; keep for future error surface if needed
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // TODO: Fetch actual group details using widget.groupId
+    // Seed with initial group, then fetch details
+    groupData = widget.initialGroup;
+    _fetchDetails();
   }
 
   @override
@@ -190,8 +113,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final screenWidth = MediaQuery.of(context).size.width;
+  final textTheme = Theme.of(context).textTheme;
+    final g = groupData ?? widget.initialGroup ?? _dummyGroupDetail;
 
     return Scaffold(
       body: CustomScrollView(
@@ -219,7 +142,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                 children: [
                   CachedNetworkImage(
                     imageUrl:
-                        groupData.coverImage ??
+                        g.coverImage ??
                         'https://via.placeholder.com/800x200.png/1A1A1A/FFFFFF?text=No+Cover',
                     fit: BoxFit.cover,
                   ),
@@ -257,7 +180,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.0),
                         child: CachedNetworkImage(
-                          imageUrl: groupData.image,
+                          imageUrl: g.image,
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
@@ -269,7 +192,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              groupData.name,
+                              g.name,
                               style: textTheme.headlineMedium?.copyWith(
                                 color: AppColors.foreground,
                               ),
@@ -279,7 +202,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                               spacing: 6.0,
                               runSpacing: 4.0,
                               children:
-                                  groupData.categories
+                                  g.categories
                                       .map(
                                         (category) =>
                                             Chip(label: Text(category)),
@@ -301,7 +224,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${groupData.memberCount} members',
+                        '${g.memberCount} members',
                         style: textTheme.bodyMedium,
                       ),
                       
@@ -318,7 +241,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${groupData.postCount} posts',
+                        '${g.postCount} posts',
                         style: textTheme.bodyMedium,
                       ),
                     ],
@@ -328,17 +251,76 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            /* TODO: Join/Leave logic */
-                          },
+                          onPressed: _loading
+                              ? null
+                              : () async {
+                                  final api = ref.read(apiServiceProvider);
+                                  setState(() => _loading = true);
+                                  try {
+                                    final currentlyJoined = (groupData ?? widget.initialGroup ?? _dummyGroupDetail).joined;
+                                    if (currentlyJoined) {
+                                      final ok = await api.leaveCommunity((groupData ?? widget.initialGroup ?? _dummyGroupDetail).id);
+                                      if (ok) {
+                                        setState(() {
+                                          final g = groupData ?? widget.initialGroup;
+                                          if (g != null) {
+                                            groupData = Group(
+                                              id: g.id,
+                                              name: g.name,
+                                              description: g.description,
+                                              memberCount: (g.memberCount > 0) ? g.memberCount - 1 : 0,
+                                              postCount: g.postCount,
+                                              image: g.image,
+                                              trending: g.trending,
+                                              categories: g.categories,
+                                              joined: false,
+                                              coverImage: g.coverImage,
+                                              createdAt: g.createdAt,
+                                              rules: g.rules,
+                                            );
+                                          }
+                                        });
+                                      }
+                                    } else {
+                                      final ok = await api.joinCommunity((groupData ?? widget.initialGroup ?? _dummyGroupDetail).id);
+                                      if (ok) {
+                                        setState(() {
+                                          final g = groupData ?? widget.initialGroup;
+                                          if (g != null) {
+                                            groupData = Group(
+                                              id: g.id,
+                                              name: g.name,
+                                              description: g.description,
+                                              memberCount: g.memberCount + 1,
+                                              postCount: g.postCount,
+                                              image: g.image,
+                                              trending: g.trending,
+                                              categories: g.categories,
+                                              joined: true,
+                                              coverImage: g.coverImage,
+                                              createdAt: g.createdAt,
+                                              rules: g.rules,
+                                            );
+                                          }
+                                        });
+                                      }
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Failed to update membership: $e')),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) setState(() => _loading = false);
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                                groupData.joined
-                                    ? AppColors.secondary
-                                    : AppColors.primary,
+                                g.joined ? AppColors.secondary : AppColors.primary,
                           ),
                           child: Text(
-                            groupData.joined ? 'Joined' : 'Join Group',
+                            g.joined ? 'Joined' : 'Join Group',
                           ),
                         ),
                       ),
@@ -386,8 +368,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildPostsTab(context, groupData),
-                _buildAboutTab(context, groupData),
+                _buildPostsTab(context, g),
+                _buildAboutTab(context, g),
                 _buildMembersTab(context),
               ],
             ),
@@ -397,46 +379,77 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
     );
   }
 
+  Future<void> _fetchDetails() async {
+    setState(() {
+      _loading = true;
+      // _error = null;
+    });
+    try {
+      final api = ref.read(apiServiceProvider);
+      final details = await api.getCommunityById(widget.groupId, fallback: groupData);
+      setState(() {
+        groupData = details;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        // _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
   Widget _buildPostsTab(BuildContext context, Group group) {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        if (group.joined) // Show Create Post button only if joined
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text('Create Post in this Group'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CreatePostScreen(communityId: group.id),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary.withOpacity(0.8),
-              ),
-            ),
-          ),
-        ..._dummyGroupPosts.map((post) => PostCard(
-          post: post,
-          onAvatarTap: () {
-            // Add avatar tap functionality if needed
-          },
-          onPostTap: () {
-            // Add post tap functionality if needed
-          },
-        )).toList(),
-        if (_dummyGroupPosts.isEmpty)
-          const Center(
+    final api = ref.watch(apiServiceProvider);
+    return FutureBuilder<List<Post>>(
+      future: api.getCommunityPosts(group.id, skip: 0, limit: 20),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Text("No posts yet in this group."),
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Failed to load posts: ${snapshot.error}'),
             ),
-          ),
-      ],
+          );
+        }
+        final posts = snapshot.data ?? const <Post>[];
+        return ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            if (group.joined)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Create Post in this Group'),
+                  onPressed: () async {
+                    final created = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CreatePostScreen(communityId: group.id),
+                      ),
+                    );
+                    if (created == true && mounted) setState(() {});
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary.withOpacity(0.8),
+                  ),
+                ),
+              ),
+            ...posts.map((post) => PostCard(post: post)).toList(),
+            if (posts.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Text('No posts yet in this group.'),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
