@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:flutter/foundation.dart';
@@ -214,7 +213,6 @@ class WebSocketService {
     try {
       final message = json.decode(data);
       final type = message['type'] as String?;
-      final messageData = message['data'] as Map<String, dynamic>?;
 
       if (kDebugMode) {
         print('Received WebSocket message: $message');

@@ -373,4 +373,158 @@ class DatabaseHelper {
       whereArgs: [userId, 1, olderThan.toIso8601String()],
     );
   }
+
+  // --- CRUD for Meal Plans ---
+
+  Future<int> insertMealPlan(
+    String userId,
+    Map<String, dynamic> mealPlanData,
+  ) async {
+    final db = await database;
+
+    // Prepare data for insertion
+    final data = {
+      'id': mealPlanData['id'] ?? '',
+      'user_id': userId,
+      'name': mealPlanData['name'] ?? '',
+      'description': mealPlanData['description'] ?? '',
+      'user_goals': mealPlanData['userGoals'] ?? '',
+      'linked_workout_plan_id': mealPlanData['linkedWorkoutPlanId'],
+      'meals_json': jsonEncode(mealPlanData['meals'] ?? []),
+      'created_at':
+          mealPlanData['createdAt'] ?? DateTime.now().toIso8601String(),
+    };
+
+    debugPrint(
+      'DatabaseHelper: Inserting meal plan for userId=$userId, planId=${data['id']}',
+    );
+
+    return await db.insert(
+      tableMealPlans,
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getMealPlans(String userId) async {
+    final db = await database;
+
+    debugPrint('DatabaseHelper: Getting meal plans for userId=$userId');
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      tableMealPlans,
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'created_at DESC',
+    );
+
+    debugPrint(
+      'DatabaseHelper: Found ${maps.length} meal plans for userId=$userId',
+    );
+
+    // Convert meals_json back to List<dynamic>
+    List<Map<String, dynamic>> mealPlans = [];
+    for (var map in maps) {
+      try {
+        final mealPlanData = Map<String, dynamic>.from(map);
+        final mealsJson = map['meals_json'] as String?;
+        if (mealsJson != null && mealsJson.isNotEmpty) {
+          mealPlanData['meals'] = jsonDecode(mealsJson);
+        } else {
+          mealPlanData['meals'] = [];
+        }
+        // Remove the JSON string version since we've parsed it
+        mealPlanData.remove('meals_json');
+        mealPlans.add(mealPlanData);
+      } catch (e) {
+        debugPrint('DatabaseHelper: Failed to parse meal plan: $e');
+      }
+    }
+
+    return mealPlans;
+  }
+
+  Future<Map<String, dynamic>?> getMealPlan(
+    String userId,
+    String mealPlanId,
+  ) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      tableMealPlans,
+      where: 'user_id = ? AND id = ?',
+      whereArgs: [userId, mealPlanId],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+
+    try {
+      final mealPlanData = Map<String, dynamic>.from(maps.first);
+      final mealsJson = maps.first['meals_json'] as String?;
+      if (mealsJson != null && mealsJson.isNotEmpty) {
+        mealPlanData['meals'] = jsonDecode(mealsJson);
+      } else {
+        mealPlanData['meals'] = [];
+      }
+      mealPlanData.remove('meals_json');
+      return mealPlanData;
+    } catch (e) {
+      debugPrint('DatabaseHelper: Failed to parse meal plan: $e');
+      return null;
+    }
+  }
+
+  Future<int> updateMealPlan(
+    String userId,
+    String mealPlanId,
+    Map<String, dynamic> mealPlanData,
+  ) async {
+    final db = await database;
+
+    final data = {
+      'name': mealPlanData['name'] ?? '',
+      'description': mealPlanData['description'] ?? '',
+      'user_goals': mealPlanData['userGoals'] ?? '',
+      'linked_workout_plan_id': mealPlanData['linkedWorkoutPlanId'],
+      'meals_json': jsonEncode(mealPlanData['meals'] ?? []),
+    };
+
+    debugPrint(
+      'DatabaseHelper: Updating meal plan for userId=$userId, planId=$mealPlanId',
+    );
+
+    return await db.update(
+      tableMealPlans,
+      data,
+      where: 'user_id = ? AND id = ?',
+      whereArgs: [userId, mealPlanId],
+    );
+  }
+
+  Future<int> deleteMealPlan(String userId, String mealPlanId) async {
+    final db = await database;
+
+    debugPrint(
+      'DatabaseHelper: Deleting meal plan for userId=$userId, planId=$mealPlanId',
+    );
+
+    return await db.delete(
+      tableMealPlans,
+      where: 'user_id = ? AND id = ?',
+      whereArgs: [userId, mealPlanId],
+    );
+  }
+
+  Future<int> deleteAllMealPlans(String userId) async {
+    final db = await database;
+
+    debugPrint('DatabaseHelper: Deleting all meal plans for userId=$userId');
+
+    return await db.delete(
+      tableMealPlans,
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
 }
