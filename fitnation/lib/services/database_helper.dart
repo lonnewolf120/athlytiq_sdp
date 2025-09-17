@@ -98,6 +98,49 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create nutrition_targets table
+    await db.execute('''
+      CREATE TABLE nutrition_targets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        target_calories REAL NOT NULL,
+        target_protein REAL NOT NULL,
+        target_carbs REAL NOT NULL,
+        target_fat REAL NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    // Create food_logs table
+    await db.execute('''
+      CREATE TABLE food_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        food_name TEXT NOT NULL,
+        calories REAL NOT NULL,
+        protein REAL NOT NULL,
+        carbs REAL NOT NULL,
+        fat REAL NOT NULL,
+        serving_size TEXT,
+        meal_type TEXT NOT NULL,
+        consumed_at TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    // Create user_preferences table
+    await db.execute('''
+      CREATE TABLE user_preferences (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(user_id, key)
+      )
+    ''');
+
     // Create workout_plans table for locally storing workout plans
     await db.execute('''
       CREATE TABLE workout_plans (
@@ -123,6 +166,49 @@ class DatabaseHelper {
           linked_workout_plan_id TEXT,
           meals_json TEXT NOT NULL,
           created_at TEXT NOT NULL
+        )
+      ''');
+
+      // Create nutrition_targets table
+      await db.execute('''
+        CREATE TABLE nutrition_targets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          target_calories REAL NOT NULL,
+          target_protein REAL NOT NULL,
+          target_carbs REAL NOT NULL,
+          target_fat REAL NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+
+      // Create food_logs table
+      await db.execute('''
+        CREATE TABLE food_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          food_name TEXT NOT NULL,
+          calories REAL NOT NULL,
+          protein REAL NOT NULL,
+          carbs REAL NOT NULL,
+          fat REAL NOT NULL,
+          serving_size TEXT,
+          meal_type TEXT NOT NULL,
+          consumed_at TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      // Create user_preferences table
+      await db.execute('''
+        CREATE TABLE user_preferences (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          key TEXT NOT NULL,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          UNIQUE(user_id, key)
         )
       ''');
     }
@@ -525,6 +611,245 @@ class DatabaseHelper {
       tableMealPlans,
       where: 'user_id = ?',
       whereArgs: [userId],
+    );
+  }
+
+  // =========================
+  // NUTRITION TARGETS CRUD
+  // =========================
+
+  // Insert or update nutrition targets
+  Future<void> insertOrUpdateNutritionTargets({
+    required String userId,
+    required double targetCalories,
+    required double targetProtein,
+    required double targetCarbs,
+    required double targetFat,
+  }) async {
+    final db = await database;
+
+    final now = DateTime.now().toIso8601String();
+
+    await db.execute(
+      '''
+      INSERT OR REPLACE INTO nutrition_targets 
+      (user_id, target_calories, target_protein, target_carbs, target_fat, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 
+        COALESCE((SELECT created_at FROM nutrition_targets WHERE user_id = ?), ?),
+        ?)
+    ''',
+      [
+        userId,
+        targetCalories,
+        targetProtein,
+        targetCarbs,
+        targetFat,
+        userId,
+        now,
+        now,
+      ],
+    );
+  }
+
+  // Get nutrition targets for a user
+  Future<Map<String, dynamic>?> getNutritionTargets(String userId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'nutrition_targets',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'updated_at DESC',
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return null;
+  }
+
+  // =========================
+  // FOOD LOGS CRUD
+  // =========================
+
+  // Insert food log entry
+  Future<void> insertFoodLog({
+    required String id,
+    required String userId,
+    required String foodName,
+    required double calories,
+    required double protein,
+    required double carbs,
+    required double fat,
+    String? servingSize,
+    required String mealType,
+    required DateTime consumedAt,
+  }) async {
+    final db = await database;
+
+    await db.insert('food_logs', {
+      'id': id,
+      'user_id': userId,
+      'food_name': foodName,
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+      'serving_size': servingSize,
+      'meal_type': mealType,
+      'consumed_at': consumedAt.toIso8601String(),
+      'created_at': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // Get food logs for a user on a specific date
+  Future<List<Map<String, dynamic>>> getFoodLogsByDate(
+    String userId,
+    DateTime date,
+  ) async {
+    final db = await database;
+
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'food_logs',
+      where: 'user_id = ? AND consumed_at >= ? AND consumed_at <= ?',
+      whereArgs: [
+        userId,
+        startOfDay.toIso8601String(),
+        endOfDay.toIso8601String(),
+      ],
+      orderBy: 'consumed_at ASC',
+    );
+
+    return maps;
+  }
+
+  // Get food logs for a user within a date range
+  Future<List<Map<String, dynamic>>> getFoodLogsByDateRange(
+    String userId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'food_logs',
+      where: 'user_id = ? AND consumed_at >= ? AND consumed_at <= ?',
+      whereArgs: [
+        userId,
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
+      ],
+      orderBy: 'consumed_at ASC',
+    );
+
+    return maps;
+  }
+
+  // Update food log entry
+  Future<void> updateFoodLog({
+    required String id,
+    required String foodName,
+    required double calories,
+    required double protein,
+    required double carbs,
+    required double fat,
+    String? servingSize,
+    required String mealType,
+    required DateTime consumedAt,
+  }) async {
+    final db = await database;
+
+    await db.update(
+      'food_logs',
+      {
+        'food_name': foodName,
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fat': fat,
+        'serving_size': servingSize,
+        'meal_type': mealType,
+        'consumed_at': consumedAt.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Delete food log entry
+  Future<void> deleteFoodLog(String id) async {
+    final db = await database;
+    await db.delete('food_logs', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // =========================
+  // USER PREFERENCES CRUD
+  // =========================
+
+  // Set user preference
+  Future<void> setUserPreference(
+    String userId,
+    String key,
+    String value,
+  ) async {
+    final db = await database;
+
+    await db.execute(
+      '''
+      INSERT OR REPLACE INTO user_preferences 
+      (user_id, key, value, updated_at)
+      VALUES (?, ?, ?, ?)
+    ''',
+      [userId, key, value, DateTime.now().toIso8601String()],
+    );
+  }
+
+  // Get user preference
+  Future<String?> getUserPreference(String userId, String key) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'user_preferences',
+      columns: ['value'],
+      where: 'user_id = ? AND key = ?',
+      whereArgs: [userId, key],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first['value'] as String?;
+    }
+    return null;
+  }
+
+  // Get all user preferences
+  Future<Map<String, String>> getAllUserPreferences(String userId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'user_preferences',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+
+    final Map<String, String> preferences = {};
+    for (final map in maps) {
+      preferences[map['key'] as String] = map['value'] as String;
+    }
+
+    return preferences;
+  }
+
+  // Delete user preference
+  Future<void> deleteUserPreference(String userId, String key) async {
+    final db = await database;
+    await db.delete(
+      'user_preferences',
+      where: 'user_id = ? AND key = ?',
+      whereArgs: [userId, key],
     );
   }
 }

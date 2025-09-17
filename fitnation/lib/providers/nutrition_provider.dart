@@ -3,6 +3,7 @@ import 'package:fitnation/api/API_Services.dart'; // Import ApiService
 import 'package:fitnation/api/meal_api_service.dart'; // Import MealApiService
 import 'package:fitnation/providers/data_providers.dart'; // For apiServiceProvider and mealApiServiceProvider
 import 'package:fitnation/models/meal.dart'; // Import Meal model
+import 'package:fitnation/services/database_helper.dart'; // Import DatabaseHelper
 import 'package:flutter/foundation.dart';
 import 'package:fitnation/services/connectivity_service.dart'; // For NoInternetException
 
@@ -44,36 +45,63 @@ class MealSavedSuccess extends NutritionState {}
 
 // --- Nutrition Notifier ---
 class NutritionNotifier extends StateNotifier<NutritionState> {
-  final ApiService _apiService; // Added ApiService back
+  final ApiService _apiService; // Keep for backward compatibility
   final MealApiService _mealApiService;
+  final DatabaseHelper _databaseHelper;
 
-  NutritionNotifier(this._apiService, this._mealApiService)
-    : super(NutritionInitial());
+  NutritionNotifier(
+    this._apiService,
+    this._mealApiService,
+    this._databaseHelper,
+  ) : super(NutritionInitial());
 
   Future<void> fetchAllNutritionData() async {
     state = NutritionLoading();
     try {
+      // Get the current user ID (you may need to adjust this based on your auth system)
+      const String userId = "current_user"; // Replace with actual user ID logic
+
       // Fetch meals using MealApiService for progress tab
       final fetchedMeals = await _mealApiService.getMealsForUser();
       debugPrint("NutritionNotifier: Fetched meals: ${fetchedMeals.length}");
 
-      // Fetch food logs using ApiService for overview tab
-      final fetchedFoodLogs = await _apiService.getFoodLogs();
-      debugPrint(
-        "NutritionNotifier: Fetched food logs: ${fetchedFoodLogs.length}",
+      // Fetch food logs from database for today
+      final today = DateTime.now();
+      final fetchedFoodLogs = await _databaseHelper.getFoodLogsByDate(
+        userId,
+        today,
       );
+      debugPrint(
+        "NutritionNotifier: Fetched food logs from database: ${fetchedFoodLogs.length}",
+      );
+
+      // Fetch nutrition targets from database
+      final nutritionTargetsData = await _databaseHelper.getNutritionTargets(
+        userId,
+      );
+      final nutritionTargets =
+          nutritionTargetsData != null
+              ? {
+                'target_calories':
+                    nutritionTargetsData['target_calories'] as double,
+                'target_protein':
+                    nutritionTargetsData['target_protein'] as double,
+                'target_carbs': nutritionTargetsData['target_carbs'] as double,
+                'target_fat': nutritionTargetsData['target_fat'] as double,
+              }
+              : {
+                'target_calories': 2200.0,
+                'target_protein': 130.0,
+                'target_carbs': 275.0,
+                'target_fat': 80.0,
+              };
 
       state = NutritionLoaded(
         meals: fetchedMeals,
         foodLogs: fetchedFoodLogs,
         healthLogs: [], // Placeholder
         dietRecommendations: [], // Placeholder
-        nutritionTargets: {
-          'target_calories': 2200.0,
-          'target_protein': 130.0,
-          'target_carbs': 275.0,
-          'target_fat': 80.0,
-        },
+        nutritionTargets: nutritionTargets,
         todayProgress: _calculateTodayProgress(fetchedFoodLogs),
       );
     } on NoInternetException catch (e) {
@@ -88,9 +116,27 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
   Future<void> addFoodLog(Map<String, dynamic> foodLogData) async {
     state = MealSaving();
     try {
-      await _apiService.createFoodLog(
-        foodLogData,
-      ); // Use ApiService for creating food logs
+      // Get the current user ID (you may need to adjust this based on your auth system)
+      const String userId = "current_user"; // Replace with actual user ID logic
+
+      // Generate a unique ID for the food log
+      final String foodLogId =
+          'food_log_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Insert food log into database
+      await _databaseHelper.insertFoodLog(
+        id: foodLogId,
+        userId: userId,
+        foodName: foodLogData['food_name'] ?? '',
+        calories: (foodLogData['calories'] ?? 0).toDouble(),
+        protein: (foodLogData['protein'] ?? 0).toDouble(),
+        carbs: (foodLogData['carbs'] ?? 0).toDouble(),
+        fat: (foodLogData['fat'] ?? 0).toDouble(),
+        servingSize: foodLogData['serving_size'],
+        mealType: foodLogData['meal_type'] ?? 'other',
+        consumedAt: foodLogData['consumed_at'] ?? DateTime.now(),
+      );
+
       state = MealSavedSuccess();
       await fetchAllNutritionData(); // Refresh data after successful save
     } on NoInternetException catch (e) {
@@ -123,26 +169,13 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
   // e.g., getFoodLogsForDate(DateTime date), getDailyMacrosSummary()
 
   Map<String, dynamic> _calculateTodayProgress(List<dynamic> foodLogs) {
-    final today = DateTime.now();
-    final todayLogs =
-        foodLogs.where((log) {
-          // Assuming log has a 'date' field - adjust based on actual structure
-          if (log is Map<String, dynamic> && log.containsKey('date')) {
-            final logDate = DateTime.tryParse(log['date'].toString());
-            return logDate != null &&
-                logDate.year == today.year &&
-                logDate.month == today.month &&
-                logDate.day == today.day;
-          }
-          return false;
-        }).toList();
-
+    // Since we're already fetching today's logs from database, no need to filter again
     double totalCalories = 0;
     double totalProtein = 0;
     double totalCarbs = 0;
     double totalFat = 0;
 
-    for (final log in todayLogs) {
+    for (final log in foodLogs) {
       if (log is Map<String, dynamic>) {
         totalCalories += (log['calories'] as num?)?.toDouble() ?? 0;
         totalProtein += (log['protein'] as num?)?.toDouble() ?? 0;
@@ -156,16 +189,25 @@ class NutritionNotifier extends StateNotifier<NutritionState> {
       'total_protein': totalProtein,
       'total_carbs': totalCarbs,
       'total_fat': totalFat,
-      'entries_count': todayLogs.length,
+      'entries_count': foodLogs.length,
     };
   }
 
   Future<void> saveNutritionTargets(Map<String, double> targets) async {
     try {
-      // TODO: Save to database when DatabaseHelper is updated
-      // await DatabaseHelper().saveNutritionTargets(userId, targets);
+      // Get the current user ID (you may need to adjust this based on your auth system)
+      const String userId = "current_user"; // Replace with actual user ID logic
 
-      // For now, update state directly
+      // Save to database using DatabaseHelper
+      await _databaseHelper.insertOrUpdateNutritionTargets(
+        userId: userId,
+        targetCalories: targets['target_calories'] ?? 0.0,
+        targetProtein: targets['target_protein'] ?? 0.0,
+        targetCarbs: targets['target_carbs'] ?? 0.0,
+        targetFat: targets['target_fat'] ?? 0.0,
+      );
+
+      // Update state directly
       if (state is NutritionLoaded) {
         final currentState = state as NutritionLoaded;
         state = NutritionLoaded(
@@ -194,7 +236,8 @@ final nutritionProvider =
       final mealApiService = ref.watch(
         mealApiServiceProvider,
       ); // Get MealApiService
-      return NutritionNotifier(apiService, mealApiService);
+      final databaseHelper = DatabaseHelper(); // Get DatabaseHelper instance
+      return NutritionNotifier(apiService, mealApiService, databaseHelper);
     });
 
 // Optional: Providers for specific data types if needed for direct consumption
