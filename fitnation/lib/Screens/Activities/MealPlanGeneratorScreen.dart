@@ -110,10 +110,21 @@ class _MealPlanGeneratorScreenState
         await ref
             .read(geminiMealPlanProvider.notifier)
             .generateMealPlan(userInfo);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meal plan generated successfully!')),
-        );
-        Navigator.pop(context); // Go back to previous screen
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Meal plan generated successfully!'),
+              action: SnackBarAction(
+                label: 'View Plans',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/meal-plans');
+                },
+              ),
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
       } catch (e) {
         ScaffoldMessenger.of(
           context,
@@ -298,17 +309,32 @@ class _MealPlanGeneratorScreenState
                   : SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _generatePlan,
-                      icon: const Icon(Icons.auto_awesome_rounded),
+                      onPressed: _isLoading ? null : _generatePlan,
+                      icon:
+                          _isLoading
+                              ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    colorScheme.onPrimary,
+                                  ),
+                                ),
+                              )
+                              : const Icon(Icons.auto_awesome_rounded),
                       label: Text(
-                        'Generate Meal Plan',
+                        _isLoading ? 'Generating...' : 'Generate Meal Plan',
                         style: textTheme.titleMedium?.copyWith(
                           color: colorScheme.onPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
+                        backgroundColor:
+                            _isLoading
+                                ? colorScheme.primary.withOpacity(0.7)
+                                : colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(

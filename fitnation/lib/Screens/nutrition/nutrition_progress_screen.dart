@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:fitnation/core/themes/colors.dart';
 import 'package:fitnation/core/themes/text_styles.dart';
+import 'package:fitnation/providers/nutrition_provider.dart';
+import 'package:fitnation/Screens/nutrition/nutrition_targets_screen.dart';
+import 'package:fitnation/Screens/nutrition/food_log_screen.dart';
 
 class NutritionProgressScreen extends ConsumerStatefulWidget {
   const NutritionProgressScreen({super.key});
@@ -14,521 +17,553 @@ class NutritionProgressScreen extends ConsumerStatefulWidget {
 
 class _NutritionProgressScreenState
     extends ConsumerState<NutritionProgressScreen> {
-  // Dummy progress data
-  final List<Map<String, dynamic>> _weeklyData = [
-    {
-      'day': 'Mon',
-      'calories': 2100.0,
-      'protein': 120.0,
-      'carbs': 200.0,
-      'fat': 80.0,
-      'target_calories': 2200.0,
-    },
-    {
-      'day': 'Tue',
-      'calories': 2250.0,
-      'protein': 135.0,
-      'carbs': 220.0,
-      'fat': 85.0,
-      'target_calories': 2200.0,
-    },
-    {
-      'day': 'Wed',
-      'calories': 1950.0,
-      'protein': 110.0,
-      'carbs': 180.0,
-      'fat': 75.0,
-      'target_calories': 2200.0,
-    },
-    {
-      'day': 'Thu',
-      'calories': 2300.0,
-      'protein': 140.0,
-      'carbs': 240.0,
-      'fat': 90.0,
-      'target_calories': 2200.0,
-    },
-    {
-      'day': 'Fri',
-      'calories': 2150.0,
-      'protein': 125.0,
-      'carbs': 210.0,
-      'fat': 82.0,
-      'target_calories': 2200.0,
-    },
-    {
-      'day': 'Sat',
-      'calories': 2400.0,
-      'protein': 145.0,
-      'carbs': 250.0,
-      'fat': 95.0,
-      'target_calories': 2200.0,
-    },
-    {
-      'day': 'Today',
-      'calories': 489.0, // Sum of today's dummy meals
-      'protein': 66.5,
-      'carbs': 33.0,
-      'fat': 8.2,
-      'target_calories': 2200.0,
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
-    // No API calls - using dummy data
+    // Load nutrition data when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(nutritionProvider.notifier).fetchAllNutritionData();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Nutrition Progress',
-          style: AppTextStyles.darkHeadlineMedium.copyWith(color: Colors.white),
-        ),
-        backgroundColor: AppColors.darkGradientStart,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Weekly Calories Chart
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.darkGradientStart.withOpacity(0.1),
-                        AppColors.darkGradientEnd.withOpacity(0.1),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Nutrition Progress',
+            style: AppTextStyles.darkHeadlineMedium.copyWith(
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: AppColors.darkGradientStart,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Log Food',
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FoodLogScreen(),
                   ),
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.trending_up,
-                            color: AppColors.darkGradientStart,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Weekly Calories Trend',
-                            style: AppTextStyles.darkHeadlineMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: SfCartesianChart(
-                          primaryXAxis: CategoryAxis(
-                            labelStyle: const TextStyle(fontSize: 12),
-                          ),
-                          primaryYAxis: NumericAxis(
-                            minimum: 0,
-                            maximum: 2600,
-                            interval: 500,
-                            labelStyle: const TextStyle(fontSize: 10),
-                            majorGridLines: const MajorGridLines(width: 1),
-                          ),
-                          plotAreaBorderWidth: 1,
-                          plotAreaBorderColor: Colors.grey.withOpacity(0.3),
-                          series: <CartesianSeries<_XY, String>>[
-                            SplineAreaSeries<_XY, String>(
-                              dataSource:
-                                  _weeklyData
-                                      .asMap()
-                                      .entries
-                                      .map(
-                                        (e) => _XY(
-                                          e.value['day'],
-                                          e.value['calories'].toDouble(),
-                                        ),
-                                      )
-                                      .toList(),
-                              xValueMapper: (p, _) => p.x,
-                              yValueMapper: (p, _) => p.y,
-                              color: AppColors.darkGradientStart.withOpacity(
-                                0.1,
-                              ),
-                              borderColor: AppColors.darkGradientStart,
-                              borderWidth: 3,
-                              markerSettings: const MarkerSettings(
-                                isVisible: true,
-                                width: 6,
-                                height: 6,
-                              ),
-                            ),
-                            LineSeries<_XY, String>(
-                              dataSource:
-                                  _weeklyData
-                                      .asMap()
-                                      .entries
-                                      .map(
-                                        (e) => _XY(
-                                          e.value['day'],
-                                          e.value['target_calories'].toDouble(),
-                                        ),
-                                      )
-                                      .toList(),
-                              xValueMapper: (p, _) => p.x,
-                              yValueMapper: (p, _) => p.y,
-                              color: Colors.orange,
-                              width: 2,
-                              dashArray: const <double>[5, 5],
-                              markerSettings: const MarkerSettings(
-                                isVisible: false,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          _buildLegendItem(
-                            'Actual',
-                            AppColors.darkGradientStart,
-                            true,
-                          ),
-                          const SizedBox(width: 20),
-                          _buildLegendItem('Target', Colors.orange, false),
-                        ],
-                      ),
-                    ],
+                );
+
+                // Refresh data if food was logged successfully
+                if (result == true) {
+                  ref.read(nutritionProvider.notifier).fetchAllNutritionData();
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Nutrition Targets',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NutritionTargetsScreen(),
                   ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Nutrition Breakdown
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.pie_chart,
-                            color: AppColors.darkGradientStart,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Today\'s Macros Breakdown',
-                            style: AppTextStyles.darkHeadlineMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 150,
-                              child: SfCircularChart(
-                                margin: EdgeInsets.zero,
-                                legend: const Legend(isVisible: false),
-                                series: <DoughnutSeries<_Macro, String>>[
-                                  DoughnutSeries<_Macro, String>(
-                                    dataSource: <_Macro>[
-                                      _Macro(
-                                        'Protein',
-                                        _weeklyData.last['protein'].toDouble(),
-                                        Colors.red,
-                                      ),
-                                      _Macro(
-                                        'Carbs',
-                                        _weeklyData.last['carbs'].toDouble(),
-                                        Colors.green,
-                                      ),
-                                      _Macro(
-                                        'Fat',
-                                        _weeklyData.last['fat'].toDouble(),
-                                        Colors.blue,
-                                      ),
-                                    ],
-                                    xValueMapper: (m, _) => m.name,
-                                    yValueMapper: (m, _) => m.value,
-                                    pointColorMapper: (m, _) => m.color,
-                                    dataLabelMapper:
-                                        (m, _) =>
-                                            '${m.value.toStringAsFixed(0)}g',
-                                    dataLabelSettings: const DataLabelSettings(
-                                      isVisible: true,
-                                    ),
-                                    innerRadius: '40%',
-                                    radius: '100%',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _buildMacroItem(
-                                  'Protein',
-                                  _weeklyData.last['protein'],
-                                  Colors.red,
-                                  'g',
-                                ),
-                                const SizedBox(height: 8),
-                                _buildMacroItem(
-                                  'Carbs',
-                                  _weeklyData.last['carbs'],
-                                  Colors.green,
-                                  'g',
-                                ),
-                                const SizedBox(height: 8),
-                                _buildMacroItem(
-                                  'Fat',
-                                  _weeklyData.last['fat'],
-                                  Colors.blue,
-                                  'g',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Daily Averages
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.assessment,
-                            color: AppColors.darkGradientStart,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Weekly Averages',
-                            style: AppTextStyles.darkHeadlineMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildAverageItem(
-                              'Avg Calories',
-                              _calculateAverage('calories'),
-                              Icons.local_fire_department,
-                              Colors.orange,
-                              'kcal',
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildAverageItem(
-                              'Avg Protein',
-                              _calculateAverage('protein'),
-                              Icons.fitness_center,
-                              Colors.red,
-                              'g',
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildAverageItem(
-                              'Avg Carbs',
-                              _calculateAverage('carbs'),
-                              Icons.grain,
-                              Colors.green,
-                              'g',
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildAverageItem(
-                              'Avg Fat',
-                              _calculateAverage('fat'),
-                              Icons.opacity,
-                              Colors.blue,
-                              'g',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Implementation Note
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.amber.withOpacity(0.1),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
-                  ),
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.amber[800]),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Using Dummy Data',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber[800],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'This screen shows dummy progress data. Real nutrition tracking will be implemented once the nutrition API is connected.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.amber[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                );
+              },
+            ),
+          ],
+          bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            tabs: [
+              Tab(icon: Icon(Icons.today), text: 'Today'),
+              Tab(icon: Icon(Icons.show_chart), text: 'Weekly'),
             ],
           ),
         ),
+        body: TabBarView(children: [_buildTodayTab(), _buildWeeklyTab()]),
       ),
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, bool isSolid) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 3,
-          decoration: BoxDecoration(
-            color: isSolid ? color : Colors.transparent,
-            border: isSolid ? null : Border.all(color: color, width: 2),
+  Widget _buildTodayTab() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final nutritionState = ref.watch(nutritionProvider);
+        final targets = ref.watch(nutritionTargetsProvider);
+        final todayProgress = ref.watch(todayProgressProvider);
+
+        if (nutritionState is NutritionLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (nutritionState is NutritionError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load nutrition data',
+                  style: AppTextStyles.darkHeadlineSmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  nutritionState.message,
+                  style: AppTextStyles.darkBodyMedium.copyWith(
+                    color: Colors.grey[500],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    ref
+                        .read(nutritionProvider.notifier)
+                        .fetchAllNutritionData();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.darkGradientStart,
+                  ),
+                  child: const Text(
+                    'Retry',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Use default values if no data available
+        final currentTargets =
+            targets ??
+            {
+              'target_calories': 2200.0,
+              'target_protein': 130.0,
+              'target_carbs': 275.0,
+              'target_fat': 80.0,
+            };
+
+        final currentProgress =
+            todayProgress ??
+            {
+              'total_calories': 1650.0,
+              'total_protein': 95.0,
+              'total_carbs': 180.0,
+              'total_fat': 65.0,
+              'entries_count': 4,
+            };
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTodayOverview(currentProgress, currentTargets),
+              const SizedBox(height: 24),
+              _buildMacroProgress(currentProgress, currentTargets),
+              const SizedBox(height: 24),
+              _buildRecentMeals(),
+            ],
           ),
-          child:
-              isSolid
-                  ? null
-                  : Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: color, width: 1),
+        );
+      },
+    );
+  }
+
+  Widget _buildTodayOverview(
+    Map<String, dynamic> progress,
+    Map<String, double> targets,
+  ) {
+    final caloriesProgress = (progress['total_calories'] /
+            targets['target_calories']! *
+            100)
+        .clamp(0, 100);
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Today\'s Progress',
+                  style: AppTextStyles.darkHeadlineSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGradientStart.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${progress['entries_count']} meals logged',
+                    style: AppTextStyles.darkBodySmall.copyWith(
+                      color: AppColors.darkGradientStart,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Calorie progress circle
+            Row(
+              children: [
+                SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: caloriesProgress / 100,
+                        strokeWidth: 12,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          caloriesProgress >= 100
+                              ? Colors.green
+                              : AppColors.darkGradientStart,
+                        ),
+                      ),
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${progress['total_calories'].toInt()}',
+                              style: AppTextStyles.darkHeadlineMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.darkGradientStart,
+                              ),
+                            ),
+                            Text(
+                              'of ${targets['target_calories']!.toInt()}',
+                              style: AppTextStyles.darkBodySmall.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            Text(
+                              'calories',
+                              style: AppTextStyles.darkBodySmall.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 20),
+
+                // Quick stats
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildQuickStat(
+                        'Remaining',
+                        '${(targets['target_calories']! - progress['total_calories']).clamp(0, double.infinity).toInt()} cal',
+                        Icons.local_fire_department,
+                        Colors.orange,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildQuickStat(
+                        'Progress',
+                        '${caloriesProgress.toInt()}%',
+                        Icons.trending_up,
+                        Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
+      ),
     );
   }
 
-  Widget _buildMacroItem(String label, double value, Color color, String unit) {
+  Widget _buildQuickStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 20),
         ),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ${value.toStringAsFixed(1)}$unit',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTextStyles.darkBodySmall.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+            Text(
+              value,
+              style: AppTextStyles.darkBodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildAverageItem(
-    String label,
-    double value,
-    IconData icon,
-    Color color,
-    String unit,
+  Widget _buildMacroProgress(
+    Map<String, dynamic> progress,
+    Map<String, double> targets,
   ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Macronutrients',
+              style: AppTextStyles.darkHeadlineSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            textAlign: TextAlign.center,
+            const SizedBox(height: 20),
+
+            _buildMacroBar(
+              'Protein',
+              progress['total_protein'],
+              targets['target_protein']!,
+              'g',
+              Colors.red,
+            ),
+            const SizedBox(height: 16),
+
+            _buildMacroBar(
+              'Carbs',
+              progress['total_carbs'],
+              targets['target_carbs']!,
+              'g',
+              Colors.blue,
+            ),
+            const SizedBox(height: 16),
+
+            _buildMacroBar(
+              'Fat',
+              progress['total_fat'],
+              targets['target_fat']!,
+              'g',
+              Colors.purple,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMacroBar(
+    String name,
+    double current,
+    double target,
+    String unit,
+    Color color,
+  ) {
+    final progress = (current / target * 100).clamp(0, 100);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              name,
+              style: AppTextStyles.darkBodyLarge.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              '${current.toInt()}/${target.toInt()}$unit',
+              style: AppTextStyles.darkBodyMedium.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Stack(
+          children: [
+            Container(
+              height: 8,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            FractionallySizedBox(
+              widthFactor: progress / 100,
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${progress.toInt()}%',
+          style: AppTextStyles.darkBodySmall.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(height: 2),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentMeals() {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recent Meals',
+                  style: AppTextStyles.darkHeadlineSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FoodLogScreen(),
+                      ),
+                    );
+
+                    // Refresh data if food was logged successfully
+                    if (result == true) {
+                      ref
+                          .read(nutritionProvider.notifier)
+                          .fetchAllNutritionData();
+                    }
+                  },
+                  child: Text(
+                    'Log Food',
+                    style: AppTextStyles.darkBodyMedium.copyWith(
+                      color: AppColors.darkGradientStart,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Mock recent meals - replace with real data
+            _buildMealItem(
+              'Breakfast',
+              'Oatmeal with Berries',
+              '320 cal',
+              '8:00 AM',
+            ),
+            _buildMealItem(
+              'Lunch',
+              'Grilled Chicken Salad',
+              '450 cal',
+              '12:30 PM',
+            ),
+            _buildMealItem('Snack', 'Greek Yogurt', '150 cal', '3:00 PM'),
+            _buildMealItem('Dinner', 'Salmon with Rice', '520 cal', '7:00 PM'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMealItem(
+    String mealType,
+    String foodName,
+    String calories,
+    String time,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: AppColors.darkGradientStart,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$mealType • $time',
+                  style: AppTextStyles.darkBodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  foodName,
+                  style: AppTextStyles.darkBodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Text(
-            '${value.toStringAsFixed(1)}$unit',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: color,
+            calories,
+            style: AppTextStyles.darkBodyMedium.copyWith(
+              color: AppColors.darkGradientStart,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -536,25 +571,243 @@ class _NutritionProgressScreenState
     );
   }
 
-  double _calculateAverage(String nutrient) {
-    if (_weeklyData.isEmpty) return 0.0;
-    double sum = 0.0;
-    for (var day in _weeklyData) {
-      sum += day[nutrient].toDouble();
-    }
-    return sum / _weeklyData.length;
+  Widget _buildWeeklyTab() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final foodLogs = ref.watch(foodLogsListProvider);
+
+        // Generate weekly chart data from food logs
+        final weeklyData = _generateWeeklyChartData(foodLogs);
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildWeeklyChart(weeklyData),
+              const SizedBox(height: 24),
+              _buildWeeklySummary(weeklyData),
+            ],
+          ),
+        );
+      },
+    );
   }
-}
 
-class _XY {
-  final String x;
-  final double y;
-  _XY(this.x, this.y);
-}
+  List<Map<String, dynamic>> _generateWeeklyChartData(List<dynamic> foodLogs) {
+    // Mock weekly data for now - replace with actual calculation from foodLogs
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
 
-class _Macro {
-  final String name;
-  final double value;
-  final Color color;
-  _Macro(this.name, this.value, this.color);
+    return List.generate(7, (index) {
+      final date = weekStart.add(Duration(days: index));
+      final dayName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index];
+
+      return {
+        'day': dayName,
+        'date': date,
+        'calories': 1800 + (index * 50) + (index % 2 == 0 ? 200 : 0),
+        'protein': 100 + (index * 5),
+        'carbs': 180 + (index * 10),
+        'fat': 60 + (index * 3),
+        'target_calories': 2200.0,
+      };
+    });
+  }
+
+  Widget _buildWeeklyChart(List<Map<String, dynamic>> weeklyData) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Weekly Calorie Intake',
+              style: AppTextStyles.darkHeadlineSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              height: 250,
+              child: SfCartesianChart(
+                primaryXAxis: CategoryAxis(
+                  majorGridLines: const MajorGridLines(width: 0),
+                ),
+                primaryYAxis: NumericAxis(
+                  majorGridLines: const MajorGridLines(width: 0),
+                  axisLine: const AxisLine(width: 0),
+                ),
+                plotAreaBorderWidth: 0,
+                series: <CartesianSeries>[
+                  ColumnSeries<Map<String, dynamic>, String>(
+                    dataSource: weeklyData,
+                    xValueMapper: (data, _) => data['day'],
+                    yValueMapper: (data, _) => data['calories'],
+                    color: AppColors.darkGradientStart,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
+                    ),
+                  ),
+                  LineSeries<Map<String, dynamic>, String>(
+                    dataSource: weeklyData,
+                    xValueMapper: (data, _) => data['day'],
+                    yValueMapper: (data, _) => data['target_calories'],
+                    color: Colors.red,
+                    dashArray: const [5, 5],
+                    width: 2,
+                    markerSettings: const MarkerSettings(isVisible: false),
+                  ),
+                ],
+                legend: Legend(
+                  isVisible: true,
+                  position: LegendPosition.bottom,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeeklySummary(List<Map<String, dynamic>> weeklyData) {
+    final totalCalories = weeklyData.fold<double>(
+      0,
+      (sum, day) => sum + day['calories'],
+    );
+    final avgCalories = totalCalories / weeklyData.length;
+    final targetCalories = weeklyData.first['target_calories'];
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Weekly Summary',
+              style: AppTextStyles.darkHeadlineSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Total Calories',
+                    '${totalCalories.toInt()}',
+                    'cal',
+                    Icons.local_fire_department,
+                    Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Daily Average',
+                    '${avgCalories.toInt()}',
+                    'cal',
+                    Icons.analytics,
+                    Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Target Goal',
+                    '${targetCalories.toInt()}',
+                    'cal/day',
+                    Icons.track_changes,
+                    Colors.green,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Performance',
+                    '${((avgCalories / targetCalories) * 100).toInt()}',
+                    '%',
+                    Icons.trending_up,
+                    (avgCalories / targetCalories) >= 0.9
+                        ? Colors.green
+                        : Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+    String title,
+    String value,
+    String unit,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.darkBodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              text: value,
+              style: AppTextStyles.darkHeadlineSmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              children: [
+                TextSpan(
+                  text: ' $unit',
+                  style: AppTextStyles.darkBodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
