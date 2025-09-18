@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../models/chat_models.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/chat_provider.dart';
+// models are accessed through ChatProvider; no direct model import required here
 import '../../core/themes/colors.dart';
 import '../../core/themes/text_styles.dart';
 
 class TypingIndicatorWidget extends StatefulWidget {
   final String roomId;
 
-  const TypingIndicatorWidget({
-    Key? key,
-    required this.roomId,
-  }) : super(key: key);
+  const TypingIndicatorWidget({Key? key, required this.roomId})
+    : super(key: key);
 
   @override
   State<TypingIndicatorWidget> createState() => _TypingIndicatorWidgetState();
@@ -27,13 +28,9 @@ class _TypingIndicatorWidgetState extends State<TypingIndicatorWidget>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _animation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.repeat(reverse: true);
   }
 
@@ -47,8 +44,10 @@ class _TypingIndicatorWidgetState extends State<TypingIndicatorWidget>
   Widget build(BuildContext context) {
     return Consumer<ChatProvider>(
       builder: (context, chatProvider, child) {
-        final typingIndicators = chatProvider.getTypingIndicatorsForRoom(widget.roomId);
-        
+        final typingIndicators = chatProvider.getTypingIndicatorsForRoom(
+          widget.roomId,
+        );
+
         if (typingIndicators.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -59,18 +58,21 @@ class _TypingIndicatorWidgetState extends State<TypingIndicatorWidget>
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.grey.withOpacity(0.3),
+                backgroundColor: AppColors.darkSecondaryText.withOpacity(0.3),
                 child: Icon(
                   Icons.person,
                   size: 16,
-                  color: AppColors.grey,
+                  color: AppColors.darkSecondaryText,
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.darkSurface,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -87,8 +89,8 @@ class _TypingIndicatorWidgetState extends State<TypingIndicatorWidget>
                       typingIndicators.length == 1
                           ? '${typingIndicators.first.username} is typing'
                           : '${typingIndicators.length} people are typing',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.grey,
+                      style: AppTextStyles.darkBodySmall.copyWith(
+                        color: AppColors.darkSecondaryText,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -106,9 +108,10 @@ class _TypingIndicatorWidgetState extends State<TypingIndicatorWidget>
                                 width: 4,
                                 height: 4,
                                 decoration: BoxDecoration(
-                                  color: AppColors.grey.withOpacity(
-                                    0.3 + (_animation.value * 0.7),
-                                  ),
+                                  color: AppColors.darkSecondaryText
+                                      .withOpacity(
+                                        0.3 + (_animation.value * 0.7),
+                                      ),
                                   shape: BoxShape.circle,
                                 ),
                               ),

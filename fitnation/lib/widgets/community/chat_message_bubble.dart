@@ -20,32 +20,34 @@ class ChatMessageBubble extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: isCurrentUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor: AppColors.primary,
-              backgroundImage: message.senderAvatar != null
-                  ? NetworkImage(message.senderAvatar!)
-                  : null,
-              child: message.senderAvatar == null
-                  ? Text(
-                      message.senderName.isNotEmpty
-                          ? message.senderName[0].toUpperCase()
-                          : '?',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
+              backgroundImage:
+                  message.senderAvatar != null
+                      ? NetworkImage(message.senderAvatar!)
+                      : null,
+              child:
+                  message.senderAvatar == null
+                      ? Text(
+                        message.senderName.isNotEmpty
+                            ? message.senderName[0].toUpperCase()
+                            : '?',
+                        style: AppTextStyles.darkBodySmall.copyWith(
+                          color: AppColors.primaryForeground,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                      : null,
             ),
             const SizedBox(width: 8),
           ],
+
           Flexible(
             child: Container(
               constraints: BoxConstraints(
@@ -53,7 +55,8 @@ class ChatMessageBubble extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isCurrentUser ? AppColors.primary : AppColors.white,
+                color:
+                    isCurrentUser ? AppColors.primary : AppColors.darkSurface,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -74,25 +77,28 @@ class ChatMessageBubble extends StatelessWidget {
                   if (!isCurrentUser)
                     Text(
                       message.senderDisplayName ?? message.senderName,
-                      style: AppTextStyles.bodySmall.copyWith(
+                      style: AppTextStyles.darkBodySmall.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
                   if (message.replyToMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(8),
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: isCurrentUser
-                            ? AppColors.white.withOpacity(0.2)
-                            : AppColors.grey.withOpacity(0.1),
+                        color:
+                            isCurrentUser
+                                ? AppColors.primaryForeground.withOpacity(0.12)
+                                : AppColors.darkSecondaryText.withOpacity(0.06),
                         borderRadius: BorderRadius.circular(8),
                         border: Border(
                           left: BorderSide(
-                            color: isCurrentUser
-                                ? AppColors.white
-                                : AppColors.primary,
+                            color:
+                                isCurrentUser
+                                    ? AppColors.primaryForeground
+                                    : AppColors.primary,
                             width: 3,
                           ),
                         ),
@@ -103,20 +109,24 @@ class ChatMessageBubble extends StatelessWidget {
                           Text(
                             message.replyToMessage!.senderDisplayName ??
                                 message.replyToMessage!.senderName,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: isCurrentUser
-                                  ? AppColors.white
-                                  : AppColors.primary,
+                            style: AppTextStyles.darkBodySmall.copyWith(
+                              color:
+                                  isCurrentUser
+                                      ? AppColors.primaryForeground
+                                      : AppColors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             message.replyToMessage!.content ?? '',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: isCurrentUser
-                                  ? AppColors.white.withOpacity(0.8)
-                                  : AppColors.grey,
+                            style: AppTextStyles.darkBodySmall.copyWith(
+                              color:
+                                  isCurrentUser
+                                      ? AppColors.primaryForeground.withOpacity(
+                                        0.8,
+                                      )
+                                      : AppColors.darkSecondaryText,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -125,27 +135,34 @@ class ChatMessageBubble extends StatelessWidget {
                       ),
                     ),
                   ],
+
                   if (message.content != null)
                     Text(
                       message.content!,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: isCurrentUser ? AppColors.white : AppColors.text,
+                      style: AppTextStyles.darkBodyMedium.copyWith(
+                        color:
+                            isCurrentUser
+                                ? AppColors.primaryForeground
+                                : AppColors.darkPrimaryText,
                       ),
                     ),
+
                   if (message.mediaUrls.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     ...message.mediaUrls.map((url) => _buildMediaWidget(url)),
                   ],
+
                   const SizedBox(height: 4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _formatTime(message.createdAt),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: isCurrentUser
-                              ? AppColors.white.withOpacity(0.7)
-                              : AppColors.grey,
+                        style: AppTextStyles.darkBodySmall.copyWith(
+                          color:
+                              isCurrentUser
+                                  ? AppColors.primaryForeground.withOpacity(0.7)
+                                  : AppColors.darkSecondaryText,
                         ),
                       ),
                       if (isCurrentUser) ...[
@@ -155,9 +172,12 @@ class ChatMessageBubble extends StatelessWidget {
                               ? Icons.done_all
                               : Icons.done,
                           size: 16,
-                          color: message.isReadByCurrentUser
-                              ? AppColors.white
-                              : AppColors.white.withOpacity(0.7),
+                          color:
+                              message.isReadByCurrentUser
+                                  ? AppColors.primaryForeground
+                                  : AppColors.primaryForeground.withOpacity(
+                                    0.7,
+                                  ),
                         ),
                       ],
                     ],
@@ -166,25 +186,28 @@ class ChatMessageBubble extends StatelessWidget {
               ),
             ),
           ),
+
           if (isCurrentUser) ...[
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundColor: AppColors.grey,
-              backgroundImage: message.senderAvatar != null
-                  ? NetworkImage(message.senderAvatar!)
-                  : null,
-              child: message.senderAvatar == null
-                  ? Text(
-                      message.senderName.isNotEmpty
-                          ? message.senderName[0].toUpperCase()
-                          : '?',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
+              backgroundColor: AppColors.darkSecondaryText,
+              backgroundImage:
+                  message.senderAvatar != null
+                      ? NetworkImage(message.senderAvatar!)
+                      : null,
+              child:
+                  message.senderAvatar == null
+                      ? Text(
+                        message.senderName.isNotEmpty
+                            ? message.senderName[0].toUpperCase()
+                            : '?',
+                        style: AppTextStyles.darkBodySmall.copyWith(
+                          color: AppColors.primaryForeground,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                      : null,
             ),
           ],
         ],
@@ -193,8 +216,6 @@ class ChatMessageBubble extends StatelessWidget {
   }
 
   Widget _buildMediaWidget(String url) {
-    // Simple implementation - in a real app, you'd want to detect file type
-    // and show appropriate widgets for images, videos, etc.
     if (url.toLowerCase().contains(RegExp(r'\.(jpg|jpeg|png|gif|webp)$'))) {
       return Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -209,7 +230,7 @@ class ChatMessageBubble extends StatelessWidget {
               return Container(
                 width: 200,
                 height: 200,
-                color: AppColors.grey.withOpacity(0.3),
+                color: AppColors.darkSecondaryText.withOpacity(0.3),
                 child: const Icon(Icons.broken_image),
               );
             },
@@ -221,7 +242,7 @@ class ChatMessageBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.grey.withOpacity(0.1),
+          color: AppColors.darkSecondaryText.withOpacity(0.06),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -232,7 +253,7 @@ class ChatMessageBubble extends StatelessWidget {
             Expanded(
               child: Text(
                 url.split('/').last,
-                style: AppTextStyles.bodySmall,
+                style: AppTextStyles.darkBodySmall,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

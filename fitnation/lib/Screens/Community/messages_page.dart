@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/themes/colors.dart';
-import '../../providers/chat_provider.dart';
-import '../../models/chat_models.dart';
-import 'individual_chat_screen.dart';
+import 'package:fitnation/core/themes/colors.dart';
+import 'package:fitnation/providers/chat_provider.dart';
+import 'package:fitnation/providers/friends_provider.dart';
+import 'package:fitnation/models/chat_models.dart';
+import 'package:fitnation/Screens/Community/chat_screen_new.dart' as new_chat;
+import 'package:fitnation/Screens/Community/find_friends_page.dart';
 
 class MessagesPage extends ConsumerStatefulWidget {
   const MessagesPage({super.key});
@@ -15,6 +17,16 @@ class MessagesPage extends ConsumerStatefulWidget {
 class _MessagesPageState extends ConsumerState<MessagesPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Load chat rooms and friends when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(chatRoomsProvider.notifier).loadChatRooms();
+      ref.read(friendsProvider.notifier).loadFriends();
+    });
+  }
 
   @override
   void dispose() {
@@ -35,7 +47,7 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
       appBar: AppBar(
         backgroundColor: AppColors.darkBackground,
         title: const Text(
-          'Messages',
+          "Messages",
           style: TextStyle(color: AppColors.darkPrimaryText),
         ),
         leading: IconButton(
@@ -44,15 +56,64 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: AppColors.darkPrimaryText),
+            icon: const Icon(Icons.person_add, color: AppColors.darkPrimaryText),
             onPressed: () {
-              // TODO: Implement search
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FindFriendsPage(),
+                ),
+              );
             },
+            tooltip: "Find Friends",
           ),
         ],
       ),
       body: Column(
-        children: [_buildSearchBar(), Expanded(child: _buildChatRoomsList())],
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              style: const TextStyle(color: AppColors.darkPrimaryText),
+              decoration: InputDecoration(
+                hintText: "Search conversations...",
+                hintStyle: const TextStyle(color: AppColors.darkHintText),
+                filled: true,
+                fillColor: AppColors.darkSurface,
+                prefixIcon: const Icon(Icons.search, color: AppColors.darkIcon),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: AppColors.darkIcon),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppColors.darkInputBorder,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppColors.secondary,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Chat rooms list
+          Expanded(
+            child: _buildChatRoomsList(),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateChatDialog(context),
@@ -62,100 +123,75 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _onSearchChanged,
-        style: const TextStyle(color: AppColors.darkPrimaryText),
-        decoration: InputDecoration(
-          hintText: 'Search conversations...',
-          hintStyle: TextStyle(
-            color: AppColors.darkPrimaryText.withOpacity(0.6),
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: AppColors.darkPrimaryText.withOpacity(0.6),
-          ),
-          filled: true,
-          fillColor: AppColors.darkSurface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 15,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildChatRoomsList() {
     final chatRoomsAsync = ref.watch(chatRoomsProvider);
+    final friendsAsync = ref.watch(friendsProvider);
 
     return chatRoomsAsync.when(
       data: (chatRooms) {
         // Filter chat rooms based on search query
-        final filteredRooms =
-            chatRooms.where((room) {
-              final name = room.name?.toLowerCase() ?? '';
-              final lastMessage = room.lastMessageContent?.toLowerCase() ?? '';
-              return name.contains(_searchQuery) ||
-                  lastMessage.contains(_searchQuery);
-            }).toList();
+        final filteredRooms = chatRooms.where((room) {
+          if (_searchQuery.isEmpty) return true;
+          return room.name.toLowerCase().contains(_searchQuery) ||
+                 room.participants.any((p) => 
+                   p.displayName.toLowerCase().contains(_searchQuery) ||
+                   p.username.toLowerCase().contains(_searchQuery)
+                 );
+        }).toList();
 
-        if (filteredRooms.isEmpty) {
-          return _searchQuery.isNotEmpty
-              ? _buildNoSearchResults()
-              : _buildEmptyState();
+        if (filteredRooms.isEmpty && _searchQuery.isEmpty) {
+          return _buildEmptyState();
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: filteredRooms.length,
-          itemBuilder: (context, index) {
-            final room = filteredRooms[index];
-            return _buildChatRoomTile(room);
+        if (filteredRooms.isEmpty && _searchQuery.isNotEmpty) {
+          return _buildNoSearchResults();
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.read(chatRoomsProvider.notifier).loadChatRooms();
           },
+          child: ListView.builder(
+            itemCount: filteredRooms.length,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemBuilder: (context, index) {
+              final room = filteredRooms[index];
+              return _buildChatRoomTile(room);
+            },
+          ),
         );
       },
-      loading:
-          () => const Center(
-            child: CircularProgressIndicator(color: AppColors.secondary),
-          ),
-      error:
-          (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: AppColors.darkPrimaryText.withOpacity(0.6),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading messages',
-                  style: TextStyle(
-                    color: AppColors.darkPrimaryText.withOpacity(0.8),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Pull to refresh',
-                  style: TextStyle(
-                    color: AppColors.darkPrimaryText.withOpacity(0.6),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.secondary),
+      ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              "Error loading chats: $error",
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(chatRoomsProvider.notifier).loadChatRooms();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+              ),
+              child: const Text("Retry"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -166,81 +202,59 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: AppColors.secondary,
-          backgroundImage:
-              room.imageUrl != null ? NetworkImage(room.imageUrl!) : null,
-          child:
-              room.imageUrl == null
-                  ? Text(
-                    room.name?.isNotEmpty == true
-                        ? room.name![0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                  : null,
+          child: room.type == 'direct'
+              ? const Icon(Icons.person, color: Colors.white)
+              : const Icon(Icons.group, color: Colors.white),
         ),
         title: Text(
-          room.name ?? 'Unknown',
-          style: TextStyle(
+          room.name,
+          style: const TextStyle(
             color: AppColors.darkPrimaryText,
-            fontWeight:
-                room.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        subtitle: Text(
-          room.lastMessageContent ?? 'No messages yet',
-          style: TextStyle(
-            color: AppColors.darkPrimaryText.withOpacity(0.7),
-            fontWeight:
-                room.unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (room.lastMessageAt != null)
+            if (room.lastMessage != null)
               Text(
-                _formatDate(room.lastMessageAt!),
-                style: TextStyle(
-                  color: AppColors.darkPrimaryText.withOpacity(0.6),
-                  fontSize: 12,
-                ),
+                room.lastMessage!,
+                style: const TextStyle(color: AppColors.darkHintText),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            if (room.unreadCount > 0) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  room.unreadCount.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            const SizedBox(height: 2),
+            Text(
+              room.lastMessageAt != null
+                  ? _formatDate(room.lastMessageAt!)
+                  : _formatDate(room.createdAt),
+              style: const TextStyle(
+                color: AppColors.darkHintText,
+                fontSize: 12,
               ),
-            ],
+            ),
           ],
         ),
+        trailing: room.participants.length > 2 
+            ? Chip(
+                label: Text('${room.participants.length}'),
+                backgroundColor: AppColors.darkHintText,
+                labelStyle: const TextStyle(color: Colors.white, fontSize: 12),
+              )
+            : const Icon(Icons.chevron_right, color: AppColors.darkIcon),
         onTap: () {
+          // Set current chat room
           ref.read(currentChatRoomProvider.notifier).state = room;
+          
+          // Navigate to chat screen
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => IndividualChatScreen(chatRoom: room),
+              builder: (context) => new_chat.ChatScreen(chatRoom: room),
             ),
           );
         },
-        isThreeLine: room.lastMessageContent != null,
+        isThreeLine: room.lastMessage != null,
       ),
     );
   }
@@ -250,42 +264,46 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.chat_bubble_outline,
-            size: 80,
-            color: AppColors.darkPrimaryText.withOpacity(0.3),
+            size: 64,
+            color: AppColors.darkHintText,
           ),
-          const SizedBox(height: 24),
-          Text(
-            'No conversations yet',
+          const SizedBox(height: 16),
+          const Text(
+            "No conversations yet",
             style: TextStyle(
-              color: AppColors.darkPrimaryText.withOpacity(0.8),
-              fontSize: 20,
+              color: AppColors.darkHintText,
+              fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'Start a conversation with your friends',
+          const Text(
+            "Start chatting with your friends!",
             style: TextStyle(
-              color: AppColors.darkPrimaryText.withOpacity(0.6),
-              fontSize: 16,
+              color: AppColors.darkHintText,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => _showCreateChatDialog(context),
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              'Start Chat',
-              style: TextStyle(color: Colors.white),
-            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FindFriendsPage(),
+                ),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.secondary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
+            ),
+            icon: const Icon(Icons.person_add, color: Colors.white),
+            label: const Text(
+              "Find Friends",
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -298,26 +316,17 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.search_off,
             size: 64,
-            color: AppColors.darkPrimaryText.withOpacity(0.6),
+            color: AppColors.darkHintText,
           ),
           const SizedBox(height: 16),
           Text(
-            'No results found',
-            style: TextStyle(
-              color: AppColors.darkPrimaryText.withOpacity(0.8),
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Try a different search term',
-            style: TextStyle(
-              color: AppColors.darkPrimaryText.withOpacity(0.6),
-              fontSize: 14,
+            "No chats found for '$_searchQuery'",
+            style: const TextStyle(
+              color: AppColors.darkHintText,
+              fontSize: 16,
             ),
           ),
         ],
@@ -327,35 +336,36 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
 
   void _showCreateChatDialog(BuildContext context) {
     final friendsAsync = ref.watch(friendsProvider);
-
+    
     friendsAsync.when(
       data: (friends) {
+        if (friends.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("You need friends to start a chat. Add some friends first!"),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
         showDialog(
           context: context,
           builder: (context) => _CreateChatDialog(friends: friends),
         );
       },
       loading: () {
-        showDialog(
-          context: context,
-          builder:
-              (context) => const AlertDialog(
-                backgroundColor: AppColors.darkSurface,
-                content: SizedBox(
-                  height: 100,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.secondary,
-                    ),
-                  ),
-                ),
-              ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Loading friends..."),
+            backgroundColor: AppColors.secondary,
+          ),
         );
       },
       error: (error, stack) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error loading friends'),
+          SnackBar(
+            content: Text("Error loading friends: $error"),
             backgroundColor: Colors.red,
           ),
         );
@@ -383,8 +393,8 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
 }
 
 class _CreateChatDialog extends ConsumerStatefulWidget {
-  final List<Friend> friends;
-
+  final List friends;
+  
   const _CreateChatDialog({required this.friends});
 
   @override
@@ -400,90 +410,88 @@ class _CreateChatDialogState extends ConsumerState<_CreateChatDialog> {
     return AlertDialog(
       backgroundColor: AppColors.darkSurface,
       title: const Text(
-        'Start New Chat',
+        "Start New Chat",
         style: TextStyle(color: AppColors.darkPrimaryText),
       ),
       content: SizedBox(
         width: double.maxFinite,
         height: 300,
-        child:
-            widget.friends.isEmpty
-                ? const Center(
-                  child: Text(
-                    'No friends available.\nAdd friends to start chatting.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.darkSecondaryText),
-                  ),
-                )
-                : ListView.builder(
-                  itemCount: widget.friends.length,
-                  itemBuilder: (context, index) {
-                    final friend = widget.friends[index];
-                    final isSelected = selectedFriendId == friend.id;
-
-                    return ListTile(
+        child: Column(
+          children: [
+            const Text(
+              "Select a friend to start chatting:",
+              style: TextStyle(color: AppColors.darkHintText),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.friends.length,
+                itemBuilder: (context, index) {
+                  final friend = widget.friends[index];
+                  final isSelected = selectedFriendId == friend.id;
+                  
+                  return Card(
+                    color: isSelected ? AppColors.secondary.withOpacity(0.3) : AppColors.darkBackground,
+                    child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: AppColors.secondary,
-                        backgroundImage:
-                            friend.avatarUrl != null
-                                ? NetworkImage(friend.avatarUrl!)
-                                : null,
-                        child:
-                            friend.avatarUrl == null
-                                ? Text(
-                                  friend.displayName?.isNotEmpty == true
-                                      ? friend.displayName![0].toUpperCase()
-                                      : friend.username[0].toUpperCase(),
-                                  style: const TextStyle(color: Colors.white),
-                                )
-                                : null,
+                        backgroundImage: friend.profileImageUrl != null 
+                            ? NetworkImage(friend.profileImageUrl!)
+                            : null,
+                        child: friend.profileImageUrl == null
+                            ? Text(
+                                friend.displayName.isNotEmpty 
+                                    ? friend.displayName[0].toUpperCase()
+                                    : 'F',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
                       ),
                       title: Text(
-                        friend.displayName ?? friend.username,
-                        style: const TextStyle(
-                          color: AppColors.darkPrimaryText,
+                        friend.displayName,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : AppColors.darkPrimaryText,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                       subtitle: Text(
-                        friend.isOnline ? 'Online' : 'Offline',
+                        '@${friend.username}',
                         style: TextStyle(
-                          color:
-                              friend.isOnline
-                                  ? Colors.green
-                                  : AppColors.darkSecondaryText,
+                          color: isSelected ? Colors.white70 : AppColors.darkHintText,
                         ),
                       ),
-                      trailing:
-                          isSelected
-                              ? const Icon(
-                                Icons.check_circle,
-                                color: AppColors.secondary,
-                              )
-                              : null,
                       onTap: () {
                         setState(() {
                           selectedFriendId = friend.id;
-                          selectedFriendUsername =
-                              friend.displayName ?? friend.username;
+                          selectedFriendUsername = friend.username;
                         });
                       },
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text(
-            'Cancel',
-            style: TextStyle(color: AppColors.darkSecondaryText),
+            "Cancel",
+            style: TextStyle(color: AppColors.darkHintText),
           ),
         ),
         ElevatedButton(
-          onPressed: selectedFriendId != null ? _createDirectChat : null,
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
+          onPressed: selectedFriendId != null ? () => _createDirectChat() : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.secondary,
+          ),
           child: const Text(
-            'Start Chat',
+            "Start Chat",
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -496,20 +504,25 @@ class _CreateChatDialogState extends ConsumerState<_CreateChatDialog> {
 
     Navigator.pop(context); // Close dialog
 
-    // Create a new chat room
-    final createChat = ref.read(createDirectChatProvider);
-    final chatRoom = await createChat(
+    final chatRoom = await ref.read(chatRoomsProvider.notifier).createDirectChat(
       selectedFriendId!,
       selectedFriendUsername!,
     );
 
-    if (mounted) {
+    if (chatRoom != null && mounted) {
       // Navigate to the new chat
       ref.read(currentChatRoomProvider.notifier).state = chatRoom;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => IndividualChatScreen(chatRoom: chatRoom),
+          builder: (context) => new_chat.ChatScreen(chatRoom: chatRoom),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to create chat"),
+          backgroundColor: Colors.red,
         ),
       );
     }

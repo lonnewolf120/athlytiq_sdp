@@ -21,7 +21,6 @@ class ChatInputWidget extends StatefulWidget {
 }
 
 class _ChatInputWidgetState extends State<ChatInputWidget> {
-  bool _isExpanded = false;
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -61,7 +60,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.darkSurface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -76,10 +75,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: AppColors.darkSurface,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: AppColors.grey.withOpacity(0.3),
+                    color: AppColors.darkSecondaryText.withOpacity(0.3),
                   ),
                 ),
                 child: Row(
@@ -89,10 +88,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                       onPressed: () {
                         // TODO: Implement emoji picker
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Emoji picker coming soon!')),
+                          const SnackBar(
+                            content: Text('Emoji picker coming soon!'),
+                          ),
                         );
                       },
-                      color: AppColors.grey,
+                      color: AppColors.darkSecondaryText,
                     ),
                     Expanded(
                       child: TextField(
@@ -108,7 +109,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                             vertical: 12,
                           ),
                         ),
-                        style: AppTextStyles.bodyMedium,
+                        style: AppTextStyles.darkBodyMedium,
                         onSubmitted: (_) => _sendMessage(),
                       ),
                     ),
@@ -117,7 +118,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                       onPressed: () {
                         _showAttachmentOptions();
                       },
-                      color: AppColors.grey,
+                      color: AppColors.darkSecondaryText,
                     ),
                   ],
                 ),
@@ -131,10 +132,11 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.send),
-                onPressed: widget.controller.text.trim().isNotEmpty
-                    ? _sendMessage
-                    : null,
-                color: AppColors.white,
+                onPressed:
+                    widget.controller.text.trim().isNotEmpty
+                        ? _sendMessage
+                        : null,
+                color: AppColors.primaryForeground,
               ),
             ),
           ],
@@ -146,81 +148,82 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.darkSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.grey.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildAttachmentOption(
-                  icon: Icons.camera_alt,
-                  label: 'Camera',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openCamera();
-                  },
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkSecondaryText.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                _buildAttachmentOption(
-                  icon: Icons.photo_library,
-                  label: 'Gallery',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openGallery();
-                  },
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildAttachmentOption(
+                      icon: Icons.camera_alt,
+                      label: 'Camera',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _openCamera();
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      icon: Icons.photo_library,
+                      label: 'Gallery',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _openGallery();
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      icon: Icons.videocam,
+                      label: 'Video',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _openVideoCamera();
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      icon: Icons.audiotrack,
+                      label: 'Audio',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _recordAudio();
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      icon: Icons.location_on,
+                      label: 'Location',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _shareLocation();
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      icon: Icons.contact_page,
+                      label: 'Contact',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _shareContact();
+                      },
+                    ),
+                  ],
                 ),
-                _buildAttachmentOption(
-                  icon: Icons.videocam,
-                  label: 'Video',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openVideoCamera();
-                  },
-                ),
-                _buildAttachmentOption(
-                  icon: Icons.audiotrack,
-                  label: 'Audio',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _recordAudio();
-                  },
-                ),
-                _buildAttachmentOption(
-                  icon: Icons.location_on,
-                  label: 'Location',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _shareLocation();
-                  },
-                ),
-                _buildAttachmentOption(
-                  icon: Icons.contact_page,
-                  label: 'Contact',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _shareContact();
-                  },
-                ),
+                const SizedBox(height: 20),
               ],
             ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -241,17 +244,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 30,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 30),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: AppTextStyles.bodySmall,
-          ),
+          Text(label, style: AppTextStyles.darkBodySmall),
         ],
       ),
     );
@@ -277,19 +273,25 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   void _recordAudio() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Audio recording functionality coming soon!')),
+      const SnackBar(
+        content: Text('Audio recording functionality coming soon!'),
+      ),
     );
   }
 
   void _shareLocation() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location sharing functionality coming soon!')),
+      const SnackBar(
+        content: Text('Location sharing functionality coming soon!'),
+      ),
     );
   }
 
   void _shareContact() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Contact sharing functionality coming soon!')),
+      const SnackBar(
+        content: Text('Contact sharing functionality coming soon!'),
+      ),
     );
   }
 }
