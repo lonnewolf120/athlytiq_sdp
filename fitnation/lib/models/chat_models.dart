@@ -78,7 +78,8 @@ class ChatRoom with _$ChatRoom {
     DateTime? updatedAt,
   }) = _ChatRoom;
 
-  factory ChatRoom.fromJson(Map<String, dynamic> json) => _$ChatRoomFromJson(json);
+  factory ChatRoom.fromJson(Map<String, dynamic> json) =>
+      _$ChatRoomFromJson(json);
 }
 
 @freezed
@@ -99,7 +100,8 @@ class ChatParticipant with _$ChatParticipant {
     DateTime? lastSeen,
   }) = _ChatParticipant;
 
-  factory ChatParticipant.fromJson(Map<String, dynamic> json) => _$ChatParticipantFromJson(json);
+  factory ChatParticipant.fromJson(Map<String, dynamic> json) =>
+      _$ChatParticipantFromJson(json);
 }
 
 @freezed
@@ -112,7 +114,8 @@ class ChatRoomCreate with _$ChatRoomCreate {
     required List<String> participantIds,
   }) = _ChatRoomCreate;
 
-  factory ChatRoomCreate.fromJson(Map<String, dynamic> json) => _$ChatRoomCreateFromJson(json);
+  factory ChatRoomCreate.fromJson(Map<String, dynamic> json) =>
+      _$ChatRoomCreateFromJson(json);
 }
 
 // Message Models
@@ -141,7 +144,8 @@ class ChatMessage with _$ChatMessage {
     @Default(false) bool isReadByCurrentUser,
   }) = _ChatMessage;
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
+  factory ChatMessage.fromJson(Map<String, dynamic> json) =>
+      _$ChatMessageFromJson(json);
 }
 
 @freezed
@@ -156,7 +160,8 @@ class MessageReaction with _$MessageReaction {
     required DateTime createdAt,
   }) = _MessageReaction;
 
-  factory MessageReaction.fromJson(Map<String, dynamic> json) => _$MessageReactionFromJson(json);
+  factory MessageReaction.fromJson(Map<String, dynamic> json) =>
+      _$MessageReactionFromJson(json);
 }
 
 @freezed
@@ -168,7 +173,8 @@ class MessageReadReceipt with _$MessageReadReceipt {
     required DateTime readAt,
   }) = _MessageReadReceipt;
 
-  factory MessageReadReceipt.fromJson(Map<String, dynamic> json) => _$MessageReadReceiptFromJson(json);
+  factory MessageReadReceipt.fromJson(Map<String, dynamic> json) =>
+      _$MessageReadReceiptFromJson(json);
 }
 
 @freezed
@@ -182,7 +188,8 @@ class MessageCreate with _$MessageCreate {
     String? forwardedFromId,
   }) = _MessageCreate;
 
-  factory MessageCreate.fromJson(Map<String, dynamic> json) => _$MessageCreateFromJson(json);
+  factory MessageCreate.fromJson(Map<String, dynamic> json) =>
+      _$MessageCreateFromJson(json);
 }
 
 // Friend Models
@@ -204,7 +211,8 @@ class FriendRequest with _$FriendRequest {
     DateTime? respondedAt,
   }) = _FriendRequest;
 
-  factory FriendRequest.fromJson(Map<String, dynamic> json) => _$FriendRequestFromJson(json);
+  factory FriendRequest.fromJson(Map<String, dynamic> json) =>
+      _$FriendRequestFromJson(json);
 }
 
 @freezed
@@ -237,7 +245,8 @@ class UserSearchResult with _$UserSearchResult {
     @Default(true) bool canSendRequest,
   }) = _UserSearchResult;
 
-  factory UserSearchResult.fromJson(Map<String, dynamic> json) => _$UserSearchResultFromJson(json);
+  factory UserSearchResult.fromJson(Map<String, dynamic> json) =>
+      _$UserSearchResultFromJson(json);
 }
 
 // WebSocket Models
@@ -251,7 +260,8 @@ class WebSocketMessage with _$WebSocketMessage {
     required DateTime timestamp,
   }) = _WebSocketMessage;
 
-  factory WebSocketMessage.fromJson(Map<String, dynamic> json) => _$WebSocketMessageFromJson(json);
+  factory WebSocketMessage.fromJson(Map<String, dynamic> json) =>
+      _$WebSocketMessageFromJson(json);
 }
 
 @freezed
@@ -265,7 +275,8 @@ class TypingIndicator with _$TypingIndicator {
     required DateTime expiresAt,
   }) = _TypingIndicator;
 
-  factory TypingIndicator.fromJson(Map<String, dynamic> json) => _$TypingIndicatorFromJson(json);
+  factory TypingIndicator.fromJson(Map<String, dynamic> json) =>
+      _$TypingIndicatorFromJson(json);
 }
 
 @freezed
@@ -277,7 +288,8 @@ class UserOnlineStatus with _$UserOnlineStatus {
     DateTime? lastActivity,
   }) = _UserOnlineStatus;
 
-  factory UserOnlineStatus.fromJson(Map<String, dynamic> json) => _$UserOnlineStatusFromJson(json);
+  factory UserOnlineStatus.fromJson(Map<String, dynamic> json) =>
+      _$UserOnlineStatusFromJson(json);
 }
 
 // API Response Models
@@ -292,7 +304,8 @@ class ChatRoomListResponse with _$ChatRoomListResponse {
     @Default(false) bool hasPrev,
   }) = _ChatRoomListResponse;
 
-  factory ChatRoomListResponse.fromJson(Map<String, dynamic> json) => _$ChatRoomListResponseFromJson(json);
+  factory ChatRoomListResponse.fromJson(Map<String, dynamic> json) =>
+      _$ChatRoomListResponseFromJson(json);
 }
 
 @freezed
@@ -306,7 +319,8 @@ class MessageListResponse with _$MessageListResponse {
     @Default(false) bool hasPrev,
   }) = _MessageListResponse;
 
-  factory MessageListResponse.fromJson(Map<String, dynamic> json) => _$MessageListResponseFromJson(json);
+  factory MessageListResponse.fromJson(Map<String, dynamic> json) =>
+      _$MessageListResponseFromJson(json);
 }
 
 @freezed
@@ -319,7 +333,8 @@ class UserSearchResponse with _$UserSearchResponse {
     @Default(false) bool hasNext,
   }) = _UserSearchResponse;
 
-  factory UserSearchResponse.fromJson(Map<String, dynamic> json) => _$UserSearchResponseFromJson(json);
+  factory UserSearchResponse.fromJson(Map<String, dynamic> json) =>
+      _$UserSearchResponseFromJson(json);
 }
 
 // Error Models
@@ -331,5 +346,38 @@ class ChatError with _$ChatError {
     Map<String, dynamic>? details,
   }) = _ChatError;
 
-  factory ChatError.fromJson(Map<String, dynamic> json) => _$ChatErrorFromJson(json);
+  factory ChatError.fromJson(Map<String, dynamic> json) =>
+      _$ChatErrorFromJson(json);
+}
+
+// Request Models for API
+@freezed
+class CreateChatRoomRequest with _$CreateChatRoomRequest {
+  const factory CreateChatRoomRequest({
+    required String name,
+    String? description,
+    required ChatRoomType type,
+    required List<String> participantIds,
+    String? avatarUrl,
+    Map<String, dynamic>? metadata,
+  }) = _CreateChatRoomRequest;
+
+  factory CreateChatRoomRequest.fromJson(Map<String, dynamic> json) =>
+      _$CreateChatRoomRequestFromJson(json);
+}
+
+@freezed
+class CreateMessageRequest with _$CreateMessageRequest {
+  const factory CreateMessageRequest({
+    required String content,
+    required MessageType type,
+    String? imageUrl,
+    String? fileUrl,
+    String? fileName,
+    Map<String, dynamic>? metadata,
+    String? replyToMessageId,
+  }) = _CreateMessageRequest;
+
+  factory CreateMessageRequest.fromJson(Map<String, dynamic> json) =>
+      _$CreateMessageRequestFromJson(json);
 }

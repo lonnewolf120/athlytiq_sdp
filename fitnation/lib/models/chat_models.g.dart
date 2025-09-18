@@ -537,3 +537,52 @@ Map<String, dynamic> _$$ChatErrorImplToJson(_$ChatErrorImpl instance) =>
       'message': instance.message,
       'details': instance.details,
     };
+
+_$CreateChatRoomRequestImpl _$$CreateChatRoomRequestImplFromJson(
+  Map<String, dynamic> json,
+) => _$CreateChatRoomRequestImpl(
+  name: json['name'] as String,
+  description: json['description'] as String?,
+  type: $enumDecode(_$ChatRoomTypeEnumMap, json['type']),
+  participantIds:
+      (json['participantIds'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+  avatarUrl: json['avatarUrl'] as String?,
+  metadata: json['metadata'] as Map<String, dynamic>?,
+);
+
+Map<String, dynamic> _$$CreateChatRoomRequestImplToJson(
+  _$CreateChatRoomRequestImpl instance,
+) => <String, dynamic>{
+  'name': instance.name,
+  'description': instance.description,
+  'type': _$ChatRoomTypeEnumMap[instance.type]!,
+  'participantIds': instance.participantIds,
+  'avatarUrl': instance.avatarUrl,
+  'metadata': instance.metadata,
+};
+
+_$CreateMessageRequestImpl _$$CreateMessageRequestImplFromJson(
+  Map<String, dynamic> json,
+) => _$CreateMessageRequestImpl(
+  content: json['content'] as String,
+  type: $enumDecode(_$MessageTypeEnumMap, json['type']),
+  imageUrl: json['imageUrl'] as String?,
+  fileUrl: json['fileUrl'] as String?,
+  fileName: json['fileName'] as String?,
+  metadata: json['metadata'] as Map<String, dynamic>?,
+  replyToMessageId: json['replyToMessageId'] as String?,
+);
+
+Map<String, dynamic> _$$CreateMessageRequestImplToJson(
+  _$CreateMessageRequestImpl instance,
+) => <String, dynamic>{
+  'content': instance.content,
+  'type': _$MessageTypeEnumMap[instance.type]!,
+  'imageUrl': instance.imageUrl,
+  'fileUrl': instance.fileUrl,
+  'fileName': instance.fileName,
+  'metadata': instance.metadata,
+  'replyToMessageId': instance.replyToMessageId,
+};

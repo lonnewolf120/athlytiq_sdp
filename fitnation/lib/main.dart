@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/theme_provider.dart';
+import 'providers/chat_provider.dart';
 // import 'package:introduction_screen/introduction_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'package:awesome_notifications/awesome_notifications.dart'; // Import awesome_notifications
@@ -75,12 +77,17 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(
-    ProviderScope(
-      overrides: [
-        // Override the sharedPreferencesProvider with the initialized instance
-        sharedPreferencesProvider.overrideWithValue(prefs),
+    provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider(create: (context) => ChatProvider()),
       ],
-      child: const MyApp(),
+      child: ProviderScope(
+        overrides: [
+          // Override the sharedPreferencesProvider with the initialized instance
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }

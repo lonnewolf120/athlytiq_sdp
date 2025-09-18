@@ -5835,3 +5835,639 @@ abstract class _ChatError implements ChatError {
   _$$ChatErrorImplCopyWith<_$ChatErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
+
+CreateChatRoomRequest _$CreateChatRoomRequestFromJson(
+  Map<String, dynamic> json,
+) {
+  return _CreateChatRoomRequest.fromJson(json);
+}
+
+/// @nodoc
+mixin _$CreateChatRoomRequest {
+  String get name => throw _privateConstructorUsedError;
+  String? get description => throw _privateConstructorUsedError;
+  ChatRoomType get type => throw _privateConstructorUsedError;
+  List<String> get participantIds => throw _privateConstructorUsedError;
+  String? get avatarUrl => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get metadata => throw _privateConstructorUsedError;
+
+  /// Serializes this CreateChatRoomRequest to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of CreateChatRoomRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $CreateChatRoomRequestCopyWith<CreateChatRoomRequest> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $CreateChatRoomRequestCopyWith<$Res> {
+  factory $CreateChatRoomRequestCopyWith(
+    CreateChatRoomRequest value,
+    $Res Function(CreateChatRoomRequest) then,
+  ) = _$CreateChatRoomRequestCopyWithImpl<$Res, CreateChatRoomRequest>;
+  @useResult
+  $Res call({
+    String name,
+    String? description,
+    ChatRoomType type,
+    List<String> participantIds,
+    String? avatarUrl,
+    Map<String, dynamic>? metadata,
+  });
+}
+
+/// @nodoc
+class _$CreateChatRoomRequestCopyWithImpl<
+  $Res,
+  $Val extends CreateChatRoomRequest
+>
+    implements $CreateChatRoomRequestCopyWith<$Res> {
+  _$CreateChatRoomRequestCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of CreateChatRoomRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? name = null,
+    Object? description = freezed,
+    Object? type = null,
+    Object? participantIds = null,
+    Object? avatarUrl = freezed,
+    Object? metadata = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            name:
+                null == name
+                    ? _value.name
+                    : name // ignore: cast_nullable_to_non_nullable
+                        as String,
+            description:
+                freezed == description
+                    ? _value.description
+                    : description // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            type:
+                null == type
+                    ? _value.type
+                    : type // ignore: cast_nullable_to_non_nullable
+                        as ChatRoomType,
+            participantIds:
+                null == participantIds
+                    ? _value.participantIds
+                    : participantIds // ignore: cast_nullable_to_non_nullable
+                        as List<String>,
+            avatarUrl:
+                freezed == avatarUrl
+                    ? _value.avatarUrl
+                    : avatarUrl // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            metadata:
+                freezed == metadata
+                    ? _value.metadata
+                    : metadata // ignore: cast_nullable_to_non_nullable
+                        as Map<String, dynamic>?,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$CreateChatRoomRequestImplCopyWith<$Res>
+    implements $CreateChatRoomRequestCopyWith<$Res> {
+  factory _$$CreateChatRoomRequestImplCopyWith(
+    _$CreateChatRoomRequestImpl value,
+    $Res Function(_$CreateChatRoomRequestImpl) then,
+  ) = __$$CreateChatRoomRequestImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String name,
+    String? description,
+    ChatRoomType type,
+    List<String> participantIds,
+    String? avatarUrl,
+    Map<String, dynamic>? metadata,
+  });
+}
+
+/// @nodoc
+class __$$CreateChatRoomRequestImplCopyWithImpl<$Res>
+    extends
+        _$CreateChatRoomRequestCopyWithImpl<$Res, _$CreateChatRoomRequestImpl>
+    implements _$$CreateChatRoomRequestImplCopyWith<$Res> {
+  __$$CreateChatRoomRequestImplCopyWithImpl(
+    _$CreateChatRoomRequestImpl _value,
+    $Res Function(_$CreateChatRoomRequestImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of CreateChatRoomRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? name = null,
+    Object? description = freezed,
+    Object? type = null,
+    Object? participantIds = null,
+    Object? avatarUrl = freezed,
+    Object? metadata = freezed,
+  }) {
+    return _then(
+      _$CreateChatRoomRequestImpl(
+        name:
+            null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                    as String,
+        description:
+            freezed == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        type:
+            null == type
+                ? _value.type
+                : type // ignore: cast_nullable_to_non_nullable
+                    as ChatRoomType,
+        participantIds:
+            null == participantIds
+                ? _value._participantIds
+                : participantIds // ignore: cast_nullable_to_non_nullable
+                    as List<String>,
+        avatarUrl:
+            freezed == avatarUrl
+                ? _value.avatarUrl
+                : avatarUrl // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        metadata:
+            freezed == metadata
+                ? _value._metadata
+                : metadata // ignore: cast_nullable_to_non_nullable
+                    as Map<String, dynamic>?,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$CreateChatRoomRequestImpl implements _CreateChatRoomRequest {
+  const _$CreateChatRoomRequestImpl({
+    required this.name,
+    this.description,
+    required this.type,
+    required final List<String> participantIds,
+    this.avatarUrl,
+    final Map<String, dynamic>? metadata,
+  }) : _participantIds = participantIds,
+       _metadata = metadata;
+
+  factory _$CreateChatRoomRequestImpl.fromJson(Map<String, dynamic> json) =>
+      _$$CreateChatRoomRequestImplFromJson(json);
+
+  @override
+  final String name;
+  @override
+  final String? description;
+  @override
+  final ChatRoomType type;
+  final List<String> _participantIds;
+  @override
+  List<String> get participantIds {
+    if (_participantIds is EqualUnmodifiableListView) return _participantIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_participantIds);
+  }
+
+  @override
+  final String? avatarUrl;
+  final Map<String, dynamic>? _metadata;
+  @override
+  Map<String, dynamic>? get metadata {
+    final value = _metadata;
+    if (value == null) return null;
+    if (_metadata is EqualUnmodifiableMapView) return _metadata;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  String toString() {
+    return 'CreateChatRoomRequest(name: $name, description: $description, type: $type, participantIds: $participantIds, avatarUrl: $avatarUrl, metadata: $metadata)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CreateChatRoomRequestImpl &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
+            (identical(other.type, type) || other.type == type) &&
+            const DeepCollectionEquality().equals(
+              other._participantIds,
+              _participantIds,
+            ) &&
+            (identical(other.avatarUrl, avatarUrl) ||
+                other.avatarUrl == avatarUrl) &&
+            const DeepCollectionEquality().equals(other._metadata, _metadata));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    name,
+    description,
+    type,
+    const DeepCollectionEquality().hash(_participantIds),
+    avatarUrl,
+    const DeepCollectionEquality().hash(_metadata),
+  );
+
+  /// Create a copy of CreateChatRoomRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CreateChatRoomRequestImplCopyWith<_$CreateChatRoomRequestImpl>
+  get copyWith =>
+      __$$CreateChatRoomRequestImplCopyWithImpl<_$CreateChatRoomRequestImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$CreateChatRoomRequestImplToJson(this);
+  }
+}
+
+abstract class _CreateChatRoomRequest implements CreateChatRoomRequest {
+  const factory _CreateChatRoomRequest({
+    required final String name,
+    final String? description,
+    required final ChatRoomType type,
+    required final List<String> participantIds,
+    final String? avatarUrl,
+    final Map<String, dynamic>? metadata,
+  }) = _$CreateChatRoomRequestImpl;
+
+  factory _CreateChatRoomRequest.fromJson(Map<String, dynamic> json) =
+      _$CreateChatRoomRequestImpl.fromJson;
+
+  @override
+  String get name;
+  @override
+  String? get description;
+  @override
+  ChatRoomType get type;
+  @override
+  List<String> get participantIds;
+  @override
+  String? get avatarUrl;
+  @override
+  Map<String, dynamic>? get metadata;
+
+  /// Create a copy of CreateChatRoomRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CreateChatRoomRequestImplCopyWith<_$CreateChatRoomRequestImpl>
+  get copyWith => throw _privateConstructorUsedError;
+}
+
+CreateMessageRequest _$CreateMessageRequestFromJson(Map<String, dynamic> json) {
+  return _CreateMessageRequest.fromJson(json);
+}
+
+/// @nodoc
+mixin _$CreateMessageRequest {
+  String get content => throw _privateConstructorUsedError;
+  MessageType get type => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
+  String? get fileUrl => throw _privateConstructorUsedError;
+  String? get fileName => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get metadata => throw _privateConstructorUsedError;
+  String? get replyToMessageId => throw _privateConstructorUsedError;
+
+  /// Serializes this CreateMessageRequest to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of CreateMessageRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $CreateMessageRequestCopyWith<CreateMessageRequest> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $CreateMessageRequestCopyWith<$Res> {
+  factory $CreateMessageRequestCopyWith(
+    CreateMessageRequest value,
+    $Res Function(CreateMessageRequest) then,
+  ) = _$CreateMessageRequestCopyWithImpl<$Res, CreateMessageRequest>;
+  @useResult
+  $Res call({
+    String content,
+    MessageType type,
+    String? imageUrl,
+    String? fileUrl,
+    String? fileName,
+    Map<String, dynamic>? metadata,
+    String? replyToMessageId,
+  });
+}
+
+/// @nodoc
+class _$CreateMessageRequestCopyWithImpl<
+  $Res,
+  $Val extends CreateMessageRequest
+>
+    implements $CreateMessageRequestCopyWith<$Res> {
+  _$CreateMessageRequestCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of CreateMessageRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? content = null,
+    Object? type = null,
+    Object? imageUrl = freezed,
+    Object? fileUrl = freezed,
+    Object? fileName = freezed,
+    Object? metadata = freezed,
+    Object? replyToMessageId = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            content:
+                null == content
+                    ? _value.content
+                    : content // ignore: cast_nullable_to_non_nullable
+                        as String,
+            type:
+                null == type
+                    ? _value.type
+                    : type // ignore: cast_nullable_to_non_nullable
+                        as MessageType,
+            imageUrl:
+                freezed == imageUrl
+                    ? _value.imageUrl
+                    : imageUrl // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            fileUrl:
+                freezed == fileUrl
+                    ? _value.fileUrl
+                    : fileUrl // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            fileName:
+                freezed == fileName
+                    ? _value.fileName
+                    : fileName // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            metadata:
+                freezed == metadata
+                    ? _value.metadata
+                    : metadata // ignore: cast_nullable_to_non_nullable
+                        as Map<String, dynamic>?,
+            replyToMessageId:
+                freezed == replyToMessageId
+                    ? _value.replyToMessageId
+                    : replyToMessageId // ignore: cast_nullable_to_non_nullable
+                        as String?,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$CreateMessageRequestImplCopyWith<$Res>
+    implements $CreateMessageRequestCopyWith<$Res> {
+  factory _$$CreateMessageRequestImplCopyWith(
+    _$CreateMessageRequestImpl value,
+    $Res Function(_$CreateMessageRequestImpl) then,
+  ) = __$$CreateMessageRequestImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String content,
+    MessageType type,
+    String? imageUrl,
+    String? fileUrl,
+    String? fileName,
+    Map<String, dynamic>? metadata,
+    String? replyToMessageId,
+  });
+}
+
+/// @nodoc
+class __$$CreateMessageRequestImplCopyWithImpl<$Res>
+    extends _$CreateMessageRequestCopyWithImpl<$Res, _$CreateMessageRequestImpl>
+    implements _$$CreateMessageRequestImplCopyWith<$Res> {
+  __$$CreateMessageRequestImplCopyWithImpl(
+    _$CreateMessageRequestImpl _value,
+    $Res Function(_$CreateMessageRequestImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of CreateMessageRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? content = null,
+    Object? type = null,
+    Object? imageUrl = freezed,
+    Object? fileUrl = freezed,
+    Object? fileName = freezed,
+    Object? metadata = freezed,
+    Object? replyToMessageId = freezed,
+  }) {
+    return _then(
+      _$CreateMessageRequestImpl(
+        content:
+            null == content
+                ? _value.content
+                : content // ignore: cast_nullable_to_non_nullable
+                    as String,
+        type:
+            null == type
+                ? _value.type
+                : type // ignore: cast_nullable_to_non_nullable
+                    as MessageType,
+        imageUrl:
+            freezed == imageUrl
+                ? _value.imageUrl
+                : imageUrl // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        fileUrl:
+            freezed == fileUrl
+                ? _value.fileUrl
+                : fileUrl // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        fileName:
+            freezed == fileName
+                ? _value.fileName
+                : fileName // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        metadata:
+            freezed == metadata
+                ? _value._metadata
+                : metadata // ignore: cast_nullable_to_non_nullable
+                    as Map<String, dynamic>?,
+        replyToMessageId:
+            freezed == replyToMessageId
+                ? _value.replyToMessageId
+                : replyToMessageId // ignore: cast_nullable_to_non_nullable
+                    as String?,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$CreateMessageRequestImpl implements _CreateMessageRequest {
+  const _$CreateMessageRequestImpl({
+    required this.content,
+    required this.type,
+    this.imageUrl,
+    this.fileUrl,
+    this.fileName,
+    final Map<String, dynamic>? metadata,
+    this.replyToMessageId,
+  }) : _metadata = metadata;
+
+  factory _$CreateMessageRequestImpl.fromJson(Map<String, dynamic> json) =>
+      _$$CreateMessageRequestImplFromJson(json);
+
+  @override
+  final String content;
+  @override
+  final MessageType type;
+  @override
+  final String? imageUrl;
+  @override
+  final String? fileUrl;
+  @override
+  final String? fileName;
+  final Map<String, dynamic>? _metadata;
+  @override
+  Map<String, dynamic>? get metadata {
+    final value = _metadata;
+    if (value == null) return null;
+    if (_metadata is EqualUnmodifiableMapView) return _metadata;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  final String? replyToMessageId;
+
+  @override
+  String toString() {
+    return 'CreateMessageRequest(content: $content, type: $type, imageUrl: $imageUrl, fileUrl: $fileUrl, fileName: $fileName, metadata: $metadata, replyToMessageId: $replyToMessageId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CreateMessageRequestImpl &&
+            (identical(other.content, content) || other.content == content) &&
+            (identical(other.type, type) || other.type == type) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.fileUrl, fileUrl) || other.fileUrl == fileUrl) &&
+            (identical(other.fileName, fileName) ||
+                other.fileName == fileName) &&
+            const DeepCollectionEquality().equals(other._metadata, _metadata) &&
+            (identical(other.replyToMessageId, replyToMessageId) ||
+                other.replyToMessageId == replyToMessageId));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    content,
+    type,
+    imageUrl,
+    fileUrl,
+    fileName,
+    const DeepCollectionEquality().hash(_metadata),
+    replyToMessageId,
+  );
+
+  /// Create a copy of CreateMessageRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CreateMessageRequestImplCopyWith<_$CreateMessageRequestImpl>
+  get copyWith =>
+      __$$CreateMessageRequestImplCopyWithImpl<_$CreateMessageRequestImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$CreateMessageRequestImplToJson(this);
+  }
+}
+
+abstract class _CreateMessageRequest implements CreateMessageRequest {
+  const factory _CreateMessageRequest({
+    required final String content,
+    required final MessageType type,
+    final String? imageUrl,
+    final String? fileUrl,
+    final String? fileName,
+    final Map<String, dynamic>? metadata,
+    final String? replyToMessageId,
+  }) = _$CreateMessageRequestImpl;
+
+  factory _CreateMessageRequest.fromJson(Map<String, dynamic> json) =
+      _$CreateMessageRequestImpl.fromJson;
+
+  @override
+  String get content;
+  @override
+  MessageType get type;
+  @override
+  String? get imageUrl;
+  @override
+  String? get fileUrl;
+  @override
+  String? get fileName;
+  @override
+  Map<String, dynamic>? get metadata;
+  @override
+  String? get replyToMessageId;
+
+  /// Create a copy of CreateMessageRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CreateMessageRequestImplCopyWith<_$CreateMessageRequestImpl>
+  get copyWith => throw _privateConstructorUsedError;
+}

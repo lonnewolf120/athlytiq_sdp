@@ -5,7 +5,7 @@ import '../../models/chat_models.dart';
 import '../../core/themes/colors.dart';
 import '../../core/themes/text_styles.dart';
 import 'chat_room_screen.dart';
-import 'create_chat_room_screen.dart';
+// import 'create_chat_room_screen.dart'; // TODO: Fix CreateChatRoomScreen implementation
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -49,12 +49,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateChatRoomScreen(),
+              // TODO: Implement CreateChatRoomScreen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Create chat feature coming soon!'),
                 ),
               );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) => const CreateChatRoomScreen(),
+              //   ),
+              // );
             },
           ),
         ],
