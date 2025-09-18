@@ -1,5 +1,6 @@
 import 'package:fitnation/Screens/Community/CreatePostScreen.dart';
 import 'package:fitnation/screens/community/PostDetailScreen.dart';
+import 'package:fitnation/Screens/Community/messages_page.dart';
 import 'package:fitnation/widgets/community/PostCard.dart';
 import 'package:fitnation/widgets/community/StoryBubble.dart';
 import 'package:fitnation/widgets/community/UserProfileModal.dart';
@@ -48,6 +49,15 @@ class _CommunityHomeScreenState
         showMenuButton: false, // Disable menu button
         showProfileMenu: true, // Enable profile menu
         actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MessagesPage()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () {
@@ -117,7 +127,9 @@ class _CommunityHomeScreenState
                         if (post.author?.id != null) {
                           showDialog(
                             context: context,
-                            builder: (context) => UserProfileModal(userId: post.author!.id),
+                            builder:
+                                (context) =>
+                                    UserProfileModal(userId: post.author!.id),
                           );
                         }
                       },
@@ -125,7 +137,8 @@ class _CommunityHomeScreenState
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PostDetailScreen(postId: post.id),
+                            builder:
+                                (context) => PostDetailScreen(postId: post.id),
                           ),
                         );
                       },
