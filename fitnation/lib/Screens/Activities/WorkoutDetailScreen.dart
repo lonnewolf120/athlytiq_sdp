@@ -1,16 +1,15 @@
 import 'package:fitnation/Screens/Activities/ActiveWorkoutScreen.dart';
 import 'package:fitnation/models/Workout.dart'; // Import the Workout model
-import 'package:fitnation/models/PlannedExercise.dart';
 import 'package:fitnation/models/Exercise.dart'
     as exercise_db; // Aliased to avoid conflict if any
 import 'package:fitnation/core/themes/colors.dart'; // Import PlannedExercise
 import 'package:fitnation/providers/active_workout_provider.dart'; // Correct import
 import 'package:fitnation/core/themes/text_styles.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // For icon URL
-import 'package:fitnation/widgets/Activities/WorkoutDetailExerciseItem.dart';
 import 'package:fitnation/services/workout_notification_service.dart'; // Import notification service
 import 'package:flutter/material.dart';
 import 'package:fitnation/Screens/Activities/MealPlanGeneratorScreen.dart'; // Import MealPlanGeneratorScreen
+import 'package:fitnation/helpers/exercise_database_helper.dart';
 
 class WorkoutDetailScreen extends StatefulWidget {
   final Workout workoutPlan; // Now accepts the full Workout model
@@ -37,6 +36,65 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   Future<void> _initializeNotifications() async {
     await _notificationService.initializeNotifications();
+  }
+
+  /// Resolve each PlannedExercise to a real catalog Exercise (full gif/muscles/instructions),
+  /// then launch ActiveWorkoutScreen.
+  Future<void> _startWorkout(BuildContext context) async {
+    final db = ExerciseDatabaseHelper();
+    await db.loadExercisesFromJson();
+
+    final activeExercises = <ActiveWorkoutExercise>[];
+    for (final pe in widget.workoutPlan.exercises) {
+      // Try to get full exercise data from catalog
+      exercise_db.Exercise? fullEx;
+      if (pe.exerciseId.isNotEmpty) {
+        fullEx = await db.getExerciseById(pe.exerciseId);
+      }
+      // Fallback: name search
+      if (fullEx == null && pe.exerciseName.isNotEmpty) {
+        final results = await db.searchExercises(query: pe.exerciseName, limit: 1);
+        if (results.isNotEmpty) fullEx = results.first;
+      }
+      // Final fallback: build from PlannedExercise fields (same as before, but explicit)
+      final baseEx = fullEx ??
+          exercise_db.Exercise(
+            exerciseId: pe.exerciseId,
+            name: pe.exerciseName,
+            gifUrl: pe.exerciseGifUrl ?? '',
+            bodyParts: const [],
+            equipments: pe.exerciseEquipments?.whereType<String>().toList() ?? const [],
+            targetMuscles: const [],
+            secondaryMuscles: const [],
+            instructions: const [],
+          );
+
+      activeExercises.add(ActiveWorkoutExercise(
+        baseExercise: baseEx,
+        sets: List.generate(pe.plannedSets > 0 ? pe.plannedSets : 3, (_) {
+          return ActiveWorkoutSet(
+            weight: pe.plannedWeight ?? '',
+            reps: pe.plannedReps > 0 ? pe.plannedReps.toString() : '',
+          );
+        }),
+      ));
+    }
+
+    if (!context.mounted) return;
+
+    final initialState = ActiveWorkoutState(
+      id: widget.workoutPlan.id,
+      workoutName: widget.workoutPlan.name,
+      startTime: DateTime.now(),
+      exercises: activeExercises,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActiveWorkoutScreen(initialState: initialState),
+      ),
+    );
   }
 
   /// Show dialog to schedule workout with date/time picker
@@ -387,56 +445,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Create the initial state for the ActiveWorkoutState
-                        final initialActiveState = ActiveWorkoutState(
-                          id:
-                              widget
-                                  .workoutPlan
-                                  .id, // Use 'id' from ActiveWorkoutState
-                          workoutName: widget.workoutPlan.name,
-                          startTime: DateTime.now(),
-                          exercises:
-                              widget.workoutPlan.exercises.map((pe) {
-                                // Create a base exercise_db.Exercise from PlannedExercise
-                                // This is a bit of a workaround as PlannedExercise is not directly exercise_db.Exercise
-                                // Ideally, PlannedExercise would hold a full exercise_db.Exercise object or enough info
-                                final baseEx = exercise_db.Exercise(
-                                  exerciseId: pe.exerciseId,
-                                  name: pe.exerciseName,
-                                  gifUrl: pe.exerciseGifUrl ?? '',
-                                  bodyParts:
-                                      [], // Placeholder or map from PlannedExercise if available
-                                  equipments:
-                                      pe.exerciseEquipments
-                                          ?.whereType<String>()
-                                          .toList() ??
-                                      [],
-                                  targetMuscles: [], // Placeholder
-                                  secondaryMuscles: [], // Placeholder
-                                  instructions: [], // Placeholder
-                                );
-                                return ActiveWorkoutExercise(
-                                  baseExercise:
-                                      baseEx, // Pass the created baseExercise
-                                  sets: List.generate(
-                                    pe.plannedSets,
-                                    (_) => ActiveWorkoutSet(),
-                                  ),
-                                );
-                              }).toList(),
-                        );
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ActiveWorkoutScreen(
-                                  initialState: initialActiveState,
-                                ),
-                          ),
-                        );
-                      },
+                      onPressed: () => _startWorkout(context),
                       child: const Text('START'),
                     ),
                   ),
