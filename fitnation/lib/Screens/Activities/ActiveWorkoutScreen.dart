@@ -2,23 +2,15 @@ import 'dart:async'; // For Timer
 import 'package:fitnation/providers/active_workout_provider.dart'; // Correct import
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fitnation/core/themes/colors.dart';
-import 'package:fitnation/core/themes/text_styles.dart';
 import 'package:fitnation/models/Exercise.dart';
-import 'package:fitnation/models/Workout.dart';
-import 'package:fitnation/models/WorkoutPostModel.dart';
 import 'package:fitnation/providers/exercise_data_provider.dart';
 import 'package:fitnation/widgets/Activities/ActiveWorkout_Items.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Assuming Riverpod for state/data
-import 'package:intl/intl.dart'; // For time formatting
-import 'package:uuid/uuid.dart'; // For generating unique IDs
 import 'package:fitnation/services/database_helper.dart'; // Import DatabaseHelper
-import 'package:fitnation/models/CompletedWorkout.dart';
-// import 'package:fitnation/models/CompletedWorkoutExercise.dart'; // Now in CompletedWorkout.dart
-// import 'package:fitnation/models/CompletedWorkoutSet.dart'; // Now in CompletedWorkout.dart
-import 'package:fitnation/models/User.dart'; // Assuming User model is available
 import 'package:fitnation/providers/data_providers.dart'; // Assuming currentUserProvider is here
 import 'package:fitnation/providers/auth_provider.dart'; // Added missing import
+import 'package:fitnation/Screens/Activities/WorkoutCompletionScreen.dart';
 
 // TODO: Define providers for searching/selecting exercises if needed for "Add Exercise" button
 // Example:
@@ -325,26 +317,31 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     // Thus, the local creation of `completedExercises` and its associated checks are removed from here.
 
     try {
-      // debugPrint('Attempting to save workout: ${completedWorkout.workoutName}'); // This object is no longer created here
       final apiService = ref.read(apiServiceProvider);
       final dbHelper = DatabaseHelper();
+
+      // Capture before save resets state
+      final completedWorkout = ref
+          .read(activeWorkoutProvider.notifier)
+          .generateCompletedWorkoutData(userId);
 
       final success = await ref
           .read(activeWorkoutProvider.notifier)
           .saveCompletedWorkout(userId, apiService, dbHelper);
 
       if (mounted) {
-        // Check if the widget is still in the tree
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Workout saved successfully!')),
+        if (success && completedWorkout != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => WorkoutCompletionScreen(completedWorkout: completedWorkout),
+            ),
           );
-          Navigator.pop(context); // Go back to previous screen
+        } else if (success) {
+          Navigator.pop(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to save workout. Please try again.'),
-            ),
+            const SnackBar(content: Text('Failed to save workout. Please try again.')),
           );
         }
       }
