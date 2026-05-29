@@ -15,7 +15,7 @@ This is the flagship differentiator: no incumbent connects nutrition logs to lif
 **In scope (v1):**
 - 14-day rolling window.
 - Text insights only (title, body, category, severity, suggested action).
-- Reads **existing** data (local completed workouts + backend food logs). **No backend changes.**
+- Reads **existing local** data (completed workouts + food logs, both in sqflite). **No backend changes.** Fully offline-capable except the AI call itself.
 - Local-first with offline cache of the last good insight set.
 - One UI surface: a `CoachInsightCard` on the Home screen (reused on the nutrition progress screen).
 
@@ -23,7 +23,6 @@ This is the flagship differentiator: no incumbent connects nutrition logs to lif
 - Push/proactive notifications (Phase 2 "proactivity").
 - Wearable/HRV/sleep recovery inputs.
 - Camera form coach, adaptive auto-planning.
-- A food-log range endpoint (v1 loops existing per-day endpoint).
 
 **YAGNI:** no new charts, no settings, no multi-window comparison.
 
@@ -31,11 +30,11 @@ This is the flagship differentiator: no incumbent connects nutrition logs to lif
 
 - `services/gemini_service.dart` — `GeminiService` using `firebase_ai` (`FirebaseAI.googleAI()`, `gemini-2.5-flash-preview-05-20`), prompt builder + robust markdown-stripping JSON parse. **Pattern to mirror.**
 - `models/CompletedWorkout.dart` — `CompletedWorkout` (startTime, endTime, durationSeconds, intensityScore, exercises→sets with `weight`/`reps` as **strings**, e.g. `"Bodyweight"`).
-- `services/database_helper.dart` — `getAllCompletedWorkouts()` / `getCompletedWorkouts()` → `List<CompletedWorkout>` (local sqflite).
-- `services/api_service.dart` — `ApiService.getFoodLogsForDate(userId, date)` → `List<FoodLogEntry>` (calories/protein/carbs/fat/quantity/unit/mealType/loggedAt).
-- State management: **Riverpod** (`flutter_riverpod` + `StateNotifier`/`AsyncNotifier`), as used in `nutrition_provider.dart`.
+- `services/database_helper.dart` — sqflite store. `getAllCompletedWorkouts()` / `getCompletedWorkouts()` → `List<CompletedWorkout>`; `food_logs` table with `getFoodLogsByDate(userId, date)` → `List<Map>` (food_name, calories, protein, carbs, fat, serving_size, meal_type, consumed_at) and `insertFoodLog(...)`. **Both inputs are local** ⇒ aggregation is fully offline.
+- `providers/nutrition_provider.dart` — Riverpod `StateNotifier` reading food logs from `DatabaseHelper.getFoodLogsByDate`. Note: it currently passes a placeholder `userId = "current_user"`; our provider must use the **real authenticated userId** from `auth_provider`.
+- State management: **Riverpod** (`flutter_riverpod` + `StateNotifier`/`AsyncNotifier`).
 
-**Pre-existing risk (not owned by this slice):** `api_service.dart` contains duplicated `FoodLogEntry.fromJson` and `getFoodLogsForDate` definitions (merge artifact) that will not compile. Our new code depends on food logs only through a narrow interface (`FoodLogSource`), so the aggregator + AI service + tests are unaffected and fully testable regardless. The duplicate is flagged for a separate cleanup; the plan will note it as a build blocker to confirm/fix before wiring the provider into the running app.
+**Note:** v1 reads the 14-day window from sqflite. We will add `DatabaseHelper.getFoodLogsInRange(userId, start, end)` (or loop `getFoodLogsByDate` over the window) — a small, additive local query, no schema change.
 
 ## 4. Architecture
 
@@ -79,7 +78,7 @@ lib/
 
 **`AiJson.extract(String raw)`** — the markdown-fence stripping + List/Map/double-decode logic currently inlined in `GeminiService`, extracted to one tested helper. `GeminiService` is refactored to call it (targeted, behavior-preserving; covered by a characterization test).
 
-**`coach_data_source.dart`** — `WorkoutSource` (`getRecentCompletedWorkouts(window)`) and `FoodLogSource` (`getMacrosByDay(userId, window)`). Concrete adapters wrap `DatabaseHelper` and `ApiService` (looping per-day over the window). Interfaces keep the provider testable and insulate us from the `api_service.dart` dup.
+**`coach_data_source.dart`** — `WorkoutSource` (`getRecentCompletedWorkouts(window)`) and `FoodLogSource` (`getMacrosByDay(userId, window)`). Both concrete adapters wrap `DatabaseHelper` (workouts via `getAllCompletedWorkouts`, macros via the new local range query). Interfaces keep the provider unit-testable with fakes.
 
 **`coachInsightsProvider`** (`AsyncNotifier<List<CoachInsight>>`)
 - Load workouts (local) + macros (per-day loop), aggregate, call service, write result + timestamp to a `coach_insights_cache` sqflite table.
@@ -93,7 +92,7 @@ lib/
 ```
 Home → coachInsightsProvider
   → WorkoutSource.getRecentCompletedWorkouts(14d)   [local sqflite]
-  → FoodLogSource.getMacrosByDay(userId, 14d)        [backend, per-day loop]
+  → FoodLogSource.getMacrosByDay(userId, 14d)        [local sqflite]
   → PerformanceNutritionAggregator → CoachingSnapshot
   → CoachInsightService.generate() → List<CoachInsight>   [firebase_ai]
   → cache to sqflite → CoachInsightCard renders
@@ -106,8 +105,7 @@ Home → coachInsightsProvider
 | Not authenticated / no userId | Empty state (no fetch). |
 | Insufficient data (<2 workouts or <3 logged days) | Empty "unlock" state; model not called. |
 | AI call fails / invalid JSON | Serve cached insights if present; else error state with retry. Never crash. |
-| Offline | Serve cached insights; card shows "offline — last updated <time>". |
-| Partial food-log day fetch failure | Treat that day as "not logged"; continue. |
+| Offline (AI unreachable) | Serve cached insights; card shows "offline — last updated <time>". Data load itself is local and always succeeds. |
 
 ## 6. Testing (TDD)
 
@@ -129,13 +127,14 @@ Provider orchestration covered via fake `WorkoutSource`/`FoodLogSource` + fake s
 2. `AiJson` extraction + `GeminiService` refactor (characterization test green).
 3. `PerformanceNutritionAggregator` (TDD).
 4. `CoachInsightService` with injectable model (TDD).
-5. Data-source interfaces + adapters; confirm/fix `api_service.dart` dup build blocker.
-6. `coachInsightsProvider` + sqflite cache.
+5. Data-source interfaces + adapters; add `DatabaseHelper.getFoodLogsInRange` (local range query).
+6. `coachInsightsProvider` (real auth userId) + sqflite insight cache.
 7. `CoachInsightCard` + Home wiring.
 8. Manual run/verify on Home.
 
 ## 8. Open questions resolved
-- Food-log source: backend per-day (`ApiService.getFoodLogsForDate`); v1 loops the window client-side; range endpoint deferred.
-- Workout source: local sqflite (`DatabaseHelper`).
+- Food-log source: **local sqflite** (`DatabaseHelper`, `food_logs` table); add a local range query for the window.
+- Workout source: local sqflite (`DatabaseHelper.getAllCompletedWorkouts`).
+- userId: real authenticated id from `auth_provider` (not the `"current_user"` placeholder seen in `nutrition_provider`).
 - State mgmt: Riverpod (matches repo).
 - AI: `firebase_ai` Gemini (matches `GeminiService`).
