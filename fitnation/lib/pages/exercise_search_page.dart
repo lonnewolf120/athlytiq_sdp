@@ -4,6 +4,7 @@ import '../models/Exercise.dart';
 import '../providers/exercise_search_provider.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/exercise_filters.dart';
+import '../widgets/anatomy/exercise_muscles_section.dart';
 
 class ExerciseSearchPage extends ConsumerStatefulWidget {
   const ExerciseSearchPage({Key? key}) : super(key: key);
@@ -389,6 +390,8 @@ class _ExerciseSearchPageState extends ConsumerState<ExerciseSearchPage> {
                             'Secondary Muscles',
                             exercise.secondaryMuscles,
                           ),
+
+                        ExerciseMusclesSection(exercise: exercise),
 
                         if (exercise.instructions.isNotEmpty) ...[
                           const SizedBox(height: 16),
