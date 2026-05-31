@@ -1,394 +1,247 @@
 {
-  "anatomy_database": [
+  "muscle_groups": [
     {
-      "muscle_group": "Shoulder",
-      "target_sub_regions": [
+      "id": "shoulders",
+      "name": "Shoulders",
+      "atlas_group_ids": ["anterior_deltoid_l", "lateral_deltoid_l", "posterior_deltoid_l"],
+      "sub_regions": [
         {
+          "id": "front_delt",
           "name": "Front Delt",
-          "exercises": [
-            "Overhead Press (Dumbbell)",
-            "Overhead Press (Barbell)",
-            "Machine Shoulder Press"
-          ]
+          "notes": "Pressing overhead emphasises the anterior head.",
+          "atlas_muscle_ids": ["anterior_deltoid_l", "anterior_deltoid_r"],
+          "exercise_names": ["Dumbbell Shoulder Press", "Barbell Shoulder Press", "Machine Shoulder Press"]
         },
         {
+          "id": "side_delt",
           "name": "Side Delt",
-          "exercises": [
-            "Lateral Raise (Dumbbell)",
-            "Lateral Raise (Cable)"
-          ]
+          "notes": "Raising the arm out to the side targets the lateral head.",
+          "atlas_muscle_ids": ["lateral_deltoid_l", "lateral_deltoid_r"],
+          "exercise_names": ["Dumbbell Lateral Raise", "Cable Lateral Raise"]
         },
         {
+          "id": "rear_delt",
           "name": "Rear Delt",
-          "exercises": [
-            "Reverse Cable Fly",
-            "Reverse Pec Deck Fly"
-          ]
+          "notes": "Horizontal pulling apart targets the posterior head.",
+          "atlas_muscle_ids": ["posterior_deltoid_l", "posterior_deltoid_r"],
+          "exercise_names": ["Reverse Cable Fly", "Reverse Pec Deck Fly", "Face Pull"]
         }
       ]
     },
     {
-      "muscle_group": "Triceps",
-      "target_sub_regions": [
+      "id": "chest",
+      "name": "Chest",
+      "atlas_group_ids": ["pectoralis_major_l"],
+      "sub_regions": [
         {
-          "name": "Long Head",
-          "exercises": [
-            "Skull Crushers",
-            "Overhead Cable Extension"
-          ]
-        },
-        {
-          "name": "Medial Head",
-          "exercises": [
-            "Reverse grip Cable pushdown"
-          ]
-        },
-        {
-          "name": "Lateral Head",
-          "exercises": [
-            "Straight bar pushdown",
-            "Rope pushdown",
-            "Close grip bench press"
-          ]
-        }
-      ]
-    },
-    {
-      "muscle_group": "Legs",
-      "target_sub_regions": [
-        {
-          "name": "Quads",
-          "exercises": [
-            "Squats",
-            "Leg Press",
-            "Leg Extension"
-          ]
-        },
-        {
-          "name": "Hamstrings",
-          "exercises": [
-            "Romanian Deadlift (RDL)",
-            "Lying leg curls",
-            "Seated leg curls"
-          ]
-        },
-        {
-          "name": "Glutes",
-          "exercises": [
-            "Bulgarian split squats",
-            "Hip Thrust"
-          ]
-        },
-        {
-          "name": "Adductors",
-          "exercises": [
-            "Adductor Machine",
-            "Sumo squats"
-          ]
-        },
-        {
-          "name": "Calves",
-          "exercises": [
-            "Seated Calf Raises",
-            "Standing Calf Raises"
-          ]
-        }
-      ]
-    },
-    {
-      "muscle_group": "Back",
-      "target_sub_regions": [
-        {
-          "name": "Traps",
-          "exercises": [
-            "Barbell Shrugs",
-            "DB Shrugs"
-          ]
-        },
-        {
-          "name": "Mid Back",
-          "exercises": [
-            "T-BAR rows",
-            "Chest supported db-rows"
-          ]
-        },
-        {
-          "name": "Upper Lats",
-          "exercises": [
-            "Lat pulldown",
-            "Single Hand Lat pulldown"
-          ]
-        },
-        {
-          "name": "Lower Lats",
-          "exercises": [
-            "Single Hand Horizontal rows (supinated grip)"
-          ]
-        },
-        {
-          "name": "Lower Back (Erector Spinae)",
-          "exercises": [
-            "Hyperextension"
-          ]
-        },
-        {
-          "name": "Bodyweight / Weighted",
-          "exercises": [
-            "Weighted Pullups"
-          ]
-        }
-      ]
-    },
-    {
-      "muscle_group": "Chest",
-      "target_sub_regions": [
-        {
+          "id": "upper_chest",
           "name": "Upper Chest",
-          "exercises": [
-            "Smith Machine Incline bench press",
-            "Incline Bench press",
-            "Incline Dumbbell press"
-          ]
+          "notes": "Incline angles bias the upper (clavicular) fibres.",
+          "atlas_muscle_ids": ["pectoralis_major_l", "pectoralis_major_r"],
+          "exercise_names": ["Incline Barbell Bench Press", "Incline Dumbbell Press", "Smith Machine Incline Press"]
         },
         {
+          "id": "mid_chest",
           "name": "Mid Chest",
-          "exercises": [
-            "Flat bench press",
-            "Flat DB press",
-            "Machine chest press",
-            "Cable Fly"
-          ]
+          "notes": "Flat pressing and flyes hit the bulk of the pec.",
+          "atlas_muscle_ids": ["pectoralis_major_l", "pectoralis_major_r"],
+          "exercise_names": ["Barbell Bench Press", "Dumbbell Bench Press", "Machine Chest Press", "Cable Fly"]
         },
         {
+          "id": "lower_chest",
           "name": "Lower Chest",
-          "exercises": [
-            "Decline Bench press",
-            "High Cable Fly",
-            "Weighted Dips (BW)"
-          ]
+          "notes": "Decline and dips emphasise the lower fibres.",
+          "atlas_muscle_ids": ["pectoralis_major_l", "pectoralis_major_r"],
+          "exercise_names": ["Decline Bench Press", "High to Low Cable Fly", "Chest Dip"]
         }
       ]
     },
     {
-      "muscle_group": "Biceps",
-      "target_sub_regions": [
+      "id": "back",
+      "name": "Back",
+      "atlas_group_ids": ["latissimus_dorsi_l", "trapezius_upper_l", "infraspinatus_l"],
+      "sub_regions": [
         {
-          "name": "Brachialis",
-          "exercises": [
-            "Incline Hammer Curl",
-            "Hammer Curl",
-            "Reverse Grip Barbell Curl"
-          ]
+          "id": "lats",
+          "name": "Lats",
+          "notes": "Vertical pulls develop width.",
+          "atlas_muscle_ids": ["latissimus_dorsi_l", "latissimus_dorsi_r"],
+          "exercise_names": ["Lat Pulldown", "Pull Up", "Single Arm Lat Pulldown"]
         },
         {
+          "id": "mid_back",
+          "name": "Mid Back",
+          "notes": "Horizontal rows build thickness through the mid traps.",
+          "atlas_muscle_ids": ["trapezius_middle_l", "trapezius_middle_r", "infraspinatus_l", "infraspinatus_r"],
+          "exercise_names": ["T-Bar Row", "Chest Supported Dumbbell Row", "Seated Cable Row"]
+        },
+        {
+          "id": "traps",
+          "name": "Traps",
+          "notes": "Shrugs target the upper traps.",
+          "atlas_muscle_ids": ["trapezius_upper_l", "trapezius_upper_r"],
+          "exercise_names": ["Barbell Shrug", "Dumbbell Shrug"]
+        },
+        {
+          "id": "lower_traps",
+          "name": "Lower Traps",
+          "notes": "Overhead and Y-raise patterns train the lower traps.",
+          "atlas_muscle_ids": ["trapezius_lower_l", "trapezius_lower_r"],
+          "exercise_names": ["Face Pull", "Y Raise"]
+        }
+      ]
+    },
+    {
+      "id": "biceps",
+      "name": "Biceps",
+      "atlas_group_ids": ["biceps_brachii_caput_longum_l", "biceps_brachii_caput_breve_l"],
+      "sub_regions": [
+        {
+          "id": "long_head",
           "name": "Long Head",
-          "exercises": [
-            "Incline Dumbbell Curl",
-            "Close Grip Barbell Curl",
-            "Behind the Back Cable Curl"
-          ]
+          "notes": "Arm behind the body stretches the long (outer) head.",
+          "atlas_muscle_ids": ["biceps_brachii_caput_longum_l", "biceps_brachii_caput_longum_r"],
+          "exercise_names": ["Incline Dumbbell Curl", "Cable Curl"]
         },
         {
+          "id": "short_head",
           "name": "Short Head",
-          "exercises": [
-            "Preacher Curls",
-            "Wide Grip Barbell Curl",
-            "Cable Curl"
-          ]
+          "notes": "Curls with the elbow forward bias the short (inner) head.",
+          "atlas_muscle_ids": ["biceps_brachii_caput_breve_l", "biceps_brachii_caput_breve_r"],
+          "exercise_names": ["Preacher Curl", "Barbell Curl", "Concentration Curl"]
         },
         {
-          "name": "Finisher",
-          "exercises": [
-            "Concentration Curl"
-          ]
+          "id": "brachialis",
+          "name": "Brachialis / Brachioradialis",
+          "notes": "Neutral and pronated grips shift load to the brachialis and forearm.",
+          "atlas_muscle_ids": ["brachioradialis_l", "brachioradialis_r"],
+          "exercise_names": ["Hammer Curl", "Reverse Barbell Curl"]
         }
       ]
     },
     {
-      "muscle_group": "Abs",
-      "target_sub_regions": [
+      "id": "triceps",
+      "name": "Triceps",
+      "atlas_group_ids": ["triceps_brachii_caput_longum_l", "triceps_brachii_caput_laterale_l", "triceps_brachii_caput_mediale_l"],
+      "sub_regions": [
         {
-          "name": "Upper 4 Packs",
-          "exercises": [
-            "Cable Crunches",
-            "Decline Crunches (Til Failure)"
-          ]
+          "id": "long_head",
+          "name": "Long Head",
+          "notes": "Overhead positions stretch the long head.",
+          "atlas_muscle_ids": ["triceps_brachii_caput_longum_l", "triceps_brachii_caput_longum_r"],
+          "exercise_names": ["Overhead Cable Extension", "Skull Crusher"]
         },
         {
+          "id": "lateral_head",
+          "name": "Lateral Head",
+          "notes": "Pushdowns with arms at the side bias the lateral head.",
+          "atlas_muscle_ids": ["triceps_brachii_caput_laterale_l", "triceps_brachii_caput_laterale_r"],
+          "exercise_names": ["Triceps Pushdown", "Rope Pushdown"]
+        },
+        {
+          "id": "medial_head",
+          "name": "Medial Head",
+          "notes": "Reverse-grip pushdowns recruit the medial head.",
+          "atlas_muscle_ids": ["triceps_brachii_caput_mediale_l", "triceps_brachii_caput_mediale_r"],
+          "exercise_names": ["Reverse Grip Triceps Pushdown", "Close Grip Bench Press"]
+        }
+      ]
+    },
+    {
+      "id": "legs",
+      "name": "Legs",
+      "atlas_group_ids": ["rectus_femoris_l", "biceps_femoris_l", "gluteus_maximus_l", "gastrocnemius_l"],
+      "sub_regions": [
+        {
+          "id": "quads",
+          "name": "Quads",
+          "notes": "Knee extension under load.",
+          "atlas_muscle_ids": ["rectus_femoris_l", "rectus_femoris_r", "vastus_lateralis_l", "vastus_lateralis_r", "vastus_medialis_l", "vastus_medialis_r"],
+          "exercise_names": ["Barbell Squat", "Leg Press", "Leg Extension"]
+        },
+        {
+          "id": "hamstrings",
+          "name": "Hamstrings",
+          "notes": "Hip hinge and knee flexion.",
+          "atlas_muscle_ids": ["biceps_femoris_l", "biceps_femoris_r", "semitendinosus_l", "semitendinosus_r", "semimembranosus_1_l", "semimembranosus_1_r"],
+          "exercise_names": ["Romanian Deadlift", "Lying Leg Curl", "Seated Leg Curl"]
+        },
+        {
+          "id": "glutes",
+          "name": "Glutes",
+          "notes": "Hip extension.",
+          "atlas_muscle_ids": ["gluteus_maximus_l", "gluteus_maximus_r", "gluteus_medius_1_l", "gluteus_medius_1_r"],
+          "exercise_names": ["Hip Thrust", "Bulgarian Split Squat"]
+        },
+        {
+          "id": "adductors",
+          "name": "Adductors",
+          "notes": "Bringing the thigh toward the midline.",
+          "atlas_muscle_ids": ["adductor_longus_l", "adductor_longus_r", "adductor_magnus_l", "adductor_magnus_r", "gracilis_l", "gracilis_r"],
+          "exercise_names": ["Hip Adduction Machine", "Sumo Squat"]
+        },
+        {
+          "id": "calves",
+          "name": "Calves",
+          "notes": "Plantar flexion of the ankle.",
+          "atlas_muscle_ids": ["gastrocnemius_l", "gastrocnemius_r"],
+          "exercise_names": ["Standing Calf Raise", "Seated Calf Raise"]
+        }
+      ]
+    },
+    {
+      "id": "abs",
+      "name": "Abs",
+      "atlas_group_ids": ["rectus_abdominis_1", "external_oblique_l"],
+      "sub_regions": [
+        {
+          "id": "upper_abs",
+          "name": "Upper Abs",
+          "notes": "Trunk flexion bringing the ribs toward the pelvis.",
+          "atlas_muscle_ids": ["rectus_abdominis_1", "rectus_abdominis_2_l", "rectus_abdominis_2_r"],
+          "exercise_names": ["Cable Crunch", "Decline Crunch"]
+        },
+        {
+          "id": "lower_abs",
           "name": "Lower Abs",
-          "exercises": [
-            "Leg Raises",
-            "Hanging Knee Raises"
-          ]
+          "notes": "Posterior pelvic tilt and leg raises.",
+          "atlas_muscle_ids": ["rectus_abdominis_3_l", "rectus_abdominis_3_r", "rectus_abdominis_4_l", "rectus_abdominis_4_r"],
+          "exercise_names": ["Hanging Leg Raise", "Lying Leg Raise"]
         },
         {
+          "id": "obliques",
           "name": "Obliques",
-          "exercises": [
-            "Cable Oblique Crunches",
-            "Twisting Hanging Knee Raises"
-          ]
-        },
-        {
-          "name": "Bodyweight Core",
-          "exercises": [
-            "AB Roller",
-            "Planks"
-          ]
+          "notes": "Rotation and lateral flexion.",
+          "atlas_muscle_ids": ["external_oblique_l", "external_oblique_r"],
+          "exercise_names": ["Cable Woodchop", "Russian Twist"]
         }
       ]
     },
     {
-      "muscle_group": "Forearms",
-      "target_sub_regions": [
+      "id": "forearms",
+      "name": "Forearms",
+      "atlas_group_ids": ["brachioradialis_l", "flexor_carpi_radialis_l", "extensor_carpi_radialis_longus_l"],
+      "sub_regions": [
         {
+          "id": "brachioradialis",
           "name": "Brachioradialis",
-          "exercises": [
-            "Reverse grip EZ barbell curls",
-            "Semi pronated grip (15-20 reps)"
-          ]
+          "notes": "Reverse and neutral grip curls.",
+          "atlas_muscle_ids": ["brachioradialis_l", "brachioradialis_r"],
+          "exercise_names": ["Reverse Barbell Curl", "Hammer Curl"]
         },
         {
+          "id": "wrist_flexors",
           "name": "Wrist Flexors",
-          "exercises": [
-            "Dumbbell Wrist Curls (Supinated grip)"
-          ]
+          "notes": "Supinated wrist curls.",
+          "atlas_muscle_ids": ["flexor_carpi_radialis_l", "flexor_carpi_radialis_r"],
+          "exercise_names": ["Dumbbell Wrist Curl"]
         },
         {
+          "id": "wrist_extensors",
           "name": "Wrist Extensors",
-          "exercises": [
-            "Reverse Wrist Curls (Pronated grip)"
-          ]
-        }
-      ]
-    }
-  ],
-  "workout_splits": [
-    {
-      "split_name": "PPL Split",
-      "days": [
-        {
-          "day_number": 1,
-          "focus_area": "Push",
-          "exercises": [
-            { "name": "Machine Shoulder Press", "target_muscle_group": "Shoulder" },
-            { "name": "Lateral Raise (Cable)", "target_muscle_group": "Shoulder" },
-            { "name": "Bench Press", "target_muscle_group": "Chest" },
-            { "name": "Pec Deck Fly", "target_muscle_group": "Chest" },
-            { "name": "Overhead Cable Extension", "target_muscle_group": "Triceps" },
-            { "name": "Rope Pushdown", "target_muscle_group": "Triceps" }
-          ]
-        },
-        {
-          "day_number": 2,
-          "focus_area": "Pull",
-          "exercises": [
-            { "name": "DB Shrugs", "target_muscle_group": "Traps" },
-            { "name": "Incline Bench Dumbbell Rows", "target_muscle_group": "Mid Back" },
-            { "name": "Close Grip Lat Pulldown", "target_muscle_group": "Lats" },
-            { "name": "Close Grip Cable Rows", "target_muscle_group": "Lats" },
-            { "name": "Reverse Cable Flyes / Pec Deck Fly", "target_muscle_group": "Rear Delt" },
-            { "name": "EZ Bar Curls", "target_muscle_group": "Biceps" },
-            { "name": "Preacher Curls", "target_muscle_group": "Biceps" }
-          ]
-        },
-        {
-          "day_number": 3,
-          "focus_area": "Leg",
-          "exercises": [
-            { "name": "Smith machine / Leg press", "target_muscle_group": "Quads" },
-            { "name": "Leg Extension", "target_muscle_group": "Quads" },
-            { "name": "Seated Leg Curls", "target_muscle_group": "Hamstrings" },
-            { "name": "Romanian Deadlift (RDL)", "target_muscle_group": "Hamstrings" },
-            { "name": "Standing Calf Raises", "target_muscle_group": "Calves" }
-          ]
-        },
-        {
-          "day_number": 4,
-          "focus_area": "Push",
-          "exercises": [
-            { "name": "Incline Bench Press" },
-            { "name": "Cable Fly" },
-            { "name": "OHP Barbell / Db" },
-            { "name": "High Cable Lateral Raise" },
-            { "name": "Overhead Cable Extension" },
-            { "name": "Straight Bar Pushdown" }
-          ]
-        },
-        {
-          "day_number": 5,
-          "focus_area": "Pull",
-          "exercises": [
-            { "name": "Lat Pulldown" },
-            { "name": "T-BAR Rows / Barbell Rows" },
-            { "name": "Single Hand Horizontal Rows" },
-            { "name": "Reverse Pec Deck Fly" },
-            { "name": "Shrugs" },
-            { "name": "Incline Dumbbell Curl" },
-            { "name": "Incline Hammer Curl" }
-          ]
-        },
-        {
-          "day_number": 6,
-          "focus_area": "Leg",
-          "exercises": [
-            { "name": "Leg Extension" },
-            { "name": "Hack Squats / Leg Press" },
-            { "name": "Romanian Deadlift" },
-            { "name": "Seated / Standing Calf Raises" },
-            { "name": "Hip Abductions / Hip Adduction" }
-          ]
-        }
-      ]
-    },
-    {
-      "split_name": "4 Day Split",
-      "days": [
-        {
-          "day_number": 1,
-          "focus_area": "Back",
-          "exercises": [
-            { "name": "Single Hand Horizontal Rows", "sets": 3, "reps": "10-12" },
-            { "name": "Lat Pulldown", "sets": 3, "reps": "10-12" },
-            { "name": "Chest Supported db Rows", "sets": 3, "reps": "10-12" },
-            { "name": "Reverse Cable Fly", "sets": 4, "reps": "15-20" },
-            { "name": "Db Shrugs", "sets": 3, "reps": "12-15" },
-            { "name": "Rack Pull / Hyperextension", "sets": 3, "reps": "8-10 / 15-20" }
-          ]
-        },
-        {
-          "day_number": 2,
-          "focus_area": "Chest and Biceps",
-          "exercises": [
-            { "name": "Incline Dumbbell Press", "sets": 3, "reps": "8-10" },
-            { "name": "Incline Dumbbell Curl", "sets": 3, "reps": "10-12" },
-            { "name": "Machine Chest Press / Flat-bench Press", "sets": 3, "reps": "8-10" },
-            { "name": "Incline Hammer Curl", "sets": 3, "reps": "10-15" },
-            { "name": "High Cable Fly", "sets": 3, "reps": "12-15" },
-            { "name": "Preacher Curls", "sets": 2, "reps": "8-10" }
-          ]
-        },
-        {
-          "day_number": 3,
-          "focus_area": "Legs",
-          "exercises": [
-            { "name": "Squats / Leg Press", "sets": 3, "reps": "10-12" },
-            { "name": "Romanian Deadlift (RDL) / Seated Leg Curl", "sets": 3, "reps": "10-12" },
-            { "name": "Leg Extension", "sets": 3, "reps": "12-15" },
-            { "name": "Hip Thrust", "sets": 3, "reps": "10-15" },
-            { "name": "Standing / Seated Calf Raises", "sets": 3, "reps": "15-20" }
-          ]
-        },
-        {
-          "day_number": 4,
-          "focus_area": "Shoulders and Triceps",
-          "exercises": [
-            { "name": "OHP Barbell", "sets": 3, "reps": "8-10" },
-            { "name": "Overhead Cable Extension" },
-            { "name": "Seated Lateral Raises", "sets": 3, "reps": "10-12" },
-            { "name": "Straight Bar Pushdown", "sets": 3, "reps": "10-12" },
-            { "name": "Reverse Pec Dec Fly", "sets": 3, "reps": "10-12" },
-            { "name": "Reverse Grip Cable Pushdown", "sets": 3, "reps": "15-20" }
-          ]
+          "notes": "Pronated reverse wrist curls.",
+          "atlas_muscle_ids": ["extensor_carpi_radialis_longus_l", "extensor_carpi_radialis_longus_r", "extensor_carpi_ulnaris_l", "extensor_carpi_ulnaris_r"],
+          "exercise_names": ["Reverse Wrist Curl"]
         }
       ]
     }
