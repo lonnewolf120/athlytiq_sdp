@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitnation/providers/auth_provider.dart';
 import 'package:fitnation/models/ProfileModel.dart';
 import 'package:fitnation/models/Workout.dart';
+import 'package:fitnation/Screens/Anatomy/AnatomyExplorerScreen.dart';
 import 'package:intl/intl.dart';
 
 // Profile provider from auth state
@@ -161,6 +162,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     'Community',
                     'Connect with fitness enthusiasts',
                   ),
+                  _buildButton(
+                    context,
+                    Icons.accessibility_new,
+                    'Muscle Anatomy',
+                    'See how exercises hit each muscle',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AnatomyExplorerScreen(),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -293,8 +306,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     BuildContext context,
     IconData icon,
     String title,
-    String subtitle,
-  ) {
+    String subtitle, {
+    VoidCallback? onTap,
+  }) {
     return Container(
       width: 120,
       decoration: BoxDecoration(
@@ -302,7 +316,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: Colors.grey[900],
       ),
       child: TextButton(
-        onPressed: () {},
+        onPressed: onTap ?? () {},
         style: TextButton.styleFrom(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.red,
