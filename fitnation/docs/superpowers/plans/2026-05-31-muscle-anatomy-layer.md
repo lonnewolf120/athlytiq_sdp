@@ -2,6 +2,28 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **⚠️ EXECUTION RECONCILIATION (2026-05-31, completed).** This plan was drafted before
+> the real `flutter_body_atlas` 0.1.4 catalog source was read. Several muscle IDs in the
+> "Verified IDs" section and in Tasks 6/7 below were **wrong** and were corrected during
+> execution. What actually shipped (authoritative — see `lib/services/anatomy/coarse_muscle_map.dart`
+> and `assets/data/muscle_anatomy.json`, both guarded by passing tests):
+> - Deltoids are `anterior_deltoid` / `lateral_deltoid` / `posterior_deltoid` (NOT `deltoid_anterior`).
+> - Chest is a single `pectoralis_major_l/r` — there is **no** clavicular/sternal split. Upper/mid/lower
+>   chest sub-regions all map to `pectoralis_major`.
+> - Traps are `trapezius_upper/middle/lower` (NOT `descendens/transversa/ascendens`).
+> - No `brachialis`, `rhomboid_major`, `erector_spinae`, `soleus`, `gastrocnemius_medialis/lateralis`,
+>   or `tensor_fasciae_latae` exist. Calves use `gastrocnemius_l/r`; forearm uses
+>   `extensor_carpi_radialis_longus` (not `..._radialis`). Brachialis sub-region maps to `brachioradialis`.
+> - Abs: `rectus_abdominis_1` (no side) + `_2/_3/_4_l/r`. Glutes/hamstrings carry numbered ids
+>   (`gluteus_medius_1_l`, `semimembranosus_1_l`).
+> - The coarse map stores **full atlas ids directly** (`kCoarseMuscleToAtlasIds`); the planned
+>   `kCoarseMuscleToAtlasBaseIds` + `expandedCoarseMap()` step was dropped as unnecessary.
+> - `BodyAtlasView.colorMapping` is nullable (`Map<I, Color?>?`); diagram tests read `colorMapping!`.
+> - Task 1 (pubspec asset line) was a no-op: `pubspec.yaml` already globs `assets/data/`.
+>
+> All 14 tasks are implemented and committed; 18 anatomy tests + 47 total project tests pass.
+> The code is the source of truth where it diverges from the task bodies below.
+
 **Goal:** Add a curated head-level muscle anatomy layer with an interactive body-diagram Explorer and exercise-detail enrichment, showing how each exercise targets specific muscle heads.
 
 **Architecture:** A bundled `muscle_anatomy.json` asset (head → atlas-id + exercise-name mapping) is loaded by `AnatomyRepository` and indexed by `ExerciseAnatomyResolver` (forward: curated names → catalog `Exercise`; reverse: catalog `Exercise` → muscle heads, with coarse-tag fallback). Riverpod providers expose these to two UIs: the synced bidirectional `AnatomyExplorerScreen` and an `ExerciseMusclesSection` injected into the existing exercise-detail bottom sheet. Per-head highlighting uses `flutter_body_atlas`'s `BodyAtlasView`.
@@ -12,7 +34,7 @@
 
 ## Verified `flutter_body_atlas` 0.1.4 API (do not guess — these are read from source)
 
-```dart
+```dart 
 // Public exports (package:flutter_body_atlas/flutter_body_atlas.dart):
 enum AtlasAsset { musclesFront, musclesBack }
 enum MuscleGroup { chest, back, shoulders, arms, core, legs, neck, other }
