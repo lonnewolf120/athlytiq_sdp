@@ -1,0 +1,480 @@
+Here is a complete structural analysis and JSON data schema representing the muscle anatomy, target heads, associated exercises, and workout splits documented in your handwritten training log.
+
+### Proposed JSON Schema
+
+This schema defines how the anatomical structures and target-specific exercises can be modeled for integration into your Flutter data layer (e.g., using `freezed` or standard serializable Dart classes).
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FitnessAnatomyAndWorkoutData",
+  "type": "object",
+  "properties": {
+    "anatomy_database": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "muscle_group": { "type": "string" },
+          "target_sub_regions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "notes": { "type": "string" },
+                "exercises": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              },
+              "required": ["name", "exercises"]
+            }
+          }
+        },
+        "required": ["muscle_group", "target_sub_regions"]
+      }
+    },
+    "workout_splits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "split_name": { "type": "string" },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "day_number": { "type": "integer" },
+                "focus_area": { "type": "string" },
+                "exercises": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "target_muscle_group": { "type": "string" },
+                      "sets": { "type": "integer" },
+                      "reps": { "type": "string" }
+                    },
+                    "required": ["name"]
+                  }
+                }
+              },
+              "required": ["day_number", "focus_area", "exercises"]
+            }
+          }
+        },
+        "required": ["split_name", "days"]
+      }
+    }
+  },
+  "required": ["anatomy_database", "workout_splits"]
+}
+```
+
+---
+
+### Populated JSON Data (Parsed from the Notes)
+
+This parsed dataset contains all details extracted from pages 1 through 13, including individual target heads (e.g., Brachialis, Long/Short head of biceps, Long/Medial/Lateral head of triceps) and the specific workout split configurations.
+
+```json
+{
+  "anatomy_database": [
+    {
+      "muscle_group": "Shoulder",
+      "target_sub_regions": [
+        {
+          "name": "Front Delt",
+          "exercises": [
+            "Overhead Press (Dumbbell)",
+            "Overhead Press (Barbell)",
+            "Machine Shoulder Press"
+          ]
+        },
+        {
+          "name": "Side Delt",
+          "exercises": [
+            "Lateral Raise (Dumbbell)",
+            "Lateral Raise (Cable)"
+          ]
+        },
+        {
+          "name": "Rear Delt",
+          "exercises": [
+            "Reverse Cable Fly",
+            "Reverse Pec Deck Fly"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Triceps",
+      "target_sub_regions": [
+        {
+          "name": "Long Head",
+          "exercises": [
+            "Skull Crushers",
+            "Overhead Cable Extension"
+          ]
+        },
+        {
+          "name": "Medial Head",
+          "exercises": [
+            "Reverse grip Cable pushdown"
+          ]
+        },
+        {
+          "name": "Lateral Head",
+          "exercises": [
+            "Straight bar pushdown",
+            "Rope pushdown",
+            "Close grip bench press"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Legs",
+      "target_sub_regions": [
+        {
+          "name": "Quads",
+          "exercises": [
+            "Squats",
+            "Leg Press",
+            "Leg Extension"
+          ]
+        },
+        {
+          "name": "Hamstrings",
+          "exercises": [
+            "Romanian Deadlift (RDL)",
+            "Lying leg curls",
+            "Seated leg curls"
+          ]
+        },
+        {
+          "name": "Glutes",
+          "exercises": [
+            "Bulgarian split squats",
+            "Hip Thrust"
+          ]
+        },
+        {
+          "name": "Adductors",
+          "exercises": [
+            "Adductor Machine",
+            "Sumo squats"
+          ]
+        },
+        {
+          "name": "Calves",
+          "exercises": [
+            "Seated Calf Raises",
+            "Standing Calf Raises"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Back",
+      "target_sub_regions": [
+        {
+          "name": "Traps",
+          "exercises": [
+            "Barbell Shrugs",
+            "DB Shrugs"
+          ]
+        },
+        {
+          "name": "Mid Back",
+          "exercises": [
+            "T-BAR rows",
+            "Chest supported db-rows"
+          ]
+        },
+        {
+          "name": "Upper Lats",
+          "exercises": [
+            "Lat pulldown",
+            "Single Hand Lat pulldown"
+          ]
+        },
+        {
+          "name": "Lower Lats",
+          "exercises": [
+            "Single Hand Horizontal rows (supinated grip)"
+          ]
+        },
+        {
+          "name": "Lower Back (Erector Spinae)",
+          "exercises": [
+            "Hyperextension"
+          ]
+        },
+        {
+          "name": "Bodyweight / Weighted",
+          "exercises": [
+            "Weighted Pullups"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Chest",
+      "target_sub_regions": [
+        {
+          "name": "Upper Chest",
+          "exercises": [
+            "Smith Machine Incline bench press",
+            "Incline Bench press",
+            "Incline Dumbbell press"
+          ]
+        },
+        {
+          "name": "Mid Chest",
+          "exercises": [
+            "Flat bench press",
+            "Flat DB press",
+            "Machine chest press",
+            "Cable Fly"
+          ]
+        },
+        {
+          "name": "Lower Chest",
+          "exercises": [
+            "Decline Bench press",
+            "High Cable Fly",
+            "Weighted Dips (BW)"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Biceps",
+      "target_sub_regions": [
+        {
+          "name": "Brachialis",
+          "exercises": [
+            "Incline Hammer Curl",
+            "Hammer Curl",
+            "Reverse Grip Barbell Curl"
+          ]
+        },
+        {
+          "name": "Long Head",
+          "exercises": [
+            "Incline Dumbbell Curl",
+            "Close Grip Barbell Curl",
+            "Behind the Back Cable Curl"
+          ]
+        },
+        {
+          "name": "Short Head",
+          "exercises": [
+            "Preacher Curls",
+            "Wide Grip Barbell Curl",
+            "Cable Curl"
+          ]
+        },
+        {
+          "name": "Finisher",
+          "exercises": [
+            "Concentration Curl"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Abs",
+      "target_sub_regions": [
+        {
+          "name": "Upper 4 Packs",
+          "exercises": [
+            "Cable Crunches",
+            "Decline Crunches (Til Failure)"
+          ]
+        },
+        {
+          "name": "Lower Abs",
+          "exercises": [
+            "Leg Raises",
+            "Hanging Knee Raises"
+          ]
+        },
+        {
+          "name": "Obliques",
+          "exercises": [
+            "Cable Oblique Crunches",
+            "Twisting Hanging Knee Raises"
+          ]
+        },
+        {
+          "name": "Bodyweight Core",
+          "exercises": [
+            "AB Roller",
+            "Planks"
+          ]
+        }
+      ]
+    },
+    {
+      "muscle_group": "Forearms",
+      "target_sub_regions": [
+        {
+          "name": "Brachioradialis",
+          "exercises": [
+            "Reverse grip EZ barbell curls",
+            "Semi pronated grip (15-20 reps)"
+          ]
+        },
+        {
+          "name": "Wrist Flexors",
+          "exercises": [
+            "Dumbbell Wrist Curls (Supinated grip)"
+          ]
+        },
+        {
+          "name": "Wrist Extensors",
+          "exercises": [
+            "Reverse Wrist Curls (Pronated grip)"
+          ]
+        }
+      ]
+    }
+  ],
+  "workout_splits": [
+    {
+      "split_name": "PPL Split",
+      "days": [
+        {
+          "day_number": 1,
+          "focus_area": "Push",
+          "exercises": [
+            { "name": "Machine Shoulder Press", "target_muscle_group": "Shoulder" },
+            { "name": "Lateral Raise (Cable)", "target_muscle_group": "Shoulder" },
+            { "name": "Bench Press", "target_muscle_group": "Chest" },
+            { "name": "Pec Deck Fly", "target_muscle_group": "Chest" },
+            { "name": "Overhead Cable Extension", "target_muscle_group": "Triceps" },
+            { "name": "Rope Pushdown", "target_muscle_group": "Triceps" }
+          ]
+        },
+        {
+          "day_number": 2,
+          "focus_area": "Pull",
+          "exercises": [
+            { "name": "DB Shrugs", "target_muscle_group": "Traps" },
+            { "name": "Incline Bench Dumbbell Rows", "target_muscle_group": "Mid Back" },
+            { "name": "Close Grip Lat Pulldown", "target_muscle_group": "Lats" },
+            { "name": "Close Grip Cable Rows", "target_muscle_group": "Lats" },
+            { "name": "Reverse Cable Flyes / Pec Deck Fly", "target_muscle_group": "Rear Delt" },
+            { "name": "EZ Bar Curls", "target_muscle_group": "Biceps" },
+            { "name": "Preacher Curls", "target_muscle_group": "Biceps" }
+          ]
+        },
+        {
+          "day_number": 3,
+          "focus_area": "Leg",
+          "exercises": [
+            { "name": "Smith machine / Leg press", "target_muscle_group": "Quads" },
+            { "name": "Leg Extension", "target_muscle_group": "Quads" },
+            { "name": "Seated Leg Curls", "target_muscle_group": "Hamstrings" },
+            { "name": "Romanian Deadlift (RDL)", "target_muscle_group": "Hamstrings" },
+            { "name": "Standing Calf Raises", "target_muscle_group": "Calves" }
+          ]
+        },
+        {
+          "day_number": 4,
+          "focus_area": "Push",
+          "exercises": [
+            { "name": "Incline Bench Press" },
+            { "name": "Cable Fly" },
+            { "name": "OHP Barbell / Db" },
+            { "name": "High Cable Lateral Raise" },
+            { "name": "Overhead Cable Extension" },
+            { "name": "Straight Bar Pushdown" }
+          ]
+        },
+        {
+          "day_number": 5,
+          "focus_area": "Pull",
+          "exercises": [
+            { "name": "Lat Pulldown" },
+            { "name": "T-BAR Rows / Barbell Rows" },
+            { "name": "Single Hand Horizontal Rows" },
+            { "name": "Reverse Pec Deck Fly" },
+            { "name": "Shrugs" },
+            { "name": "Incline Dumbbell Curl" },
+            { "name": "Incline Hammer Curl" }
+          ]
+        },
+        {
+          "day_number": 6,
+          "focus_area": "Leg",
+          "exercises": [
+            { "name": "Leg Extension" },
+            { "name": "Hack Squats / Leg Press" },
+            { "name": "Romanian Deadlift" },
+            { "name": "Seated / Standing Calf Raises" },
+            { "name": "Hip Abductions / Hip Adduction" }
+          ]
+        }
+      ]
+    },
+    {
+      "split_name": "4 Day Split",
+      "days": [
+        {
+          "day_number": 1,
+          "focus_area": "Back",
+          "exercises": [
+            { "name": "Single Hand Horizontal Rows", "sets": 3, "reps": "10-12" },
+            { "name": "Lat Pulldown", "sets": 3, "reps": "10-12" },
+            { "name": "Chest Supported db Rows", "sets": 3, "reps": "10-12" },
+            { "name": "Reverse Cable Fly", "sets": 4, "reps": "15-20" },
+            { "name": "Db Shrugs", "sets": 3, "reps": "12-15" },
+            { "name": "Rack Pull / Hyperextension", "sets": 3, "reps": "8-10 / 15-20" }
+          ]
+        },
+        {
+          "day_number": 2,
+          "focus_area": "Chest and Biceps",
+          "exercises": [
+            { "name": "Incline Dumbbell Press", "sets": 3, "reps": "8-10" },
+            { "name": "Incline Dumbbell Curl", "sets": 3, "reps": "10-12" },
+            { "name": "Machine Chest Press / Flat-bench Press", "sets": 3, "reps": "8-10" },
+            { "name": "Incline Hammer Curl", "sets": 3, "reps": "10-15" },
+            { "name": "High Cable Fly", "sets": 3, "reps": "12-15" },
+            { "name": "Preacher Curls", "sets": 2, "reps": "8-10" }
+          ]
+        },
+        {
+          "day_number": 3,
+          "focus_area": "Legs",
+          "exercises": [
+            { "name": "Squats / Leg Press", "sets": 3, "reps": "10-12" },
+            { "name": "Romanian Deadlift (RDL) / Seated Leg Curl", "sets": 3, "reps": "10-12" },
+            { "name": "Leg Extension", "sets": 3, "reps": "12-15" },
+            { "name": "Hip Thrust", "sets": 3, "reps": "10-15" },
+            { "name": "Standing / Seated Calf Raises", "sets": 3, "reps": "15-20" }
+          ]
+        },
+        {
+          "day_number": 4,
+          "focus_area": "Shoulders and Triceps",
+          "exercises": [
+            { "name": "OHP Barbell", "sets": 3, "reps": "8-10" },
+            { "name": "Overhead Cable Extension" },
+            { "name": "Seated Lateral Raises", "sets": 3, "reps": "10-12" },
+            { "name": "Straight Bar Pushdown", "sets": 3, "reps": "10-12" },
+            { "name": "Reverse Pec Dec Fly", "sets": 3, "reps": "10-12" },
+            { "name": "Reverse Grip Cable Pushdown", "sets": 3, "reps": "15-20" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```

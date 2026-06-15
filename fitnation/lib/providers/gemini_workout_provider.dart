@@ -73,7 +73,9 @@ class GeminiWorkoutNotifier extends StateNotifier<List<Workout>> {
         _ref
             .read(workoutGenerationProvider.notifier)
             .setError('User not authenticated. Cannot generate workout plan.');
-        throw Exception('User not authenticated. Cannot generate workout plan.');
+        throw Exception(
+          'User not authenticated. Cannot generate workout plan.',
+        );
       }
 
       _ref.read(workoutGenerationProvider.notifier).updateParsingStep();
@@ -83,25 +85,25 @@ class GeminiWorkoutNotifier extends StateNotifier<List<Workout>> {
       final history = await dbHelper.getCompletedWorkouts(currentUserId);
       const summarizer = WorkoutHistorySummarizer();
       final progressHints = summarizer.summarize(history);
-      debugPrint('GeminiWorkoutNotifier: ${history.length} sessions → ${progressHints.length} exercise hints');
+      debugPrint(
+        'GeminiWorkoutNotifier: ${history.length} sessions → ${progressHints.length} exercise hints',
+      );
 
-      // Generate with catalog-grounded service
-      final catalog = LocalExerciseCatalog();
-      // Ensure catalog db is populated before generating
-      await ExerciseDatabaseHelper().loadExercisesFromJson();
-      final service = WorkoutRecommendationService.withFirebase(catalog);
-      final Workout? newWorkout = await service.generate(
-        userProfile: userInfo,
+      final Workout? newWorkout = await _generateNonAiWorkout(
+        userInfo: userInfo,
         progressHints: progressHints,
       );
 
       if (newWorkout == null) {
-        _ref.read(workoutGenerationProvider.notifier)
+        _ref
+            .read(workoutGenerationProvider.notifier)
             .setError('Could not generate workout. Please try again.');
         return;
       }
 
-      debugPrint('GeminiWorkoutNotifier: Generated: ${newWorkout.name} (${newWorkout.exercises.length} exercises)');
+      debugPrint(
+        'GeminiWorkoutNotifier: Generated: ${newWorkout.name} (${newWorkout.exercises.length} exercises)',
+      );
 
       // Update status to processing
       _ref.read(workoutGenerationProvider.notifier).updateProcessingStep();
@@ -158,6 +160,126 @@ class GeminiWorkoutNotifier extends StateNotifier<List<Workout>> {
           .setError('Failed to generate workout plan: ${e.toString()}');
       rethrow; // Re-throw to be caught by UI if needed
     }
+  }
+
+  Future<Workout?> _generateNonAiWorkout({
+    required Map<String, dynamic> userInfo,
+    required Map<String, ExerciseProgressHint> progressHints,
+  }) async {
+    try {
+      debugPrint(
+        'GeminiWorkoutNotifier: Trying backend deterministic workout engine.',
+      );
+      return await _apiService.generateEngineWorkout(
+        goal:
+            _stringFrom(userInfo, const [
+              'goal',
+              'fitness_goal',
+              'user_goals',
+            ]) ??
+            'general_fitness',
+        splitType: _splitTypeFrom(userInfo),
+        bodyParts: _stringListFrom(userInfo, const [
+          'body_parts',
+          'bodyParts',
+          'target_muscles',
+          'muscle_groups',
+        ]),
+        equipment: _stringListFrom(userInfo, const [
+          'equipment',
+          'equipment_selected',
+          'available_equipment',
+        ]),
+        durationMinutes: _intFrom(userInfo, const [
+          'duration_minutes',
+          'duration',
+          'workout_duration',
+        ], fallback: 45),
+        experienceLevel:
+            _stringFrom(userInfo, const [
+              'experience_level',
+              'level',
+              'fitness_level',
+            ]) ??
+            'intermediate',
+      );
+    } catch (e, st) {
+      debugPrint(
+        'GeminiWorkoutNotifier: Backend engine failed, falling back to local non-AI catalog: $e',
+      );
+      debugPrint('GeminiWorkoutNotifier: Stacktrace: $st');
+    }
+
+    final catalog = LocalExerciseCatalog();
+    await ExerciseDatabaseHelper().loadExercisesFromJson();
+    final service = WorkoutRecommendationService.withoutAi(catalog);
+    return service.generateDeterministicFallback(
+      userProfile: userInfo,
+      progressHints: progressHints,
+    );
+  }
+
+  String? _stringFrom(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  List<String> _stringListFrom(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value is List) {
+        return value
+            .map((e) => e.toString().trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+      if (value is String && value.trim().isNotEmpty) {
+        return value
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+    }
+    return const [];
+  }
+
+  int _intFrom(
+    Map<String, dynamic> map,
+    List<String> keys, {
+    required int fallback,
+  }) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) {
+        final parsed = int.tryParse(value);
+        if (parsed != null) return parsed;
+      }
+    }
+    return fallback;
+  }
+
+  String _splitTypeFrom(Map<String, dynamic> userInfo) {
+    final raw =
+        _stringFrom(userInfo, const [
+          'split_type',
+          'split',
+          'workout_split',
+        ])?.toLowerCase();
+    if (raw == null || raw.isEmpty) return 'balanced';
+    if (raw.contains('push') || raw.contains('pull') || raw == 'ppl') {
+      return 'push_pull_legs';
+    }
+    if (raw.contains('upper') || raw.contains('lower')) return 'upper_lower';
+    if (raw.contains('full')) return 'full_body';
+    return 'balanced';
   }
 
   // You might want methods to clear plans, load saved plans, etc.

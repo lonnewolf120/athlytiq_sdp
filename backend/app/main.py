@@ -15,6 +15,7 @@ from app.api.v1.endpoints import shop # NEW: Import shop router
 from app.api.v1.endpoints import challenges # NEW: Import challenges router
 from app.api.v1.endpoints import exercise # Legacy exercise router
 from app.api.v1.endpoints import exercise_library # Enhanced exercise library router
+from app.api.v1.endpoints import workout_engine # NEW: Deterministic workout engine
 from app.api.v1.endpoints import chat # NEW: Import chat router
 from app.api.v1.endpoints import friends # NEW: Import friends router
 from app.api.v1.endpoints import social # NEW: Import social router
@@ -24,6 +25,7 @@ import app.models_db # This import ensures all models in models_db.py are regist
 from app.middleware.logger import LoggerMiddleware
 import cloudinary
 from app.core.config import settings
+import os
 
 
 load_dotenv()
@@ -38,8 +40,9 @@ origins = [
     '*'
 ]
 
-##Creates tables
-Base.metadata.create_all(bind=engine)
+## Creates tables unless explicitly disabled for isolated tests/import checks.
+if os.getenv("SKIP_DB_CREATE_ALL", "").lower() not in {"1", "true", "yes"}:
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Fitnation Backend",
@@ -71,6 +74,7 @@ app.include_router(posts.router, prefix="/api/v1/posts", tags=["posts"]) # Inclu
 app.include_router(nutrition.router, prefix="/api/v1/nutrition", tags=["nutrition"]) # Include new nutrition router
 app.include_router(exercise.router, prefix="/api/v1/exercises", tags=["exercises"]) # Legacy exercise router
 app.include_router(exercise_library.router, prefix="/api/v1/exercise-library", tags=["Exercise Library"]) # Enhanced exercise library
+app.include_router(workout_engine.router, prefix="/api/v1/workouts", tags=["Workout Engine"]) # NEW: Deterministic workout engine
 # app.include_router(exercise.router,prefix="/api/v1/exercises",tags=["exercises"])
 # app.include_router(workoutHistory.router,prefix="/api/v1/workoutHistory",tags=["workoutHistory"])
 

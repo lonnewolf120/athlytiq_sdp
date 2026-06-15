@@ -1,7 +1,45 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from uuid import UUID
+
+
+# --- Non-AI food database / barcode schemas ---
+class BarcodeLookupRequest(BaseModel):
+    barcode: str = Field(..., min_length=3, max_length=64)
+
+
+class BarcodeLookupResponse(BaseModel):
+    barcode: str
+    found: bool
+    source: str = "open_food_facts"
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    calories: Optional[float] = None
+    protein_g: Optional[float] = None
+    carbs_g: Optional[float] = None
+    fat_g: Optional[float] = None
+    serving_size: Optional[str] = None
+    unit: str = "100g"
+    raw_product_url: Optional[str] = None
+
+
+class NutritionFavoriteResponse(BaseModel):
+    food_name: str
+    count: int
+    avg_calories: Optional[float] = None
+    avg_protein_g: Optional[float] = None
+    avg_carbs_g: Optional[float] = None
+    avg_fat_g: Optional[float] = None
+    most_recent_meal_type: Optional[str] = None
+    most_recent_serving_size: Optional[str] = None
+
+
+class NutritionSummaryResponse(BaseModel):
+    days: int
+    totals: Dict[str, float]
+    daily: List[Dict[str, float | str]]
+    by_meal_type: Dict[str, Dict[str, float]]
 
 # --- FoodLog Schemas ---
 class FoodLogBase(BaseModel):

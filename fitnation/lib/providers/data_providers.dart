@@ -37,7 +37,7 @@ final nutritionAiServiceProvider = Provider<NutritionAIService>((ref) {
 });
 
 final foodDatabaseServiceProvider = Provider<FoodDatabaseService>((ref) {
-  return FoodDatabaseService();
+  return FoodDatabaseService(apiService: ref.watch(apiServiceProvider));
 });
 
 // Removed: Expose the geminiServiceProvider from gemini_workout_provider.dart

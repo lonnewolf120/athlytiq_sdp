@@ -181,15 +181,15 @@ class ApiService {
   }
 
   // --- Community Endpoints ---
-  Future<List<Group>> getCommunities({int skip = 0, int limit = 50, bool my = false}) async {
+  Future<List<Group>> getCommunities({
+    int skip = 0,
+    int limit = 50,
+    bool my = false,
+  }) async {
     try {
       final response = await _dio.get(
         '/social/communities',
-        queryParameters: {
-          'skip': skip,
-          'limit': limit,
-          if (my) 'my': true,
-        },
+        queryParameters: {'skip': skip, 'limit': limit, if (my) 'my': true},
       );
 
       final List data = response.data as List;
@@ -199,14 +199,17 @@ class ApiService {
         final String id = (m['id'] ?? '').toString();
         final String name = (m['name'] ?? 'Community').toString();
         final String desc = (m['description'] ?? '').toString();
-        final int memberCount = (m['member_count'] is int)
-            ? (m['member_count'] as int)
-            : int.tryParse(m['member_count']?.toString() ?? '0') ?? 0;
+        final int memberCount =
+            (m['member_count'] is int)
+                ? (m['member_count'] as int)
+                : int.tryParse(m['member_count']?.toString() ?? '0') ?? 0;
         final bool joined = (m['joined'] == true);
 
         // Provide placeholders for fields not in backend yet
         final int postCount = 0;
-        final String image = 'https://avatar.iran.liara.run/username?username=' + Uri.encodeComponent(name);
+        final String image =
+            'https://avatar.iran.liara.run/username?username=' +
+            Uri.encodeComponent(name);
         final bool trending = false;
         final List<String> categories = const [];
 
@@ -233,12 +236,17 @@ class ApiService {
       final m = response.data as Map<String, dynamic>;
 
       final String id = (m['id'] ?? '').toString();
-      final String name = (m['name'] ?? fallback?.name ?? 'Community').toString();
-      final String desc = (m['description'] ?? fallback?.description ?? '').toString();
+      final String name =
+          (m['name'] ?? fallback?.name ?? 'Community').toString();
+      final String desc =
+          (m['description'] ?? fallback?.description ?? '').toString();
       // Prefer backend image_url, fallback to existing image if provided
-      final String image = (m['image_url']?.toString().isNotEmpty == true)
-          ? m['image_url'].toString()
-          : (fallback?.image ?? 'https://avatar.iran.liara.run/username?username=' + Uri.encodeComponent(name));
+      final String image =
+          (m['image_url']?.toString().isNotEmpty == true)
+              ? m['image_url'].toString()
+              : (fallback?.image ??
+                  'https://avatar.iran.liara.run/username?username=' +
+                      Uri.encodeComponent(name));
 
       // Use fallback values for list-only fields not returned by details endpoint
       final int memberCount = fallback?.memberCount ?? 0;
@@ -247,9 +255,10 @@ class ApiService {
       final bool trending = fallback?.trending ?? false;
       final List<String> categories = fallback?.categories ?? const [];
       final String? coverImage = fallback?.coverImage;
-      final DateTime? createdAt = m['created_at'] != null
-          ? DateTime.tryParse(m['created_at'].toString())
-          : (fallback?.createdAt);
+      final DateTime? createdAt =
+          m['created_at'] != null
+              ? DateTime.tryParse(m['created_at'].toString())
+              : (fallback?.createdAt);
       final List<String>? rules = fallback?.rules;
 
       return Group(
@@ -283,7 +292,9 @@ class ApiService {
 
   Future<bool> leaveCommunity(String communityId) async {
     try {
-      final response = await _dio.delete('/social/communities/$communityId/join');
+      final response = await _dio.delete(
+        '/social/communities/$communityId/join',
+      );
       final data = response.data as Map<String, dynamic>;
       return data['joined'] == false;
     } on DioException catch (e) {
@@ -291,14 +302,20 @@ class ApiService {
     }
   }
 
-  Future<List<Post>> getCommunityPosts(String communityId, {int skip = 0, int limit = 20}) async {
+  Future<List<Post>> getCommunityPosts(
+    String communityId, {
+    int skip = 0,
+    int limit = 20,
+  }) async {
     try {
-      final response = await _dio.get('/social/communities/$communityId/posts', queryParameters: {
-        'skip': skip,
-        'limit': limit,
-      });
+      final response = await _dio.get(
+        '/social/communities/$communityId/posts',
+        queryParameters: {'skip': skip, 'limit': limit},
+      );
       final data = response.data as List;
-      return data.map((e) => _mapBackendPostToPost(e as Map<String, dynamic>)).toList();
+      return data
+          .map((e) => _mapBackendPostToPost(e as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       throw _handleDioError(e, "Failed to load community posts");
     }
@@ -306,7 +323,9 @@ class ApiService {
 
   Future<bool> addPostToCommunity(String communityId, String postId) async {
     try {
-      final response = await _dio.post('/social/communities/$communityId/posts/$postId');
+      final response = await _dio.post(
+        '/social/communities/$communityId/posts/$postId',
+      );
       final m = response.data as Map<String, dynamic>;
       return m['ok'] == true;
     } on DioException catch (e) {
@@ -320,10 +339,15 @@ class ApiService {
     List<PostType> types = [];
     final pt = m['post_type'];
     if (pt is List) {
-      types = pt.map((x) => PostType.values.firstWhere(
-            (t) => t.name == (x?.toString() ?? ''),
-            orElse: () => PostType.text,
-          )).toList();
+      types =
+          pt
+              .map(
+                (x) => PostType.values.firstWhere(
+                  (t) => t.name == (x?.toString() ?? ''),
+                  orElse: () => PostType.text,
+                ),
+              )
+              .toList();
     }
 
     final author = User(
@@ -351,8 +375,14 @@ class ApiService {
       author: author,
       content: (m['content'] ?? '').toString(),
       mediaUrl: (m['media_url'] ?? '').toString(),
-      createdAt: m['created_at'] != null ? DateTime.tryParse(m['created_at'].toString()) ?? DateTime.now() : DateTime.now(),
-      updatedAt: m['updated_at'] != null ? DateTime.tryParse(m['updated_at'].toString()) ?? DateTime.now() : DateTime.now(),
+      createdAt:
+          m['created_at'] != null
+              ? DateTime.tryParse(m['created_at'].toString()) ?? DateTime.now()
+              : DateTime.now(),
+      updatedAt:
+          m['updated_at'] != null
+              ? DateTime.tryParse(m['updated_at'].toString()) ?? DateTime.now()
+              : DateTime.now(),
       comments: const [],
       reacts: const [],
       commentCount: _asInt(m['comment_count']),
@@ -428,6 +458,57 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw _handleDioError(e, "Failed to save workout plan");
+    }
+  }
+
+  /// Generate a workout using the backend deterministic engine.
+  ///
+  /// This is the default non-AI path. The backend selects exercises from the
+  /// real exercise library and returns Workout-compatible JSON with real IDs.
+  Future<Workout> generateEngineWorkout({
+    required String goal,
+    String splitType = 'balanced',
+    List<String> bodyParts = const [],
+    List<String> equipment = const [],
+    int durationMinutes = 45,
+    String experienceLevel = 'intermediate',
+    int? exerciseCount,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/workouts/generate-engine',
+        data: {
+          'goal': goal,
+          'split_type': splitType,
+          'body_parts': bodyParts,
+          'equipment': equipment,
+          'duration_minutes': durationMinutes,
+          'experience_level': experienceLevel,
+          if (exerciseCount != null) 'exercise_count': exerciseCount,
+        },
+      );
+
+      final raw = Map<String, dynamic>.from(response.data as Map);
+      raw['type'] = raw['split_type']?.toString();
+      raw['equipment_selected'] =
+          equipment.isEmpty ? null : equipment.join(', ');
+      raw['prompt'] =
+          {
+            'goal': goal,
+            'split_type': splitType,
+            'body_parts': bodyParts,
+            'equipment': equipment,
+            'duration_minutes': durationMinutes,
+            'experience_level': experienceLevel,
+            'source': 'deterministic_engine',
+          }.toString();
+
+      return Workout.fromJson(raw);
+    } on DioException catch (e) {
+      throw _handleDioError(
+        e,
+        "Failed to generate workout with deterministic engine",
+      );
     }
   }
 
@@ -685,15 +766,54 @@ class ApiService {
 
   Future<dynamic> createFoodLog(Map<String, dynamic> foodLogData) async {
     try {
-      print("Creating food log with data: $foodLogData");
+      debugPrint("Creating food log with data: $foodLogData");
       final response = await _dio.post(
         '/nutrition/food_logs',
         data: foodLogData,
       );
       return response.data;
     } on DioException catch (e) {
-      print("DioException caught: ${e.message}");
+      debugPrint("DioException caught: ${e.message}");
       throw _handleDioError(e, "Failed to create food log");
+    }
+  }
+
+  Future<Map<String, dynamic>?> lookupBarcode(String barcode) async {
+    try {
+      final response = await _dio.post(
+        '/nutrition/barcode-lookup',
+        data: {'barcode': barcode},
+      );
+      final data = Map<String, dynamic>.from(response.data as Map);
+      return data['found'] == true ? data : null;
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to lookup barcode");
+    }
+  }
+
+  Future<List<dynamic>> getNutritionFavorites({int limit = 20}) async {
+    try {
+      final response = await _dio.get(
+        '/nutrition/favorites',
+        queryParameters: {'limit': limit},
+      );
+      return response.data as List<dynamic>;
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to fetch nutrition favorites");
+    }
+  }
+
+  Future<Map<String, dynamic>> getNutritionHistorySummary({
+    int days = 7,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/nutrition/history-summary',
+        queryParameters: {'days': days},
+      );
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      throw _handleDioError(e, "Failed to fetch nutrition history summary");
     }
   }
 
